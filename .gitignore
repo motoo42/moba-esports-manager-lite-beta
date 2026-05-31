@@ -14,4 +14,5 @@ vite.config.d.ts
 vitest.config.js
 vitest.config.d.ts
 playwright.config.js
-playwright.config.d.tsUI-Picture/
+playwright.config.d.ts
+UI-Picture/

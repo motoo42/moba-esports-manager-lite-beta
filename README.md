@@ -130,7 +130,7 @@ Wiki에 정리할 항목:
 ## 참고 문서
 
 - `IMPLEMENTATION_ORDER.md`
-- `롤게임/development-checklist.md`
-- `롤게임/overview.md`
-- `롤게임/mvp-scope.md`
-- `롤게임/season-calendar.md`
+- `docs/development-checklist.md`
+- `docs/overview.md`
+- `docs/mvp-scope.md`
+- `docs/season-calendar.md`
