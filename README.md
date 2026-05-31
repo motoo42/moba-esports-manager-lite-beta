@@ -2,7 +2,7 @@
 
 League of Legends e스포츠 팀 매니지먼트 시뮬레이션 게임입니다.
 
-사용자는 LCK 팀의 감독/프런트가 되어 스토브리그, 로스터 구성, 계약, 훈련, 전략 선택, 경기 진행, 대회 일정 관리, 포스트시즌 진출 등을 관리합니다. 스포츠 매니저 게임과 LoL e스포츠 구조를 결합한 프로젝트입니다.
+사용자는 LCK 팀의 감독/프런트가 되어 스토브리그, 로스터 구성, 계약, 훈련, 전략 선택, 경기 진행, 대회 일정 관리, 포스트시즌 진출 등을 관리합니다. Football Manager 스타일의 메인 허브와 LoL e스포츠 시즌 구조를 결합한 개인 프로젝트입니다.
 
 ## 프로젝트 목표
 
@@ -130,7 +130,7 @@ Wiki에 정리할 항목:
 ## 참고 문서
 
 - `IMPLEMENTATION_ORDER.md`
-- `롤게임/development-checklist.md`
-- `롤게임/overview.md`
-- `롤게임/mvp-scope.md`
-- `롤게임/season-calendar.md`
+- `docs/development-checklist.md`
+- `docs/overview.md`
+- `docs/mvp-scope.md`
+- `docs/season-calendar.md`
