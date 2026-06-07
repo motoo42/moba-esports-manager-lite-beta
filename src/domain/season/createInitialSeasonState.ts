@@ -1,38 +1,40 @@
-import {
-  asianGamesSeasonCompetitions,
-  normalSeasonCompetitions,
-} from "../../data/competitions";
 import { createPlayableLckTeams } from "../../data/lckTeams";
 import type {
   Competition,
   CompetitionId,
   CompetitionState,
-  SeasonCalendarType,
+  Opponent,
+  Player,
   SeasonState,
   StandingEntry,
 } from "../../types/game";
+import { createAsianGamesSetup } from "./asianGamesFormat";
+import { createFirstStandSetup } from "./firstStandFormat";
 import { createLckCupSchedule } from "./lckCupFormat";
 import {
   lckRounds12RegularStageName,
   createLckRounds12Schedule,
 } from "./lckRounds12Format";
 import {
+  createLckRounds34Setup,
+  lckRounds34CurrentStageName,
+} from "./lckRounds34Format";
+import {
+  createLckRounds35Setup,
+  lckRounds35CurrentStageName,
+} from "./lckRounds35Format";
+import { createMsiSetup, msiStageNames } from "./msiFormat";
+import {
   formatSeasonDateLabel,
   getFirstScheduledDateKey,
 } from "./seasonScheduleDates";
+import {
+  getSeasonCompetitionsForProfile,
+  getSeasonProfile,
+  getSeasonProfileForState,
+} from "./seasonProfile";
 
-const firstSeasonYear = 2026;
 const stoveLeagueWeeks = 4;
-
-function isAsianGamesSeason(yearLabel: number) {
-  return (yearLabel - firstSeasonYear) % 4 === 0;
-}
-
-function getSeasonCompetitions(calendarType: SeasonCalendarType) {
-  return calendarType === "asian-games"
-    ? asianGamesSeasonCompetitions
-    : normalSeasonCompetitions;
-}
 
 function findUserTeamId(userTeamName: string) {
   const normalizedUserTeamName = userTeamName.trim().toLowerCase();
@@ -92,24 +94,21 @@ export function createInitialSeasonState({
   seasonNumber: number;
   userTeamName: string;
 }): SeasonState {
-  const yearLabel = firstSeasonYear + seasonNumber - 1;
-  const calendarType: SeasonCalendarType = isAsianGamesSeason(yearLabel)
-    ? "asian-games"
-    : "normal";
-  const competitions = getSeasonCompetitions(calendarType).map((competition) =>
+  const profile = getSeasonProfile(seasonNumber);
+  const competitions = getSeasonCompetitionsForProfile(profile).map((competition) =>
     createCompetitionState(competition, userTeamName),
   );
 
   return {
     seasonNumber,
-    yearLabel,
-    calendarType,
+    yearLabel: profile.yearLabel,
+    calendarType: profile.calendarType,
     phase: "stove-league",
     currentCompetitionId: null,
     currentWeek: 0,
     currentTurn: 0,
-    currentDateKey: `${yearLabel}-01-01`,
-    currentDateLabel: `${yearLabel} Stove League Week 1`,
+    currentDateKey: `${profile.yearLabel}-01-01`,
+    currentDateLabel: `${profile.yearLabel} Stove League Week 1`,
     progressStatus: "idle",
     stoveLeague: {
       status: "active",
@@ -273,6 +272,367 @@ export function activateLckRounds12(seasonState: SeasonState): SeasonState {
         : competition,
     ),
   };
+}
+
+export function activateFirstStand(
+  seasonState: SeasonState,
+  internationalOpponents: Opponent[],
+): SeasonState {
+  const competitionId: CompetitionId = "first-stand";
+  const firstStandSetup = createFirstStandSetup({
+    internationalOpponents,
+    options: {
+      calendarType: seasonState.calendarType,
+      year: seasonState.yearLabel,
+    },
+    seasonState,
+  });
+  const openingDateKey =
+    getFirstScheduledDateKey(firstStandSetup.schedule) ??
+    `${seasonState.yearLabel}-03-10`;
+  const userTeamId = getUserTeamIdFromStandings(firstStandSetup.standings);
+  const openingMatchIds = hasUserMatchOnDate(
+    firstStandSetup.schedule,
+    openingDateKey,
+    userTeamId,
+  )
+    ? getMatchIdsForDate(firstStandSetup.schedule, openingDateKey)
+    : [];
+  const openingWeek =
+    firstStandSetup.schedule.find((match) => match.scheduledDate === openingDateKey)
+      ?.week ?? 1;
+  const existingScheduleIds = new Set(
+    seasonState.scheduledMatches.map((match) => match.id),
+  );
+  const newSchedules = firstStandSetup.schedule.filter(
+    (match) => !existingScheduleIds.has(match.id),
+  );
+
+  return {
+    ...seasonState,
+    phase: "competition",
+    currentCompetitionId: competitionId,
+    currentWeek: openingWeek,
+    currentDateKey: openingDateKey,
+    currentDateLabel: formatSeasonDateLabel(openingDateKey),
+    progressStatus: openingMatchIds.length > 0 ? "match-preview" : "idle",
+    nextMatchIds: openingMatchIds,
+    lastMatchRecordIds: [],
+    scheduledMatches: [...seasonState.scheduledMatches, ...newSchedules],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === competitionId
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName: "Group Stage",
+            currentWeek: openingWeek,
+            standings: firstStandSetup.standings,
+            schedule: firstStandSetup.schedule,
+            qualifiedTeamIds: [],
+            qualifiedTeamNames: [],
+            winnerTeamId: undefined,
+            winnerTeamName: undefined,
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+export function activateMsi(
+  seasonState: SeasonState,
+  internationalOpponents: Opponent[],
+): SeasonState {
+  const competitionId: CompetitionId = "msi";
+  const msiSetup = createMsiSetup({
+    internationalOpponents,
+    options: {
+      calendarType: seasonState.calendarType,
+      year: seasonState.yearLabel,
+    },
+    seasonState,
+  });
+  const openingDateKey =
+    getFirstScheduledDateKey(msiSetup.schedule) ??
+    `${seasonState.yearLabel}-06-08`;
+  const userTeamId = getUserTeamIdFromStandings(msiSetup.standings);
+  const openingMatchIds = hasUserMatchOnDate(
+    msiSetup.schedule,
+    openingDateKey,
+    userTeamId,
+  )
+    ? getMatchIdsForDate(msiSetup.schedule, openingDateKey)
+    : [];
+  const openingWeek =
+    msiSetup.schedule.find((match) => match.scheduledDate === openingDateKey)
+      ?.week ?? 1;
+  const existingScheduleIds = new Set(
+    seasonState.scheduledMatches.map((match) => match.id),
+  );
+  const newSchedules = msiSetup.schedule.filter(
+    (match) => !existingScheduleIds.has(match.id),
+  );
+
+  return {
+    ...seasonState,
+    phase: "competition",
+    currentCompetitionId: competitionId,
+    currentWeek: openingWeek,
+    currentDateKey: openingDateKey,
+    currentDateLabel: formatSeasonDateLabel(openingDateKey),
+    progressStatus: openingMatchIds.length > 0 ? "match-preview" : "idle",
+    nextMatchIds: openingMatchIds,
+    lastMatchRecordIds: [],
+    scheduledMatches: [...seasonState.scheduledMatches, ...newSchedules],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === competitionId
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName: msiStageNames.playInSemifinals,
+            currentWeek: openingWeek,
+            standings: msiSetup.standings,
+            schedule: msiSetup.schedule,
+            qualifiedTeamIds: [],
+            qualifiedTeamNames: [],
+            winnerTeamId: undefined,
+            winnerTeamName: undefined,
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+export function activateLckRounds34(seasonState: SeasonState): SeasonState {
+  const competitionId: CompetitionId = "lck-rounds-3-4";
+  const lckRounds12 = seasonState.competitions.find(
+    (competition) => competition.competitionId === "lck-rounds-1-2",
+  );
+  const baseStandings = lckRounds12?.standings.length
+    ? lckRounds12.standings
+    : createInitialLckStandings("T1");
+  const lckRounds34Setup = createLckRounds34Setup(baseStandings, {
+    calendarType: seasonState.calendarType,
+    year: seasonState.yearLabel,
+  });
+  const openingDateKey =
+    getFirstScheduledDateKey(lckRounds34Setup.schedule) ??
+    `${seasonState.yearLabel}-07-08`;
+  const userTeamId = getUserTeamIdFromStandings(lckRounds34Setup.standings);
+  const openingMatchIds = hasUserMatchOnDate(
+    lckRounds34Setup.schedule,
+    openingDateKey,
+    userTeamId,
+  )
+    ? getMatchIdsForDate(lckRounds34Setup.schedule, openingDateKey)
+    : [];
+  const openingWeek =
+    lckRounds34Setup.schedule.find((match) => match.scheduledDate === openingDateKey)
+      ?.week ?? 1;
+  const existingScheduleIds = new Set(
+    seasonState.scheduledMatches.map((match) => match.id),
+  );
+  const newSchedules = lckRounds34Setup.schedule.filter(
+    (match) => !existingScheduleIds.has(match.id),
+  );
+
+  return {
+    ...seasonState,
+    phase: "competition",
+    currentCompetitionId: competitionId,
+    currentWeek: openingWeek,
+    currentDateKey: openingDateKey,
+    currentDateLabel: formatSeasonDateLabel(openingDateKey),
+    progressStatus: openingMatchIds.length > 0 ? "match-preview" : "idle",
+    nextMatchIds: openingMatchIds,
+    lastMatchRecordIds: [],
+    scheduledMatches: [...seasonState.scheduledMatches, ...newSchedules],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === competitionId
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName: lckRounds34CurrentStageName,
+            currentWeek: openingWeek,
+            schedule: lckRounds34Setup.schedule,
+            standings: lckRounds34Setup.standings,
+            qualifiedTeamIds: [],
+            qualifiedTeamNames: [],
+            winnerTeamId: undefined,
+            winnerTeamName: undefined,
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+export function activateLckRounds35(seasonState: SeasonState): SeasonState {
+  const profile = getSeasonProfileForState(seasonState);
+  const competitionId: CompetitionId = "lck-rounds-3-5";
+
+  if (profile.postMsiCompetitionId !== competitionId) {
+    return seasonState;
+  }
+
+  const lckRounds35 = seasonState.competitions.find(
+    (competition) => competition.competitionId === competitionId,
+  );
+  const lckRounds12 = seasonState.competitions.find(
+    (competition) => competition.competitionId === "lck-rounds-1-2",
+  );
+  const baseStandings =
+    lckRounds12?.standings.length ? lckRounds12.standings : createInitialLckStandings("T1");
+  const lckRounds35Setup = createLckRounds35Setup(baseStandings, {
+    calendarType: seasonState.calendarType,
+    year: seasonState.yearLabel,
+  });
+  const openingDateKey =
+    getFirstScheduledDateKey(lckRounds35Setup.schedule) ??
+    `${seasonState.yearLabel}-07-03`;
+  const userTeamId = getUserTeamIdFromStandings(lckRounds35Setup.standings);
+  const openingMatchIds = hasUserMatchOnDate(
+    lckRounds35Setup.schedule,
+    openingDateKey,
+    userTeamId,
+  )
+    ? getMatchIdsForDate(lckRounds35Setup.schedule, openingDateKey)
+    : [];
+  const openingWeek =
+    lckRounds35Setup.schedule.find((match) => match.scheduledDate === openingDateKey)
+      ?.week ?? 1;
+  const existingScheduleIds = new Set(
+    seasonState.scheduledMatches.map((match) => match.id),
+  );
+  const newSchedules = lckRounds35Setup.schedule.filter(
+    (match) => !existingScheduleIds.has(match.id),
+  );
+
+  if (!lckRounds35) {
+    return seasonState;
+  }
+
+  return {
+    ...seasonState,
+    phase: "competition",
+    currentCompetitionId: competitionId,
+    currentWeek: openingWeek,
+    currentDateKey: openingDateKey,
+    currentDateLabel: formatSeasonDateLabel(openingDateKey),
+    progressStatus: openingMatchIds.length > 0 ? "match-preview" : "idle",
+    nextMatchIds: openingMatchIds,
+    lastMatchRecordIds: [],
+    scheduledMatches: [...seasonState.scheduledMatches, ...newSchedules],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === competitionId
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName: lckRounds35CurrentStageName,
+            currentWeek: openingWeek,
+            standings: lckRounds35Setup.standings,
+            schedule: lckRounds35Setup.schedule,
+            qualifiedTeamIds: [],
+            qualifiedTeamNames: [],
+            winnerTeamId: undefined,
+            winnerTeamName: undefined,
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+export function activateAsianGames(
+  seasonState: SeasonState,
+  players: Player[],
+): SeasonState {
+  const competitionId: CompetitionId = "asian-games";
+  const setup = createAsianGamesSetup({
+    players,
+    seasonState,
+  });
+  const openingDateKey =
+    setup.asianGamesState.rosterSelectedDateKey ??
+    `${seasonState.yearLabel}-09-01`;
+  const openingWeek = 1;
+  const existingScheduleIds = new Set(
+    seasonState.scheduledMatches.map((match) => match.id),
+  );
+  const newSchedules = setup.schedule.filter(
+    (match) => !existingScheduleIds.has(match.id),
+  );
+
+  return {
+    ...seasonState,
+    phase: "competition",
+    currentCompetitionId: competitionId,
+    currentWeek: openingWeek,
+    currentDateKey: openingDateKey,
+    currentDateLabel: formatSeasonDateLabel(openingDateKey),
+    progressStatus: "idle",
+    asianGames: setup.asianGamesState,
+    nextMatchIds: [],
+    lastMatchRecordIds: [],
+    scheduledMatches: [...seasonState.scheduledMatches, ...newSchedules],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === competitionId
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName: "National Team Selection",
+            currentWeek: openingWeek,
+            standings: setup.standings,
+            schedule: setup.schedule,
+            qualifiedTeamIds: [],
+            qualifiedTeamNames: [],
+            winnerTeamId: undefined,
+            winnerTeamName: undefined,
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+export function transitionFromLckCupToFirstStand(
+  seasonState: SeasonState,
+  internationalOpponents: Opponent[],
+): SeasonState {
+  return activateFirstStand(seasonState, internationalOpponents);
+}
+
+export function transitionFromFirstStandToLckRounds12(
+  seasonState: SeasonState,
+): SeasonState {
+  return activateLckRounds12(seasonState);
+}
+
+export function transitionFromLckRounds12ToMsi(
+  seasonState: SeasonState,
+  internationalOpponents: Opponent[],
+): SeasonState {
+  return activateMsi(seasonState, internationalOpponents);
+}
+
+export function transitionFromMsiToLckRounds34(
+  seasonState: SeasonState,
+): SeasonState {
+  return activateLckRounds34(seasonState);
+}
+
+export function transitionFromMsiToLckRounds35(
+  seasonState: SeasonState,
+): SeasonState {
+  return activateLckRounds35(seasonState);
+}
+
+export function transitionFromLckRounds34ToAsianGames(
+  seasonState: SeasonState,
+  players: Player[],
+): SeasonState {
+  return activateAsianGames(seasonState, players);
 }
 
 export function completeFirstStandPlaceholder(seasonState: SeasonState): SeasonState {

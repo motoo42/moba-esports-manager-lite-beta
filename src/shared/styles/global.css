@@ -40,6 +40,17 @@ select {
     linear-gradient(135deg, #080b13 0%, #111827 52%, #0b1220 100%);
 }
 
+.screenshot-shell {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 18px;
+}
+
+.screenshot-shell .app-content {
+  overflow: hidden;
+  border: 1px solid #253048;
+  border-radius: 8px;
+}
+
 .app-shell-simple {
   display: block;
   height: 100dvh;
@@ -103,6 +114,12 @@ select {
   font-size: 1.16rem;
 }
 
+.shell-menu-button:disabled,
+.submenu-item:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .shell-menu-button-active {
   border-color: #f43f9d;
   background: #211736;
@@ -156,7 +173,9 @@ select {
 
 .shell-topbar {
   display: grid;
-  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.5fr) auto;
+  grid-template-columns:
+    minmax(160px, 0.7fr) minmax(0, 1.05fr) minmax(260px, 0.8fr)
+    auto;
   gap: 18px;
   align-items: center;
   min-height: 86px;
@@ -197,13 +216,220 @@ select {
 }
 
 .shell-progress-button:disabled {
-  opacity: 1;
+  cursor: not-allowed;
+  filter: saturate(0.45);
+  opacity: 0.62;
+}
+
+.save-manager {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.save-manager-topbar {
+  grid-template-columns: minmax(92px, 0.72fr) minmax(120px, 1fr);
+  align-items: center;
+}
+
+.save-manager-panel {
+  border: 1px solid #303a52;
+  border-radius: 8px;
+  padding: 16px;
+  background: #111827;
+}
+
+.save-manager-panel h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.save-manager input,
+.save-manager select {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid #303a52;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #0d1424;
+  color: #e8edf6;
+  font-size: 0.78rem;
+}
+
+.save-manager-panel input,
+.save-manager-panel select {
+  min-height: 40px;
+  font-size: 0.9rem;
+}
+
+.save-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: 6px;
+}
+
+.save-manager-actions button {
+  min-height: 30px;
+  border: 1px solid #3b4761;
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: #141b2d;
+  color: #d7deeb;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.save-manager-panel .save-manager-actions button {
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: 0.84rem;
+}
+
+.save-manager-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.save-manager-status {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #9aa7bd;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-manager-autosave {
+  grid-column: 1 / -1;
+  justify-self: start;
+  overflow: hidden;
+  max-width: 100%;
+  border: 1px solid #303a52;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #0d1424;
+  color: #cfd7e6;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-manager-autosave-saving {
+  border-color: #67e8f9;
+  background: #0b2430;
+  color: #cffafe;
+}
+
+.save-manager-autosave-saved {
+  border-color: #22c55e;
+  background: #12301f;
+  color: #bbf7d0;
+}
+
+.save-manager-autosave-failed,
+.save-manager-autosave-conflict {
+  border-color: #ef4444;
+  background: #361717;
+  color: #fecaca;
+}
+
+.app-shell-busy .shell-content .app-main,
+.app-shell-busy .shell-sidebar,
+.app-shell-busy .shell-submenu {
+  pointer-events: none;
+}
+
+.game-progress-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 42%, rgb(159 92 255 / 18%), transparent 34%),
+    rgb(3 7 18 / 76%);
+  backdrop-filter: blur(10px);
+}
+
+.game-progress-card {
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  padding: 24px;
+  background:
+    linear-gradient(145deg, rgb(159 92 255 / 16%), transparent 48%),
+    #111827;
+  box-shadow: 0 30px 90px rgb(0 0 0 / 52%);
+}
+
+.game-progress-card h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.55rem;
+}
+
+.game-progress-card p {
+  margin: 0;
+  color: #cfd7e6;
+}
+
+.game-progress-card ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-progress-card li {
+  border: 1px solid #253048;
+  border-radius: 6px;
+  padding: 9px 10px;
+  background: #0d1424;
+  color: #d7deeb;
+  font-weight: 800;
+}
+
+.game-progress-bar {
+  overflow: hidden;
+  height: 8px;
+  border: 1px solid #303a52;
+  border-radius: 999px;
+  background: #0d1424;
+}
+
+.game-progress-bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9f5cff, #f43f9d);
+  transform-origin: left;
+  animation: game-progress-fill 5s linear forwards;
+}
+
+@keyframes game-progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .shell-content .app-main {
   width: 100%;
   min-height: 0;
   overflow: auto;
+  overflow-x: hidden;
   padding: 24px;
   scrollbar-gutter: stable;
 }
@@ -286,7 +512,8 @@ h1 {
   gap: 8px;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   min-height: 44px;
   border: 1px solid #303a52;
@@ -294,6 +521,27 @@ h1 {
   padding: 8px 12px;
   background: #0f1626;
   color: #e8edf6;
+}
+
+.compact-field {
+  gap: 6px;
+}
+
+.compact-field span {
+  color: #9aa7bd;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.player-market-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.search-field {
+  min-width: 0;
 }
 
 .budget-summary {
@@ -974,6 +1222,23 @@ h1 {
   font-weight: 900;
 }
 
+.lck-rounds-group-badge {
+  min-width: 58px;
+  text-align: center;
+}
+
+.lck-rounds-group-badge-legend {
+  border-color: #fbbf24;
+  background: #34270a;
+  color: #fde68a;
+}
+
+.lck-rounds-group-badge-rise {
+  border-color: #38bdf8;
+  background: #09283a;
+  color: #bae6fd;
+}
+
 .playoff-cutline {
   height: 0;
   border-bottom: 1px dashed #9f5cff;
@@ -984,6 +1249,30 @@ h1 {
   margin: 0;
   color: #9aa7bd;
   font-size: 0.82rem;
+}
+
+@media (max-width: 560px) {
+  .lck-standings-table {
+    grid-template-columns: 34px minmax(120px, 1fr) 52px 72px 58px;
+    gap: 7px;
+    padding: 8px;
+    font-size: 0.78rem;
+  }
+
+  .lck-standings-table span:nth-child(4),
+  .lck-standings-table span:nth-child(5) {
+    display: none;
+  }
+
+  .lck-standings-table strong {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
+
+  .lck-standings-header {
+    font-size: 0.68rem;
+  }
 }
 
 .lck-schedule-scroll {
@@ -1104,18 +1393,21 @@ h1 {
 
 .lck-playoff-bracket {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(220px, 1fr) minmax(190px, 0.85fr);
+  grid-auto-columns: minmax(220px, 1fr);
+  grid-auto-flow: column;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
   gap: 28px;
   min-width: 980px;
+  width: max-content;
   height: 100%;
-  align-items: center;
+  align-items: start;
 }
 
 .lck-playoff-round {
   position: relative;
   display: grid;
   gap: 14px;
-  align-content: center;
+  align-content: start;
   min-height: 100%;
 }
 
@@ -1142,6 +1434,13 @@ h1 {
   text-transform: uppercase;
 }
 
+.lck-playoff-round-current h3 {
+  border-color: rgba(147, 197, 253, 0.8);
+  background: #172554;
+  color: #dbeafe;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.16);
+}
+
 .lck-playoff-match-stack {
   display: grid;
   gap: 18px;
@@ -1155,6 +1454,17 @@ h1 {
   padding: 11px;
   background: #111827;
   box-shadow: 0 14px 28px rgb(0 0 0 / 18%);
+}
+
+.lck-playoff-match-current {
+  border-color: rgba(147, 197, 253, 0.86);
+  background:
+    linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(17, 24, 39, 0.98)),
+    #111827;
+  box-shadow:
+    inset 3px 0 0 #60a5fa,
+    0 0 0 1px rgba(96, 165, 250, 0.12),
+    0 18px 32px rgb(0 0 0 / 22%);
 }
 
 .lck-playoff-match header {
@@ -1223,6 +1533,17 @@ h1 {
   box-shadow: inset 3px 0 0 #9f5cff;
 }
 
+.lck-playoff-team-winner {
+  border-color: rgba(73, 197, 124, 0.74);
+  background:
+    linear-gradient(135deg, rgba(73, 197, 124, 0.18), rgba(15, 25, 36, 0.96)),
+    #0d1424;
+}
+
+.lck-playoff-team-winner span {
+  color: #9ee8b8;
+}
+
 .lck-playoff-champion-card {
   display: grid;
   gap: 8px;
@@ -1238,6 +1559,1640 @@ h1 {
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.asian-games-dashboard {
+  min-height: 0;
+}
+
+.asian-games-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.asian-games-country-panel,
+.asian-games-roster-panel,
+.asian-games-schedule-panel,
+.asian-games-bracket-panel {
+  min-width: 0;
+}
+
+.asian-games-country-grid,
+.asian-games-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asian-games-roster-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.asian-games-country-korea,
+.asian-games-roster-starter {
+  border-color: rgba(96, 165, 250, 0.76);
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(13, 20, 36, 0.98)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #60a5fa;
+}
+
+.asian-games-timeline-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.asian-games-timeline-list span {
+  border: 1px solid #253048;
+  border-radius: 6px;
+  padding: 8px;
+  background: #0d1424;
+  color: #cfd7e6;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.asian-games-schedule-list {
+  display: grid;
+  gap: 10px;
+}
+
+.asian-games-schedule-day {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0d1424;
+}
+
+.asian-games-schedule-day header {
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.asian-games-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid #253048;
+  padding-top: 8px;
+}
+
+.asian-games-schedule-row div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.asian-games-schedule-row strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asian-games-schedule-row span {
+  color: #9aa7bd;
+  font-size: 0.82rem;
+}
+
+.asian-games-schedule-row > span {
+  justify-self: end;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.asian-games-schedule-korea {
+  border-left: 3px solid #60a5fa;
+  padding-left: 8px;
+}
+
+.asian-games-bracket-frame {
+  min-height: 420px;
+  overflow: auto;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 16px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px),
+    linear-gradient(180deg, rgb(255 255 255 / 3%) 1px, transparent 1px),
+    #0b1220;
+  background-size: 48px 48px;
+  scrollbar-gutter: stable;
+}
+
+.asian-games-bracket-board {
+  display: grid;
+  grid-template-columns: 260px 260px 260px 220px;
+  grid-template-rows: 34px repeat(8, 78px);
+  gap: 24px;
+  min-width: 1120px;
+  align-items: stretch;
+}
+
+.asian-games-bracket-heading {
+  display: grid;
+  min-height: 34px;
+  margin: 0;
+  place-items: center;
+  border: 1px solid #303a52;
+  border-radius: 999px;
+  background: #111827;
+  color: #d8d2ff;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.asian-games-heading-qf {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.asian-games-heading-sf {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.asian-games-heading-medal {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.asian-games-heading-result {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.asian-games-bracket-node-current .asian-games-bracket-match,
+.asian-games-bracket-node-current.asian-games-bracket-node::before {
+  border-color: rgba(96, 165, 250, 0.8);
+  box-shadow:
+    inset 3px 0 0 #60a5fa,
+    0 16px 32px rgb(0 0 0 / 20%);
+}
+
+.asian-games-bracket-node {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  align-self: center;
+}
+
+.asian-games-bracket-node-source::after,
+.asian-games-bracket-node-merge::before {
+  position: absolute;
+  top: 50%;
+  z-index: 0;
+  width: 12px;
+  height: 2px;
+  background: #475569;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.asian-games-bracket-node-source::after {
+  right: -12px;
+}
+
+.asian-games-bracket-node-merge::before {
+  left: -12px;
+}
+
+.asian-games-slot-sf-a::after,
+.asian-games-slot-sf-b::after,
+.asian-games-slot-final::after {
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  z-index: 0;
+  width: 2px;
+  background: #475569;
+  content: "";
+  transform: translate(-1px, -50%);
+}
+
+.asian-games-slot-sf-a::after,
+.asian-games-slot-sf-b::after {
+  height: 204px;
+}
+
+.asian-games-slot-final::after {
+  height: 408px;
+}
+
+.asian-games-slot-qf-a {
+  grid-column: 1;
+  grid-row: 2 / span 2;
+}
+
+.asian-games-slot-qf-b {
+  grid-column: 1;
+  grid-row: 4 / span 2;
+}
+
+.asian-games-slot-qf-c {
+  grid-column: 1;
+  grid-row: 6 / span 2;
+}
+
+.asian-games-slot-qf-d {
+  grid-column: 1;
+  grid-row: 8 / span 2;
+}
+
+.asian-games-slot-sf-a {
+  grid-column: 2;
+  grid-row: 3 / span 2;
+}
+
+.asian-games-slot-sf-b {
+  grid-column: 2;
+  grid-row: 7 / span 2;
+}
+
+.asian-games-slot-final {
+  grid-column: 3;
+  grid-row: 5 / span 2;
+}
+
+.asian-games-slot-bronze {
+  grid-column: 3;
+  grid-row: 7 / span 2;
+}
+
+.asian-games-medal-board {
+  display: grid;
+  grid-column: 4;
+  grid-row: 3 / span 5;
+  gap: 12px;
+  align-self: stretch;
+  align-content: center;
+}
+
+.asian-games-bracket-match,
+.asian-games-medal-card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  border: 1px solid #303a52;
+  border-radius: 8px;
+  padding: 11px;
+  background: #111827;
+  box-shadow: 0 14px 28px rgb(0 0 0 / 18%);
+}
+
+.asian-games-bracket-korea {
+  border-color: rgba(96, 165, 250, 0.78);
+  box-shadow:
+    inset 3px 0 0 #60a5fa,
+    0 14px 28px rgb(0 0 0 / 18%);
+}
+
+.asian-games-bracket-match header {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.asian-games-bracket-match header strong {
+  color: #ffffff;
+}
+
+.asian-games-bracket-match header span,
+.asian-games-bracket-match small {
+  color: #9aa7bd;
+  font-size: 0.76rem;
+}
+
+.asian-games-bracket-slots {
+  display: grid;
+  gap: 7px;
+}
+
+.asian-games-team-slot {
+  overflow: hidden;
+  border: 1px solid #253048;
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: #0d1424;
+  color: #d7deeb;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asian-games-team-korea {
+  border-color: #60a5fa;
+  color: #ffffff;
+}
+
+.asian-games-team-winner {
+  border-color: rgba(34, 197, 94, 0.72);
+  background: #12301f;
+  color: #bbf7d0;
+}
+
+.asian-games-bracket-placeholder {
+  border-style: dashed;
+}
+
+.asian-games-bracket-placeholder span {
+  color: #9aa7bd;
+}
+
+.asian-games-medal-gold {
+  border-color: rgba(245, 158, 11, 0.86);
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(66, 42, 8, 0.96)),
+    #2d1f09;
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.asian-games-medal-silver {
+  border-color: rgba(203, 213, 225, 0.78);
+  background:
+    linear-gradient(135deg, rgba(226, 232, 240, 0.2), rgba(30, 41, 59, 0.96)),
+    #182133;
+  box-shadow: inset 3px 0 0 #cbd5e1;
+}
+
+.asian-games-medal-bronze {
+  border-color: rgba(180, 83, 9, 0.86);
+  background:
+    linear-gradient(135deg, rgba(180, 83, 9, 0.24), rgba(51, 26, 10, 0.96)),
+    #27160c;
+  box-shadow: inset 3px 0 0 #b45309;
+}
+
+.asian-games-medal-board span {
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.asian-games-medal-gold span {
+  color: #fcd34d;
+}
+
+.asian-games-medal-silver span {
+  color: #e2e8f0;
+}
+
+.asian-games-medal-bronze span {
+  color: #fdba74;
+}
+
+.asian-games-medal-board strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-dashboard {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.first-stand-main-panel {
+  min-height: 0;
+}
+
+.first-stand-entrant-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.first-stand-entrant-card {
+  display: grid;
+  gap: 5px;
+  overflow: hidden;
+  border: 1px solid #273451;
+  border-radius: 7px;
+  padding: 11px;
+  background: #0d1424;
+  min-height: 112px;
+}
+
+.first-stand-entrant-card span {
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.first-stand-entrant-card strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.98rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-entrant-card small,
+.first-stand-entrant-card em {
+  overflow: hidden;
+  color: #9aa7bd;
+  font-size: 0.73rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-entrant-lck {
+  border-color: rgba(159, 92, 255, 0.72);
+  background:
+    linear-gradient(135deg, rgba(159, 92, 255, 0.2), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #9f5cff;
+}
+
+.first-stand-entrant-placeholder {
+  border-style: dashed;
+}
+
+.first-stand-format-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.first-stand-format-strip span {
+  overflow: hidden;
+  border: 1px solid #253048;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #111827;
+  color: #cfd7e6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 0;
+}
+
+.first-stand-group-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 12px;
+  background: #0d1424;
+}
+
+.first-stand-group-card header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.first-stand-group-card header strong {
+  color: #ffffff;
+}
+
+.first-stand-group-table {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 52px 42px 42px 72px;
+  gap: 7px;
+  align-items: center;
+  border-bottom: 1px solid #253048;
+  padding: 7px 8px;
+  font-size: 0.82rem;
+}
+
+.first-stand-group-table-header {
+  border: 1px solid #253048;
+  border-radius: 6px 6px 0 0;
+  background: #111827;
+  color: #9aa7bd;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.first-stand-group-table strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-group-row-lck {
+  background: #171436;
+  box-shadow: inset 3px 0 0 #9f5cff;
+}
+
+.first-stand-schedule-scroll {
+  display: grid;
+  gap: 8px;
+  max-height: 454px;
+  overflow: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.first-stand-schedule-day {
+  display: grid;
+  gap: 8px;
+}
+
+.first-stand-schedule-day header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #253048;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #111827;
+}
+
+.first-stand-schedule-day header strong {
+  color: #ffffff;
+  font-size: 0.84rem;
+}
+
+.first-stand-schedule-day header span {
+  color: #9aa7bd;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.first-stand-schedule-day-list {
+  display: grid;
+  gap: 7px;
+}
+
+.first-stand-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #253048;
+  border-radius: 7px;
+  padding: 9px 10px;
+  background: #0d1424;
+}
+
+.first-stand-schedule-row-user {
+  border-color: rgba(159, 92, 255, 0.72);
+  background:
+    linear-gradient(90deg, rgba(159, 92, 255, 0.18), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #9f5cff;
+}
+
+.first-stand-schedule-row strong,
+.first-stand-schedule-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-schedule-row strong {
+  display: block;
+  color: #ffffff;
+}
+
+.first-stand-schedule-row span {
+  display: block;
+  margin-top: 3px;
+  color: #9aa7bd;
+  font-size: 0.76rem;
+}
+
+.first-stand-schedule-row b {
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #111827;
+  color: #cfd7e6;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.first-stand-bracket-frame {
+  overflow: auto;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 12px;
+  background: #080d18;
+}
+
+.first-stand-bracket {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr;
+  gap: 18px;
+  min-width: 780px;
+}
+
+.first-stand-bracket-round {
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+
+.first-stand-bracket-round:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  width: 10px;
+  height: 1px;
+  background: #334155;
+  content: "";
+}
+
+.first-stand-bracket-round h3 {
+  margin: 0;
+  color: #93c5fd;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.first-stand-bracket-stack {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  min-height: 270px;
+}
+
+.first-stand-bracket-match {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #253048;
+  border-radius: 7px;
+  padding: 11px;
+  background: #0d1424;
+}
+
+.first-stand-bracket-match-current {
+  border-color: rgba(96, 165, 250, 0.78);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.18);
+}
+
+.first-stand-bracket-match header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.first-stand-bracket-match header span {
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.first-stand-bracket-match header strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-bracket-team {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #253048;
+  border-radius: 6px;
+  padding: 8px;
+  background: #111827;
+}
+
+.first-stand-bracket-team span,
+.first-stand-bracket-champion span {
+  color: #93c5fd;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.first-stand-bracket-team strong,
+.first-stand-bracket-champion strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-stand-bracket-team small,
+.first-stand-bracket-champion small {
+  color: #9aa7bd;
+  font-size: 0.74rem;
+}
+
+.first-stand-bracket-team-placeholder {
+  border-style: dashed;
+  opacity: 0.76;
+}
+
+.first-stand-bracket-team-user {
+  border-color: rgba(159, 92, 255, 0.72);
+  box-shadow: inset 3px 0 0 #9f5cff;
+}
+
+.first-stand-bracket-team-winner {
+  border-color: rgba(16, 185, 129, 0.68);
+  background: rgba(6, 78, 59, 0.32);
+}
+
+.first-stand-bracket-round-current h3 {
+  color: #fcd34d;
+}
+
+.first-stand-bracket-champion {
+  display: grid;
+  gap: 6px;
+  border-color: #f59e0b;
+  border-radius: 7px;
+  padding: 12px;
+  background: #21170a;
+}
+
+.msi-dashboard {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.msi-main-panel {
+  min-height: 0;
+}
+
+.msi-summary-grid {
+  grid-template-columns: 1.2fr 0.85fr 0.7fr 1fr 0.9fr;
+}
+
+.msi-overview-split {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+.msi-overview-split article {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 12px;
+  background: #0b1220;
+}
+
+.msi-overview-split header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.msi-overview-split header strong {
+  color: #ffffff;
+}
+
+.msi-overview-split header span {
+  color: #9aa7bd;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.msi-entrant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.msi-entrant-grid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.msi-entrant-card {
+  display: grid;
+  gap: 5px;
+  overflow: hidden;
+  border: 1px solid #273451;
+  border-radius: 7px;
+  padding: 10px;
+  background: #0d1424;
+  min-height: 104px;
+  box-shadow: inset 3px 0 0 #38bdf8;
+}
+
+.msi-entrant-card span {
+  color: #67e8f9;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.msi-entrant-card strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-entrant-card small,
+.msi-entrant-card em {
+  overflow: hidden;
+  color: #9aa7bd;
+  font-size: 0.72rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-entrant-card-user {
+  border-color: rgba(250, 204, 21, 0.72);
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #facc15;
+}
+
+.msi-format-strip {
+  grid-template-columns: 0.9fr 1fr 1.25fr;
+}
+
+.msi-worlds-bonus-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 0.8fr) minmax(0, 1.4fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(250, 204, 21, 0.38);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.14), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+}
+
+.msi-worlds-bonus-strip span {
+  color: #facc15;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.msi-worlds-bonus-strip strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-worlds-bonus-strip small {
+  overflow: hidden;
+  color: #cfd7e6;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-schedule-scroll {
+  display: grid;
+  gap: 8px;
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.msi-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #253048;
+  border-radius: 7px;
+  padding: 9px 10px;
+  background: #0d1424;
+}
+
+.msi-schedule-row-user {
+  border-color: rgba(250, 204, 21, 0.72);
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.15), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #facc15;
+}
+
+.msi-schedule-row-feature {
+  border-color: rgba(56, 189, 248, 0.62);
+}
+
+.msi-schedule-row strong,
+.msi-schedule-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-schedule-row strong {
+  display: block;
+  color: #ffffff;
+}
+
+.msi-schedule-row span {
+  display: block;
+  margin-top: 3px;
+  color: #9aa7bd;
+  font-size: 0.76rem;
+}
+
+.msi-bracket-frame {
+  min-height: 430px;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 12px;
+  background: #080d18;
+}
+
+.msi-bracket-board {
+  display: grid;
+  grid-template-areas:
+    "play upper upper"
+    "lower lower final"
+    "lower lower champion";
+  grid-template-columns:
+    minmax(300px, 0.82fr) minmax(0, 1.35fr)
+    minmax(180px, 0.55fr);
+  gap: 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.msi-bracket-section-play-in {
+  grid-area: play;
+}
+
+.msi-bracket-section-play-in .msi-bracket-round-grid {
+  grid-auto-columns: minmax(132px, 1fr);
+}
+
+.msi-bracket-section-upper {
+  grid-area: upper;
+}
+
+.msi-bracket-section-lower {
+  grid-area: lower;
+}
+
+.msi-bracket-section-final {
+  grid-area: final;
+}
+
+.msi-champion-card {
+  grid-area: champion;
+}
+
+.worlds-dashboard {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.worlds-pool-panel {
+  min-height: 0;
+}
+
+.worlds-overview-split {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.worlds-overview-split article {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #273451;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0b1220;
+}
+
+.worlds-overview-split header,
+.worlds-groups-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.worlds-overview-split header strong,
+.worlds-groups-section > header strong {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.worlds-overview-split header span,
+.worlds-groups-section > header span {
+  color: #9aa7bd;
+  font-size: 0.76rem;
+}
+
+.worlds-entrant-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.worlds-entrant-grid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-height: 360px;
+}
+
+.worlds-entrant-card {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  min-height: 92px;
+  border: 1px solid #273451;
+  border-radius: 7px;
+  padding: 10px;
+  background: #0d1424;
+  box-shadow: inset 3px 0 0 #38bdf8;
+}
+
+.worlds-entrant-card span {
+  color: #67e8f9;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worlds-entrant-card strong,
+.worlds-entrant-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worlds-entrant-card strong {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.worlds-entrant-card small {
+  color: #9aa7bd;
+  font-size: 0.74rem;
+}
+
+.worlds-entrant-msi-bonus {
+  border-color: rgba(250, 204, 21, 0.62);
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+  box-shadow: inset 3px 0 0 #facc15;
+}
+
+.worlds-entrant-lcq-placeholder {
+  border-style: dashed;
+  box-shadow: inset 3px 0 0 #94a3b8;
+}
+
+.worlds-entrant-user {
+  border-color: rgba(34, 197, 94, 0.78);
+  box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.worlds-lck-path-strip,
+.worlds-champion-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.worlds-lck-seed,
+.worlds-champion-strip {
+  min-width: 0;
+  border: 1px solid #273451;
+  border-radius: 7px;
+  padding: 9px;
+  background: #0f172a;
+  color: #9aa7bd;
+  font-size: 0.78rem;
+}
+
+.worlds-lck-seed strong,
+.worlds-champion-strip strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.worlds-lck-seed-conditional-missed {
+  opacity: 0.68;
+  border-style: dashed;
+}
+
+.worlds-champion-strip {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  border-color: rgba(250, 204, 21, 0.6);
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(15, 23, 42, 0.96)),
+    #0f172a;
+}
+
+.worlds-champion-strip span {
+  color: #facc15;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worlds-schedule-list,
+.worlds-groups-panel,
+.worlds-bracket-panel {
+  min-height: 0;
+}
+
+.worlds-schedule-list {
+  display: grid;
+  gap: 10px;
+  max-height: 540px;
+  overflow: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.worlds-schedule-day,
+.worlds-group-card,
+.worlds-bracket-match,
+.worlds-champion-card {
+  border: 1px solid #273451;
+  border-radius: 8px;
+  background: #0d1424;
+}
+
+.worlds-schedule-day {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.worlds-schedule-day header {
+  color: #67e8f9;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worlds-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(58px, auto);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  border-radius: 7px;
+  padding: 8px;
+  background: #101827;
+}
+
+.worlds-schedule-row div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.worlds-schedule-row strong,
+.worlds-schedule-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worlds-schedule-row strong {
+  color: #ffffff;
+  font-size: 0.84rem;
+}
+
+.worlds-schedule-row span {
+  color: #9aa7bd;
+  font-size: 0.75rem;
+}
+
+.worlds-schedule-row > span {
+  justify-self: end;
+  color: #dbeafe;
+  font-weight: 900;
+}
+
+.worlds-schedule-user {
+  outline: 1px solid rgba(34, 197, 94, 0.7);
+  background: rgba(20, 83, 45, 0.24);
+}
+
+.worlds-groups-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.worlds-groups-section:first-of-type {
+  margin-top: 0;
+}
+
+.worlds-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.worlds-groups-grid-four {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.worlds-group-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.worlds-group-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.worlds-group-card header strong {
+  color: #67e8f9;
+  font-size: 0.82rem;
+}
+
+.worlds-group-card header span {
+  color: #9aa7bd;
+  font-size: 0.72rem;
+}
+
+.worlds-group-table {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 42px 30px 30px 46px;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 6px;
+  color: #9aa7bd;
+  font-size: 0.74rem;
+}
+
+@media (min-width: 1500px) {
+  .worlds-groups-grid-four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.worlds-group-header {
+  background: #182033;
+  color: #cbd5e1;
+  font-weight: 900;
+}
+
+.worlds-group-table strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worlds-group-table-scroll {
+  display: grid;
+  gap: 4px;
+  min-height: 0;
+}
+
+.worlds-group-user {
+  outline: 1px solid rgba(34, 197, 94, 0.7);
+  background: rgba(20, 83, 45, 0.2);
+}
+
+.worlds-bracket-frame {
+  display: grid;
+  grid-template-columns: minmax(190px, 2fr) minmax(170px, 1.6fr) minmax(160px, 1.35fr) minmax(150px, 1.2fr);
+  gap: 10px;
+  min-width: 0;
+  overflow: auto;
+  padding-bottom: 3px;
+}
+
+.worlds-bracket-round {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  min-width: 0;
+}
+
+.worlds-bracket-round h3 {
+  margin: 0;
+  color: #67e8f9;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.worlds-bracket-stack {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.worlds-bracket-stack-centered {
+  padding-top: 52px;
+}
+
+.worlds-bracket-stack-final {
+  padding-top: 118px;
+}
+
+.worlds-bracket-match {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.worlds-bracket-match header {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.worlds-bracket-match header strong {
+  color: #ffffff;
+  font-size: 0.82rem;
+}
+
+.worlds-bracket-match header span,
+.worlds-bracket-match small,
+.worlds-champion-card small {
+  color: #9aa7bd;
+  font-size: 0.72rem;
+}
+
+.worlds-bracket-slots {
+  display: grid;
+  gap: 5px;
+}
+
+.worlds-bracket-team {
+  min-width: 0;
+  border-radius: 5px;
+  padding: 6px 7px;
+  background: #111827;
+  color: #dbeafe;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worlds-bracket-team-user {
+  color: #bbf7d0;
+  background: rgba(20, 83, 45, 0.5);
+}
+
+.worlds-bracket-team-winner {
+  color: #fef3c7;
+  background: rgba(180, 83, 9, 0.36);
+}
+
+.worlds-bracket-placeholder {
+  border-style: dashed;
+  opacity: 0.72;
+}
+
+.worlds-bracket-placeholder span {
+  color: #9aa7bd;
+  font-size: 0.74rem;
+}
+
+.worlds-champion-card {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 168px;
+  padding: 14px;
+  border-color: rgba(250, 204, 21, 0.58);
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(13, 20, 36, 0.96)),
+    #0d1424;
+}
+
+.worlds-champion-card span {
+  color: #facc15;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worlds-champion-card strong {
+  min-width: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-bracket-section {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0b1220;
+}
+
+.msi-bracket-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.msi-bracket-section > header strong {
+  color: #ffffff;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.msi-bracket-round-grid {
+  display: grid;
+  grid-auto-columns: minmax(112px, 1fr);
+  grid-auto-flow: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.msi-bracket-round {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  min-width: 0;
+}
+
+.msi-bracket-round h3 {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  color: #67e8f9;
+  font-size: 0.74rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.msi-bracket-round-current h3 {
+  color: #facc15;
+}
+
+.msi-bracket-match-stack {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 0;
+}
+
+.msi-bracket-match {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #253048;
+  border-radius: 7px;
+  padding: 8px;
+  background: #0d1424;
+}
+
+.msi-bracket-match-current {
+  border-color: rgba(250, 204, 21, 0.72);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.16);
+}
+
+.msi-bracket-match header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.msi-bracket-match header strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-format-badge {
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 0.66rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.msi-format-badge-feature {
+  border-color: rgba(250, 204, 21, 0.72);
+  background: #2f2508;
+  color: #fde68a;
+}
+
+.msi-bracket-team {
+  display: grid;
+  gap: 4px;
+  overflow: hidden;
+  border: 1px solid #253048;
+  border-radius: 6px;
+  padding: 6px;
+  background: #111827;
+}
+
+.msi-bracket-team span,
+.msi-champion-card span {
+  color: #67e8f9;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.msi-bracket-team strong,
+.msi-champion-card strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-bracket-team small,
+.msi-champion-card small,
+.msi-bracket-match-status {
+  overflow: hidden;
+  color: #9aa7bd;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msi-bracket-team-placeholder {
+  border-style: dashed;
+  opacity: 0.72;
+}
+
+.msi-bracket-team-user {
+  border-color: rgba(250, 204, 21, 0.72);
+  box-shadow: inset 3px 0 0 #facc15;
+}
+
+.msi-bracket-team-winner {
+  border-color: rgba(16, 185, 129, 0.68);
+  background: rgba(6, 78, 59, 0.32);
+}
+
+.msi-champion-card {
+  display: grid;
+  align-self: stretch;
+  align-content: center;
+  gap: 7px;
+  border: 1px solid rgba(250, 204, 21, 0.72);
+  border-radius: 8px;
+  padding: 12px;
+  background: #21170a;
 }
 
 .competition-table {
@@ -1721,6 +3676,108 @@ h1 {
   font-weight: 900;
 }
 
+.asian-games-decision-modal {
+  display: grid;
+  gap: 16px;
+  width: min(720px, 100%);
+  max-height: min(760px, calc(100dvh - 48px));
+  overflow: auto;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 22px;
+  background: #111827;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 48%);
+}
+
+.asian-games-decision-modal h2,
+.asian-games-decision-modal p {
+  margin: 0;
+}
+
+.asian-games-decision-modal p {
+  color: #cfd7e6;
+  line-height: 1.6;
+}
+
+.asian-games-decision-roster {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asian-games-decision-roster article,
+.asian-games-roster-card,
+.asian-games-country-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0d1424;
+}
+
+.asian-games-decision-roster span,
+.asian-games-roster-card span,
+.asian-games-country-card span {
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.asian-games-decision-roster strong,
+.asian-games-roster-card strong,
+.asian-games-country-card strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asian-games-decision-roster small,
+.asian-games-roster-card small,
+.asian-games-country-card small {
+  color: #9aa7bd;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.asian-games-sixth-player {
+  border-color: rgba(245, 158, 11, 0.72);
+  background: #21170a;
+}
+
+.asian-games-sixth-player span {
+  color: #fcd34d;
+}
+
+.asian-games-decision-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asian-games-decision-actions button {
+  min-height: 44px;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #172033;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.asian-games-decision-actions button:first-child {
+  border-color: rgba(96, 165, 250, 0.8);
+  background: #172554;
+}
+
+.asian-games-decision-actions button:last-child {
+  border-color: rgba(34, 197, 94, 0.65);
+  background: #12301f;
+}
+
 .player-detail-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1872,6 +3929,341 @@ h1 {
   padding: 6px 8px;
   background: #0f1626;
   color: #e8edf6;
+}
+
+.season-summary-page {
+  max-width: 1180px;
+}
+
+.season-summary-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.season-summary-status {
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+  border: 1px solid #303a52;
+  border-radius: 8px;
+  padding: 12px;
+  background: #101827;
+}
+
+.season-summary-status span,
+.season-summary-metric span,
+.season-summary-metric small,
+.season-competition-result span,
+.season-competition-result small,
+.season-renewal-row span,
+.season-renewal-row small,
+.season-summary-empty span,
+.season-summary-renewal-ready span {
+  color: #9aa7bd;
+}
+
+.season-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 20px;
+}
+
+.season-summary-card-title {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.season-summary-card-title h2 {
+  margin-bottom: 0;
+}
+
+.season-summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.season-summary-metric {
+  display: grid;
+  gap: 4px;
+  min-height: 96px;
+  border: 1px solid #2a3245;
+  border-radius: 8px;
+  padding: 12px;
+  background: #0f1626;
+}
+
+.season-summary-metric strong {
+  line-height: 1.25;
+}
+
+.season-competition-results,
+.season-renewal-list {
+  display: grid;
+  gap: 10px;
+}
+
+.season-competition-result,
+.season-renewal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #2a3245;
+  border-radius: 8px;
+  padding: 12px;
+  background: #0f1626;
+}
+
+.season-competition-result div,
+.season-renewal-row div,
+.season-summary-empty,
+.season-summary-renewal-ready {
+  display: grid;
+  gap: 4px;
+}
+
+.season-renewal-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.season-renewal-row .contract-select {
+  min-width: 150px;
+}
+
+.season-renewed-label {
+  color: #60a5fa;
+  text-align: right;
+}
+
+.season-summary-empty,
+.season-summary-renewal-ready {
+  border: 1px solid #2a3245;
+  border-radius: 8px;
+  padding: 14px;
+  background: #0f1626;
+}
+
+.season-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.offseason-page {
+  min-height: 0;
+}
+
+.offseason-timeline-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.offseason-timeline-header h1 {
+  margin: 2px 0 6px;
+  font-size: 1.8rem;
+}
+
+.offseason-timeline-header span,
+.offseason-player-main span,
+.offseason-player-main small,
+.offseason-day-badge span,
+.offseason-log-entry span,
+.offseason-mini-player span {
+  color: var(--muted);
+}
+
+.offseason-day-badge {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  min-width: 140px;
+}
+
+.offseason-day-badge strong {
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.offseason-week-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.offseason-week-step {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.offseason-week-step span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.offseason-week-step strong {
+  font-size: 0.9rem;
+}
+
+.offseason-week-step-active {
+  border-color: rgba(56, 189, 248, 0.8);
+  background: rgba(14, 116, 144, 0.28);
+}
+
+.offseason-week-step-complete {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.offseason-tab-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.offseason-tab {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+
+.offseason-tab-active {
+  border-color: rgba(56, 189, 248, 0.85);
+  background: rgba(14, 116, 144, 0.34);
+}
+
+.offseason-list {
+  display: grid;
+  gap: 10px;
+  max-height: min(56vh, 520px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.offseason-player-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.offseason-player-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.offseason-offer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.offseason-offer-controls select,
+.offseason-offer-controls input {
+  min-height: 36px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--text);
+  padding: 0 10px;
+}
+
+.offseason-offer-controls input {
+  width: 92px;
+}
+
+.offseason-status-label {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.offseason-empty,
+.offseason-roster-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.offseason-empty span {
+  color: var(--muted);
+}
+
+.offseason-validation-box {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+  padding: 10px 12px;
+}
+
+.offseason-roster-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.offseason-mini-player {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 10px;
+  min-width: 0;
+}
+
+.offseason-log-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+  gap: 14px;
+}
+
+.offseason-log-list,
+.offseason-offer-history {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  max-height: min(56vh, 520px);
+  overflow: auto;
+}
+
+.offseason-log-entry {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.offseason-log-blocked {
+  border-color: rgba(248, 113, 113, 0.45);
 }
 
 .stat-pill {
@@ -2355,6 +4747,31 @@ h1 {
   color: #9f2f2f;
 }
 
+@media (max-width: 1100px) {
+  .msi-bracket-board {
+    grid-template-areas:
+      "play"
+      "upper"
+      "lower"
+      "final"
+      "champion";
+    grid-template-columns: 1fr;
+  }
+
+  .worlds-entrant-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .worlds-overview-split,
+  .worlds-groups-grid-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .worlds-bracket-frame {
+    grid-template-columns: repeat(4, minmax(170px, 1fr));
+  }
+}
+
 @media (max-width: 780px) {
   .app-shell {
     grid-template-columns: 56px minmax(0, 1fr);
@@ -2377,17 +4794,55 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .save-manager-topbar {
+    grid-template-columns: 1fr;
+  }
+
   .shell-status-strip {
     justify-content: flex-start;
+  }
+
+  .msi-bracket-frame {
+    min-height: 0;
+  }
+
+  .asian-games-bracket-frame {
+    min-height: 360px;
+    padding: 12px;
+  }
+
+  .msi-bracket-board {
+    grid-template-areas:
+      "play"
+      "upper"
+      "lower"
+      "final"
+      "champion";
+    grid-template-columns: 1fr;
+  }
+
+  .msi-bracket-round-grid {
+    grid-auto-columns: unset;
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
   }
 
   .two-column {
     grid-template-columns: 1fr;
   }
 
+  .player-market-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .slot,
   .calendar-list li,
   .signed-player-row,
+  .season-summary-header,
+  .season-summary-grid,
+  .season-summary-metrics,
+  .season-competition-result,
+  .season-renewal-row,
   .starter-grid,
   .match-hub-grid,
   .season-calendar-header,
@@ -2400,7 +4855,23 @@ h1 {
   .competition-summary-grid,
   .competition-overview-grid,
   .competition-schedule-columns,
-  .competition-group-grid,
+    .competition-group-grid,
+    .lck-rounds-content-grid,
+    .asian-games-decision-roster,
+    .asian-games-decision-actions,
+    .asian-games-overview-grid,
+    .asian-games-country-grid,
+    .asian-games-roster-grid,
+    .asian-games-timeline-list,
+    .msi-overview-split,
+    .msi-worlds-bonus-strip,
+    .worlds-overview-split,
+    .worlds-lck-path-strip,
+    .worlds-groups-grid,
+    .worlds-groups-grid-four,
+  .msi-entrant-grid,
+  .msi-entrant-grid-compact,
+  .worlds-entrant-grid,
   .weekly-match-row,
   .group-score-grid,
   .draft-score-row,
@@ -2408,5 +4879,59 @@ h1 {
   .option-grid,
   .option-grid-compact {
     grid-template-columns: 1fr;
+  }
+
+  .worlds-bracket-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .worlds-bracket-stack-centered,
+  .worlds-bracket-stack-final {
+    padding-top: 0;
+  }
+
+  .season-summary-status,
+  .season-renewal-row .contract-select,
+  .season-summary-actions .button {
+    width: 100%;
+  }
+
+  .season-renewed-label {
+    text-align: left;
+  }
+
+  .offseason-timeline-header {
+    display: grid;
+  }
+
+  .offseason-player-row,
+  .offseason-log-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offseason-day-badge {
+    justify-items: start;
+  }
+
+  .offseason-week-track {
+    grid-template-columns: 1fr;
+  }
+
+  .offseason-offer-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .offseason-offer-controls select,
+  .offseason-offer-controls input,
+  .offseason-offer-controls .button {
+    width: 100%;
+  }
+
+  .offseason-list,
+  .offseason-log-list,
+  .offseason-offer-history {
+    max-height: none;
   }
 }

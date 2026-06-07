@@ -7,10 +7,11 @@ import type {
   StrategyId,
   Team,
 } from "../../types/game";
+import { normalizeLeagueCode } from "../season/worldsQualification";
 
 export const draftRoles: Role[] = ["top", "jungle", "mid", "bot", "support"];
 
-const leagueCodes: LeagueCode[] = ["LCK", "LPL", "LEC", "LTA", "LCP", "CBLOL"];
+const leagueCodes: LeagueCode[] = ["LCK", "LPL", "LEC", "LCS", "LCP", "CBLOL"];
 
 const styleChampionPreferences: Record<Opponent["style"], Record<Role, string[]>> = {
   aggressive: {
@@ -71,8 +72,10 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function toLeagueCode(leagueLabel: string): LeagueCode {
-  return leagueCodes.includes(leagueLabel as LeagueCode)
-    ? (leagueLabel as LeagueCode)
+  const normalizedLeagueLabel = normalizeLeagueCode(leagueLabel);
+
+  return leagueCodes.includes(normalizedLeagueLabel)
+    ? normalizedLeagueLabel
     : "LEC";
 }
 

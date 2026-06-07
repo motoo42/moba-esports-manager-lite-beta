@@ -5,17 +5,56 @@ import type {
   MatchSchedule,
   SeasonProgressActionLabel,
   SeasonState,
-  SeriesScore,
   StandingEntry,
 } from "../../types/game";
+import {
+  advanceAsianGamesAfterCompletedMatches,
+  asianGamesKoreaTeamId,
+  markAsianGamesDecisionPendingIfNeeded,
+} from "./asianGamesFormat";
+import {
+  advanceFirstStandAfterCompletedMatches,
+  isFirstStandGroupStageName,
+} from "./firstStandFormat";
 import {
   getLckCupFinalists,
   getNextLckCupKnockoutSchedule,
 } from "./lckCupFormat";
+import { lckRounds12RegularStageName } from "./lckRounds12Format";
+import { isLckRounds34RegularStageName } from "./lckRounds34Format";
+import { isLckRounds35RegularStageName } from "./lckRounds35Format";
+import {
+  createLckRounds34SeasonPlayInOpeningSchedule,
+  getLckRounds34FinalPlacements,
+  getLckRounds34PostseasonSeeds,
+  getNextLckRounds34PostseasonSchedule,
+  isLckRounds34PostseasonStageName,
+  lckRounds34PostseasonMatchIds,
+  lckRounds34PostseasonStageNames,
+} from "./lckRounds34Postseason";
+import {
+  createLckRounds35SeasonPlayInOpeningSchedule,
+  getLckRounds35FinalPlacements,
+  getLckRounds35PostseasonSeeds,
+  getNextLckRounds35PostseasonSchedule,
+  isLckRounds35PostseasonStageName,
+  lckRounds35PostseasonMatchIds,
+  lckRounds35PostseasonStageNames,
+} from "./lckRounds35Postseason";
+import {
+  createLckRounds12PlayoffOpeningSchedule,
+  getLckRounds12Finalists,
+  getNextLckRounds12PlayoffSchedule,
+  isLckRounds12PlayoffStageName,
+  lckRounds12PlayoffMatchIds,
+  lckRounds12PlayoffStageNames,
+} from "./lckRounds12Playoffs";
 import {
   addDaysToDateKey,
   formatSeasonDateLabel,
 } from "./seasonScheduleDates";
+import { applyRecordsToStandings } from "./standingsEngine";
+import { applyLckWorldsQualification } from "./worldsQualification";
 
 function createDateLabel(
   yearLabel: number,
@@ -37,6 +76,12 @@ function findCompetition(
 }
 
 function getUserTeamId(seasonState: SeasonState) {
+  if (seasonState.currentCompetitionId === "asian-games") {
+    return seasonState.asianGames?.playMode === "manual"
+      ? asianGamesKoreaTeamId
+      : undefined;
+  }
+
   const activeCompetition = findCompetition(
     seasonState.competitions,
     seasonState.currentCompetitionId,
@@ -169,59 +214,36 @@ function appendUniqueSchedules(
   ];
 }
 
-function updateEntryWithScore(
-  entry: StandingEntry,
-  score: SeriesScore,
-  side: "blue" | "red",
-  wonMatch: boolean,
-) {
-  const setWins = side === "blue" ? score.blueWins : score.redWins;
-  const setLosses = side === "blue" ? score.redWins : score.blueWins;
-  const wins = entry.wins + (wonMatch ? 1 : 0);
-  const losses = entry.losses + (wonMatch ? 0 : 1);
-  const totalMatches = wins + losses;
-
-  return {
-    ...entry,
-    wins,
-    losses,
-    matchWins: wins,
-    matchLosses: losses,
-    setWins: entry.setWins + setWins,
-    setLosses: entry.setLosses + setLosses,
-    winRate: totalMatches > 0 ? wins / totalMatches : 0,
-  };
+function getLastScheduledDateKey(schedule: MatchSchedule[]) {
+  return [...schedule]
+    .filter((match) => match.scheduledDate)
+    .sort((left, right) =>
+      (right.scheduledDate ?? "").localeCompare(left.scheduledDate ?? ""),
+    )[0]?.scheduledDate;
 }
 
-function sortStandings(standings: StandingEntry[]) {
-  return [...standings]
-    .sort((left, right) => {
-      const winDiff = right.wins - left.wins;
+function compareStandingEntries(left: StandingEntry, right: StandingEntry) {
+  const winDiff = right.wins - left.wins;
 
-      if (winDiff !== 0) {
-        return winDiff;
-      }
+  if (winDiff !== 0) {
+    return winDiff;
+  }
 
-      const setDiffLeft = left.setWins - left.setLosses;
-      const setDiffRight = right.setWins - right.setLosses;
-      const setDiff = setDiffRight - setDiffLeft;
+  const leftSetDiff = left.setWins - left.setLosses;
+  const rightSetDiff = right.setWins - right.setLosses;
+  const setDiff = rightSetDiff - leftSetDiff;
 
-      if (setDiff !== 0) {
-        return setDiff;
-      }
+  if (setDiff !== 0) {
+    return setDiff;
+  }
 
-      const setWinsDiff = right.setWins - left.setWins;
+  const setWinsDiff = right.setWins - left.setWins;
 
-      if (setWinsDiff !== 0) {
-        return setWinsDiff;
-      }
+  if (setWinsDiff !== 0) {
+    return setWinsDiff;
+  }
 
-      return left.initialSeed - right.initialSeed;
-    })
-    .map((entry, index) => ({
-      ...entry,
-      rank: index + 1,
-    }));
+  return left.initialSeed - right.initialSeed;
 }
 
 function updateSeasonDateState(
@@ -238,7 +260,7 @@ function updateSeasonDateState(
     : [];
   const currentWeek = scheduledMatches[0]?.week ?? seasonState.currentWeek;
 
-  return {
+  return markAsianGamesDecisionPendingIfNeeded({
     ...seasonState,
     currentDateKey: dateKey,
     currentDateLabel: formatSeasonDateLabel(dateKey),
@@ -253,56 +275,19 @@ function updateSeasonDateState(
         currentWeek,
       ),
     ),
-  };
-}
-
-function applyRecordsToStandings(
-  standings: StandingEntry[],
-  records: MatchRecord[],
-  schedule: MatchSchedule[],
-) {
-  if (standings.length === 0 || records.length === 0) {
-    return standings;
-  }
-
-  const scheduleById = new Map(schedule.map((match) => [match.id, match]));
-
-  const nextStandings = records.reduce<StandingEntry[]>((currentStandings, record) => {
-    const match = scheduleById.get(record.scheduleId);
-
-    if (!match) {
-      return currentStandings;
-    }
-
-    return currentStandings.map((entry) => {
-      if (entry.teamId === match.blueTeamId) {
-        return updateEntryWithScore(
-          entry,
-          record.score,
-          "blue",
-          record.winnerSide === "blue",
-        );
-      }
-
-      if (entry.teamId === match.redTeamId) {
-        return updateEntryWithScore(
-          entry,
-          record.score,
-          "red",
-          record.winnerSide === "red",
-        );
-      }
-
-      return entry;
-    });
-  }, standings);
-
-  return sortStandings(nextStandings);
+  });
 }
 
 export function getSeasonProgressActionLabel(
   seasonState: SeasonState,
 ): SeasonProgressActionLabel {
+  if (
+    seasonState.phase === "offseason" &&
+    seasonState.offseason?.status === "active"
+  ) {
+    return "다음날";
+  }
+
   if (seasonState.progressStatus === "match-preview") {
     return "플레이";
   }
@@ -377,10 +362,10 @@ export function advanceToNextMatchWeek(seasonState: SeasonState): SeasonState {
     findNextScheduledDate(seasonState, { includeCurrent: true });
 
   if (nextDate) {
-    return {
+    return markAsianGamesDecisionPendingIfNeeded({
       ...updateSeasonDateState(seasonState, nextDate),
       currentTurn: seasonState.currentTurn + 1,
-    };
+    });
   }
 
   const nextWeek = findNextScheduledWeek(seasonState);
@@ -427,10 +412,10 @@ export function advanceToNextDay(seasonState: SeasonState): SeasonState {
 
   const nextDateKey = addDaysToDateKey(seasonState.currentDateKey, 1);
 
-  return {
+  return markAsianGamesDecisionPendingIfNeeded({
     ...updateSeasonDateState(seasonState, nextDateKey),
     currentTurn: seasonState.currentTurn + 1,
-  };
+  });
 }
 
 export function continueAfterMatchReview(seasonState: SeasonState): SeasonState {
@@ -472,19 +457,59 @@ export function recordCompletedMatches(
         competition.schedule,
         records,
       );
+      const standingsRecords =
+        competition.competitionId === "lck-rounds-1-2"
+          ? records.filter((record) => {
+              const match = competition.schedule.find(
+                (scheduledMatch) => scheduledMatch.id === record.scheduleId,
+              );
+
+              return match?.stageName === lckRounds12RegularStageName;
+            })
+          : competition.competitionId === "lck-rounds-3-4"
+            ? records.filter((record) => {
+                const match = competition.schedule.find(
+                  (scheduledMatch) => scheduledMatch.id === record.scheduleId,
+                );
+
+                return Boolean(
+                  match && isLckRounds34RegularStageName(match.stageName),
+                );
+              })
+          : competition.competitionId === "lck-rounds-3-5"
+            ? records.filter((record) => {
+                const match = competition.schedule.find(
+                  (scheduledMatch) => scheduledMatch.id === record.scheduleId,
+                );
+
+                return Boolean(
+                  match && isLckRounds35RegularStageName(match.stageName),
+                );
+              })
+          : competition.competitionId === "first-stand"
+            ? records.filter((record) => {
+                const match = competition.schedule.find(
+                  (scheduledMatch) => scheduledMatch.id === record.scheduleId,
+                );
+
+                return Boolean(match && isFirstStandGroupStageName(match.stageName));
+              })
+          : records;
 
       return {
         ...competition,
         schedule: competitionSchedule,
-        standings: applyRecordsToStandings(
-          competition.standings,
-          records,
-          competition.schedule,
-        ),
+        standings: applyRecordsToStandings({
+          records: standingsRecords,
+          schedule: competition.schedule,
+          standings: competition.standings,
+        }),
       };
     }),
   };
 }
+
+export { advanceAsianGamesAfterCompletedMatches };
 
 export function advanceLckCupAfterCompletedWeek(
   seasonState: SeasonState,
@@ -588,32 +613,504 @@ export function completeLckRounds12IfFinished(
     return seasonState;
   }
 
-  const allRegularMatchesCompleted = lckRounds.schedule.every(
-    (match) => match.status === "completed",
+  const finalRecord = seasonState.matchRecords.find(
+    (record) =>
+      record.competitionId === "lck-rounds-1-2" &&
+      record.scheduleId === lckRounds12PlayoffMatchIds.final,
   );
+
+  if (finalRecord) {
+    const finalists = getLckRounds12Finalists(lckRounds, seasonState.matchRecords);
+
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-1-2"
+          ? {
+              ...competition,
+              status: "completed",
+              currentStageName: "Playoffs Completed",
+              qualifiedTeamIds: finalists.map((team) => team.teamId),
+              qualifiedTeamNames: finalists.map((team) => team.teamName),
+              winnerTeamId: finalRecord.winnerTeamId,
+              winnerTeamName: finalRecord.winnerTeamName,
+              completed: true,
+            }
+          : competition,
+      ),
+    };
+  }
+
+  const regularSchedule = lckRounds.schedule.filter(
+    (match) => match.stageName === lckRounds12RegularStageName,
+  );
+  const allRegularMatchesCompleted =
+    regularSchedule.length > 0 &&
+    regularSchedule.every((match) => match.status === "completed");
 
   if (!allRegularMatchesCompleted) {
     return seasonState;
   }
 
+  const hasPlayoffSchedule = lckRounds.schedule.some((match) =>
+    isLckRounds12PlayoffStageName(match.stageName),
+  );
   const playoffQualifiers = [...lckRounds.standings]
     .sort((left, right) => left.rank - right.rank)
     .slice(0, 6);
+
+  if (!hasPlayoffSchedule) {
+    const lastRegularDate =
+      getLastScheduledDateKey(regularSchedule) ?? seasonState.currentDateKey;
+    const openingSchedule = createLckRounds12PlayoffOpeningSchedule(
+      {
+        ...lckRounds,
+        qualifiedTeamIds: playoffQualifiers.map((entry) => entry.teamId),
+        qualifiedTeamNames: playoffQualifiers.map((entry) => entry.teamName),
+      },
+      {
+        startDateKey: addDaysToDateKey(lastRegularDate, 3),
+      },
+    );
+
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        openingSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-1-2"
+          ? {
+              ...competition,
+              status: "active",
+              currentStageName:
+                openingSchedule[0]?.stageName ?? lckRounds12PlayoffStageNames.round1,
+              currentWeek: openingSchedule[0]?.week ?? competition.currentWeek,
+              schedule: appendUniqueSchedules(competition.schedule, openingSchedule),
+              qualifiedTeamIds: playoffQualifiers.map((entry) => entry.teamId),
+              qualifiedTeamNames: playoffQualifiers.map((entry) => entry.teamName),
+              completed: false,
+            }
+          : competition,
+      ),
+    };
+  }
+
+  const nextPlayoffSchedule = getNextLckRounds12PlayoffSchedule(
+    lckRounds,
+    seasonState.matchRecords,
+  );
+
+  if (nextPlayoffSchedule.length > 0) {
+    return {
+      ...seasonState,
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        nextPlayoffSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-1-2"
+          ? {
+              ...competition,
+              currentStageName: nextPlayoffSchedule[0].stageName,
+              currentWeek: nextPlayoffSchedule[0].week,
+              schedule: appendUniqueSchedules(
+                competition.schedule,
+                nextPlayoffSchedule,
+              ),
+            }
+          : competition,
+      ),
+    };
+  }
+
+  return seasonState;
+}
+
+export function completeLckRounds34IfFinished(
+  seasonState: SeasonState,
+): SeasonState {
+  if (seasonState.currentCompetitionId !== "lck-rounds-3-4") {
+    return seasonState;
+  }
+
+  const lckRounds = seasonState.competitions.find(
+    (competition) => competition.competitionId === "lck-rounds-3-4",
+  );
+
+  if (!lckRounds || lckRounds.completed || lckRounds.schedule.length === 0) {
+    return seasonState;
+  }
+
+  const regularSchedule = lckRounds.schedule.filter((match) =>
+    isLckRounds34RegularStageName(match.stageName),
+  );
+  const finalRecord = seasonState.matchRecords.find(
+    (record) =>
+      record.competitionId === "lck-rounds-3-4" &&
+      record.scheduleId === lckRounds34PostseasonMatchIds.grandFinal,
+  );
+
+  if (finalRecord) {
+    const finalPlacements = getLckRounds34FinalPlacements(
+      lckRounds,
+      seasonState.matchRecords,
+    );
+
+    if (finalPlacements.length >= 4) {
+      const completedSeasonState: SeasonState = {
+        ...seasonState,
+        nextMatchIds: [],
+        competitions: seasonState.competitions.map((competition) =>
+          competition.competitionId === "lck-rounds-3-4"
+            ? {
+                ...competition,
+                status: "completed",
+                currentStageName: "Playoffs Completed",
+                qualifiedTeamIds: finalPlacements
+                  .slice(0, 4)
+                  .map((team) => team.teamId),
+                qualifiedTeamNames: finalPlacements
+                  .slice(0, 4)
+                  .map((team) => team.teamName),
+                winnerTeamId: finalRecord.winnerTeamId,
+                winnerTeamName: finalRecord.winnerTeamName,
+                completed: true,
+              }
+            : competition.competitionId === "asian-games"
+              ? {
+                  ...competition,
+                  status:
+                    competition.status === "locked"
+                      ? "available"
+                      : competition.status,
+                }
+              : competition,
+        ),
+      };
+
+      return applyLckWorldsQualification(
+        completedSeasonState,
+        finalPlacements.slice(0, 4),
+      );
+    }
+  }
+
+  const allRegularMatchesCompleted =
+    regularSchedule.length > 0 &&
+    regularSchedule.every((match) => match.status === "completed");
+
+  if (!allRegularMatchesCompleted) {
+    return seasonState;
+  }
+
+  const legendStandings = lckRounds.standings
+    .filter((entry) => entry.lckRoundsGroup === "legend")
+    .sort((left, right) => left.rank - right.rank);
+  const riseStandings = lckRounds.standings
+    .filter((entry) => entry.lckRoundsGroup === "rise")
+    .sort((left, right) => left.rank - right.rank);
+  const postseasonTeams = [
+    ...legendStandings.slice(0, 5),
+    ...riseStandings.slice(0, 3),
+  ];
+  const hasPostseasonSchedule = lckRounds.schedule.some((match) =>
+    isLckRounds34PostseasonStageName(match.stageName),
+  );
+
+  if (!hasPostseasonSchedule) {
+    const postseasonSeededCompetition = {
+      ...lckRounds,
+      qualifiedTeamIds: postseasonTeams.map((entry) => entry.teamId),
+      qualifiedTeamNames: postseasonTeams.map((entry) => entry.teamName),
+    };
+    const lastRegularDate =
+      getLastScheduledDateKey(regularSchedule) ?? seasonState.currentDateKey;
+    const openingSchedule = createLckRounds34SeasonPlayInOpeningSchedule(
+      postseasonSeededCompetition,
+      {
+        startDateKey: addDaysToDateKey(lastRegularDate, 3),
+      },
+    );
+
+    if (openingSchedule.length === 0) {
+      return seasonState;
+    }
+
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        openingSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-3-4"
+          ? {
+              ...competition,
+              status: "active",
+              currentStageName:
+                openingSchedule[0]?.stageName ??
+                lckRounds34PostseasonStageNames.seasonPlayInRound1,
+              currentWeek: openingSchedule[0]?.week ?? competition.currentWeek,
+              qualifiedTeamIds: getLckRounds34PostseasonSeeds(
+                postseasonSeededCompetition,
+              ).map((team) => team.teamId),
+              qualifiedTeamNames: getLckRounds34PostseasonSeeds(
+                postseasonSeededCompetition,
+              ).map((team) => team.teamName),
+              schedule: appendUniqueSchedules(
+                competition.schedule,
+                openingSchedule,
+              ),
+              completed: false,
+            }
+          : competition,
+      ),
+    };
+  }
+
+  const nextPostseasonSchedule = getNextLckRounds34PostseasonSchedule(
+    lckRounds,
+    seasonState.matchRecords,
+  );
+
+  if (nextPostseasonSchedule.length > 0) {
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        nextPostseasonSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-3-4"
+          ? {
+              ...competition,
+              currentStageName: nextPostseasonSchedule[0].stageName,
+              currentWeek: nextPostseasonSchedule[0].week,
+              schedule: appendUniqueSchedules(
+                competition.schedule,
+                nextPostseasonSchedule,
+              ),
+            }
+          : competition,
+      ),
+    };
+  }
 
   return {
     ...seasonState,
     nextMatchIds: [],
     competitions: seasonState.competitions.map((competition) =>
-      competition.competitionId === "lck-rounds-1-2"
+      competition.competitionId === "lck-rounds-3-4"
         ? {
             ...competition,
-            status: "completed",
-            currentStageName: "Regular Season Completed",
-            qualifiedTeamIds: playoffQualifiers.map((entry) => entry.teamId),
-            qualifiedTeamNames: playoffQualifiers.map((entry) => entry.teamName),
-            completed: true,
+            status: "active",
+            currentStageName:
+              lckRounds.currentStageName || "Postseason Standby",
+            qualifiedTeamIds: postseasonTeams.map((entry) => entry.teamId),
+            qualifiedTeamNames: postseasonTeams.map((entry) => entry.teamName),
+            completed: false,
           }
         : competition,
     ),
   };
 }
+
+export function completeLckRounds35IfFinished(
+  seasonState: SeasonState,
+): SeasonState {
+  if (seasonState.currentCompetitionId !== "lck-rounds-3-5") {
+    return seasonState;
+  }
+
+  const lckRounds = seasonState.competitions.find(
+    (competition) => competition.competitionId === "lck-rounds-3-5",
+  );
+
+  if (!lckRounds || lckRounds.completed || lckRounds.schedule.length === 0) {
+    return seasonState;
+  }
+
+  const regularSchedule = lckRounds.schedule.filter((match) =>
+    isLckRounds35RegularStageName(match.stageName),
+  );
+  const finalRecord = seasonState.matchRecords.find(
+    (record) =>
+      record.competitionId === "lck-rounds-3-5" &&
+      record.scheduleId === lckRounds35PostseasonMatchIds.grandFinal,
+  );
+
+  if (finalRecord) {
+    const finalPlacements = getLckRounds35FinalPlacements(
+      lckRounds,
+      seasonState.matchRecords,
+    );
+
+    if (finalPlacements.length >= 4) {
+      const completedSeasonState: SeasonState = {
+        ...seasonState,
+        nextMatchIds: [],
+        competitions: seasonState.competitions.map((competition) =>
+          competition.competitionId === "lck-rounds-3-5"
+            ? {
+                ...competition,
+                status: "completed",
+                currentStageName: "Playoffs Completed",
+                qualifiedTeamIds: finalPlacements
+                  .slice(0, 4)
+                  .map((team) => team.teamId),
+                qualifiedTeamNames: finalPlacements
+                  .slice(0, 4)
+                  .map((team) => team.teamName),
+                winnerTeamId: finalRecord.winnerTeamId,
+                winnerTeamName: finalRecord.winnerTeamName,
+                completed: true,
+              }
+            : competition.competitionId === "worlds"
+              ? {
+                  ...competition,
+                  status:
+                    competition.status === "locked"
+                      ? "available"
+                      : competition.status,
+                }
+              : competition,
+        ),
+      };
+
+      return applyLckWorldsQualification(
+        completedSeasonState,
+        finalPlacements.slice(0, 4),
+      );
+    }
+  }
+
+  const allRegularMatchesCompleted =
+    regularSchedule.length > 0 &&
+    regularSchedule.every((match) => match.status === "completed");
+
+  if (!allRegularMatchesCompleted) {
+    return seasonState;
+  }
+
+  const legendStandings = lckRounds.standings
+    .filter((entry) => entry.lckRoundsGroup === "legend")
+    .sort(compareStandingEntries);
+  const riseStandings = lckRounds.standings
+    .filter((entry) => entry.lckRoundsGroup === "rise")
+    .sort(compareStandingEntries);
+  const postseasonTeams = [
+    ...legendStandings.slice(0, 5),
+    ...riseStandings.slice(0, 3),
+  ];
+  const hasPostseasonSchedule = lckRounds.schedule.some((match) =>
+    isLckRounds35PostseasonStageName(match.stageName),
+  );
+
+  if (!hasPostseasonSchedule) {
+    const postseasonSeededCompetition = {
+      ...lckRounds,
+      qualifiedTeamIds: postseasonTeams.map((entry) => entry.teamId),
+      qualifiedTeamNames: postseasonTeams.map((entry) => entry.teamName),
+    };
+    const lastRegularDate =
+      getLastScheduledDateKey(regularSchedule) ?? seasonState.currentDateKey;
+    const openingSchedule = createLckRounds35SeasonPlayInOpeningSchedule(
+      postseasonSeededCompetition,
+      {
+        startDateKey: addDaysToDateKey(lastRegularDate, 3),
+      },
+    );
+
+    if (openingSchedule.length === 0) {
+      return seasonState;
+    }
+
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        openingSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-3-5"
+          ? {
+              ...competition,
+              status: "active",
+              currentStageName:
+                openingSchedule[0]?.stageName ??
+                lckRounds35PostseasonStageNames.seasonPlayInRound1,
+              currentWeek: openingSchedule[0]?.week ?? competition.currentWeek,
+              qualifiedTeamIds: getLckRounds35PostseasonSeeds(
+                postseasonSeededCompetition,
+              ).map((team) => team.teamId),
+              qualifiedTeamNames: getLckRounds35PostseasonSeeds(
+                postseasonSeededCompetition,
+              ).map((team) => team.teamName),
+              schedule: appendUniqueSchedules(
+                competition.schedule,
+                openingSchedule,
+              ),
+              completed: false,
+            }
+          : competition,
+      ),
+    };
+  }
+
+  const nextPostseasonSchedule = getNextLckRounds35PostseasonSchedule(
+    lckRounds,
+    seasonState.matchRecords,
+  );
+
+  if (nextPostseasonSchedule.length > 0) {
+    return {
+      ...seasonState,
+      nextMatchIds: [],
+      scheduledMatches: appendUniqueSchedules(
+        seasonState.scheduledMatches,
+        nextPostseasonSchedule,
+      ),
+      competitions: seasonState.competitions.map((competition) =>
+        competition.competitionId === "lck-rounds-3-5"
+          ? {
+              ...competition,
+              currentStageName: nextPostseasonSchedule[0].stageName,
+              currentWeek: nextPostseasonSchedule[0].week,
+              schedule: appendUniqueSchedules(
+                competition.schedule,
+                nextPostseasonSchedule,
+              ),
+            }
+          : competition,
+      ),
+    };
+  }
+
+  return {
+    ...seasonState,
+    nextMatchIds: [],
+    competitions: seasonState.competitions.map((competition) =>
+      competition.competitionId === "lck-rounds-3-5"
+        ? {
+            ...competition,
+            status: "active",
+            currentStageName:
+              lckRounds.currentStageName || "Postseason Standby",
+            qualifiedTeamIds: postseasonTeams.map((entry) => entry.teamId),
+            qualifiedTeamNames: postseasonTeams.map((entry) => entry.teamName),
+            completed: false,
+          }
+        : competition,
+    ),
+  };
+}
+
+
+export { advanceFirstStandAfterCompletedMatches };

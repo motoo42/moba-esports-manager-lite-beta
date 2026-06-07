@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { lck2026Players } from "../../src/data/lck2026Players";
 import { samplePlayers } from "../../src/data/samplePlayers";
 import { RosterBuilder } from "../../src/features/roster-builder";
 import type { Team } from "../../src/types/game";
@@ -58,10 +59,42 @@ describe("RosterBuilder", () => {
       />,
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Sign" })[0]);
-    fireEvent.click(screen.getAllByRole("button", { name: "Start" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Sign Oner" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start Zeus" }));
 
     expect(onSignPlayer).toHaveBeenCalledWith(samplePlayers[1]);
     expect(onSelectPlayer).toHaveBeenCalledWith("top", samplePlayers[0]);
+  });
+
+  it("filters the expanded 2026 player pool by team, position, tier, and search", () => {
+    render(
+      <RosterBuilder
+        players={lck2026Players}
+        team={emptyTeam}
+        onSelectPlayer={vi.fn()}
+        onSignPlayer={vi.fn()}
+        onReleasePlayer={vi.fn()}
+        onConfirmRoster={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Filter players by team"), {
+      target: { value: "T1" },
+    });
+    fireEvent.change(screen.getByLabelText("Filter players by position"), {
+      target: { value: "mid" },
+    });
+    fireEvent.change(screen.getByLabelText("Filter players by roster tier"), {
+      target: { value: "main" },
+    });
+
+    expect(screen.getByText("Faker")).toBeInTheDocument();
+    expect(screen.queryByText("Chovy")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Search players"), {
+      target: { value: "oner" },
+    });
+
+    expect(screen.queryByText("Faker")).not.toBeInTheDocument();
   });
 });

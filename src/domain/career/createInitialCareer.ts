@@ -1,6 +1,5 @@
-import { normalSeasonCompetitions } from "../../data/competitions";
 import { sampleOpponents } from "../../data/sampleOpponents";
-import { samplePlayers } from "../../data/samplePlayers";
+import { lck2026Players } from "../../data/lck2026Players";
 import { createInitialSeasonState } from "../season";
 import type { CareerSave } from "../../types/game";
 
@@ -27,7 +26,7 @@ export function createInitialCareer(teamName: string): CareerSave {
       losses: 0,
       elo: 1500,
     },
-    lckPlayers: samplePlayers,
+    lckPlayers: lck2026Players,
     internationalOpponents: sampleOpponents,
     weeklyPlan: {
       strategy: "balanced",
@@ -37,13 +36,6 @@ export function createInitialCareer(teamName: string): CareerSave {
       seasonNumber: 1,
       userTeamName,
     }),
-    seasonHistory: [
-      {
-        seasonNumber: 1,
-        calendarType: "normal",
-        lckResult: normalSeasonCompetitions[0].name,
-        finalElo: 1500,
-      },
-    ],
+    seasonHistory: [],
   };
 }

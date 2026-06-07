@@ -1,70 +1,57 @@
 ---
 name: mission-verifier
-description: Project-local skill for checking personal project plans, skills, documentation, GitHub workflow, and implementation against the Week 13 requirements. Use before finalizing planning docs, weekly reflections, repository setup, issues, pull requests, deployment notes, or after creating multiple project skills.
+description: Project-local skill for checking plans, implementation, documentation, GitHub workflow, and handoff readiness against the project goals and course evidence requirements. Use before calling major work complete.
 ---
 
 # Mission Verifier
 
-Use this skill before calling a project task complete.
-
-## Purpose
-
-Planning and implementation can look finished while missing course evidence, workflow notes, or verification. This skill checks the work against the 3-week mission and reports remaining risk.
+Use this skill before finalizing a substantial task.
 
 ## Inputs
 
-1. Read `../project-requirements-and-agent-workflow.md`.
-2. Read `../project-topic-draft.md` when topic or scope is involved.
-3. Read `skills/index.md` and relevant skills when validating skill work.
-4. Inspect changed files with `git status` and targeted reads when a git repository exists.
-5. Read README, Wiki drafts, issue drafts, PR drafts, and weekly reflections when present.
-6. Run available tests or builds when implementation files changed and the project has scripts.
+1. Read `../README.md`.
+2. Read `../CODEX_HANDOFF.md`.
+3. Read `../docs/development-checklist.md`.
+4. Read the docs or source files changed in the task.
+5. Inspect `git status`.
+6. Run available build/tests when code changed.
 
 ## Validation Loop
 
-1. Check whether the work matches the user's latest request.
-2. Check against Week 13 requirements:
-   - 3-week deployable personal frontend project.
-   - Week 1 planning before implementation.
-   - project plan.
-   - service topic and core features.
-   - technical stack and reasons.
-   - screen flow or page structure.
-   - GitHub issue task management.
-   - Wiki documentation.
-   - feature PR workflow.
-   - Agent workflow draft.
-   - weekly personal reflection.
-3. Check for stale or copied assumptions from older projects.
-4. Fix small documentation or skill issues when clearly safe.
-5. Name unresolved decisions instead of pretending they are done.
-
-## Skill Validation Checks
-
-- Every skill has YAML frontmatter with exactly `name` and `description`.
-- Descriptions explain when to use the skill.
-- Skills point to project source documents.
-- `skills/index.md` lists all skills.
-- No skill contains old AI-Blog mission details unless intentionally reused.
-- No secrets, tokens, or private values are present.
-
-## Planning Checks
-
-- The topic status is explicit.
-- MVP and deferred features are separated.
-- Week 1 does not overcommit to implementation.
-- Risks and verification checkpoints are named.
-- Next tasks can become GitHub issues.
+1. Confirm the work matches the user's latest request.
+2. Check current project goals:
+   - 1-season MVP.
+   - 16:9 FM-style UI.
+   - URL-based pages.
+   - domain logic separated from UI.
+   - AI-agent workflow documented.
+3. Check course evidence:
+   - README.
+   - GitHub Issue/PR workflow.
+   - Wiki-ready planning docs.
+   - Agent workflow notes.
+   - weekly reflection support.
+4. Find stale docs or stale assumptions.
+5. Fix small documentation issues when safe.
+6. Name remaining gaps clearly.
 
 ## Implementation Checks
 
-- Changes are scoped to the selected issue or request.
-- Existing project conventions are preserved.
-- Empty, loading, error, and success states are considered for UI work.
-- Build, test, or manual verification is reported honestly.
-- New dependencies are justified by the MVP.
+- Existing user decisions are preserved.
+- Domain logic is testable.
+- UI frame remains stable.
+- Build/test status is reported honestly.
+- Screenshots are saved for important UI work.
+- Checklist is updated.
+
+## Documentation Checks
+
+- Markdown renders cleanly.
+- Links point to existing files.
+- Completed work and planned work are separated.
+- No old mojibake/encoding corruption remains.
+- No actual secrets or connection strings.
 
 ## Output
 
-Lead with pass/fail findings. Then name files checked, fixes made, commands run, and remaining gaps.
-
+Lead with pass/fail findings, then list files checked, fixes made, commands run, and remaining gaps.

@@ -10,8 +10,9 @@ export function SeasonSummaryPage() {
 
   return (
     <SeasonSummary
-      team={state.career.userTeam}
-      onBackToRoster={() => dispatch({ type: "go-to", route: "roster-builder" })}
+      career={state.career}
+      onStartOffseason={() => dispatch({ type: "start-offseason-market" })}
+      onViewRoster={() => dispatch({ type: "go-to", route: "roster-builder" })}
     />
   );
 }

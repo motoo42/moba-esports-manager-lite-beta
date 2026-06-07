@@ -4,8 +4,17 @@ import {
   normalSeasonCompetitions,
 } from "../data/competitions";
 import { useGame } from "../app/GameProvider";
+import type { CalendarSubPage } from "../app/routes";
 
-export function SeasonCalendarPage() {
+type SeasonCalendarPageProps = {
+  subPage?: CalendarSubPage | null;
+  onSubPageChange?: (subPage: CalendarSubPage) => void;
+};
+
+export function SeasonCalendarPage({
+  subPage,
+  onSubPageChange,
+}: SeasonCalendarPageProps) {
   const { state, dispatch } = useGame();
 
   if (!state.career) {
@@ -34,6 +43,8 @@ export function SeasonCalendarPage() {
     <SeasonCalendar
       career={career}
       competitions={competitions}
+      viewMode={subPage}
+      onViewModeChange={onSubPageChange}
       onViewCompetition={(competitionId) =>
         dispatch({ type: "view-competition", competitionId })
       }

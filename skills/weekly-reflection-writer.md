@@ -1,26 +1,21 @@
 ---
 name: weekly-reflection-writer
-description: Project-local skill for writing weekly personal reflections and final retrospectives for the 3-week project. Use when preparing GitHub Wiki reflection pages, summarizing AI usage, recording decisions, or turning completed work into honest learning notes.
+description: Project-local skill for writing weekly GitHub Wiki reflections and retrospectives. Use when summarizing completed work, AI usage, personal decisions, verification, or next-week plans.
 ---
 
 # Weekly Reflection Writer
 
-Use this skill when creating or revising weekly reflection content.
-
-## Purpose
-
-The mission requires at least one personal reflection each week in GitHub Wiki. The reflection should be specific, honest, and connected to project decisions and AI-agent usage.
+Use this skill when creating or revising reflection content.
 
 ## Inputs
 
-1. Read `../project-requirements-and-agent-workflow.md`.
-2. Read current project plan, topic draft, README, Wiki drafts, issues, PRs, or changed files relevant to the week.
-3. Read `agent-workflow-curator.md` when reflecting on AI usage patterns.
-4. Inspect actual work before claiming completion.
+1. Read `../README.md`.
+2. Read `../CODEX_HANDOFF.md`.
+3. Read `../docs/development-checklist.md`.
+4. Read recent PR descriptions, issue notes, screenshots, or changed files if available.
+5. Read `agent-workflow-curator.md` when reflecting on AI usage.
 
 ## Reflection Structure
-
-Use this default shape:
 
 ```markdown
 # Weekly Reflection - Week X
@@ -42,28 +37,25 @@ Use this default shape:
 
 ## Writing Rules
 
-- Write in first person when preparing final user reflection text.
-- Mention concrete artifacts: docs, issues, PRs, prototype results, deployed URL, or tests.
+- Write in first person for final Wiki text.
+- Mention concrete artifacts: docs, issues, PRs, tests, screenshots, deployed URL.
 - Separate completed work from planned work.
-- Include how AI helped and where AI output needed correction.
-- Include what the user personally judged or verified.
-- Name remaining risks instead of hiding them.
-- Keep the tone reflective, not promotional.
+- Include how AI helped and where AI needed correction.
+- Include what the user personally judged.
+- Name remaining risks.
+- Avoid claiming unverified implementation.
 
-## Week-Specific Focus
+## Current Reflection Themes
 
-- Week 1: topic, scope, planning, stack decision, Agent workflow draft.
-- Week 2: implementation progress, issue flow, PR review, changed assumptions.
-- Week 3: deployment, polish, final limitations, workflow retrospective.
+- Topic and scope changed from 3-week submission pressure to long-term precision.
+- UI decisions became FM-style 16:9 fixed-frame.
+- AI was used to split tasks, implement vertical slices, generate docs, and verify flows.
+- User personally validated screenshots and corrected UI direction.
+- GitHub workflow was introduced after substantial local implementation.
 
 ## Quality Check
 
-- The reflection does not claim unverified implementation.
-- It mentions AI usage with specific examples.
-- It includes at least one lesson or future change.
-- It can be pasted into GitHub Wiki with minimal editing.
-
-## Output
-
-Return a Wiki-ready reflection draft and a short list of facts that still need user confirmation.
-
+- Specific, not promotional.
+- Honest about unfinished parts.
+- Uses actual project facts.
+- Ready to paste into GitHub Wiki with minimal editing.

@@ -16,16 +16,23 @@ export type CompetitionId =
   | "worlds"
   | "asian-games";
 
-export type LeagueCode = "LCK" | "LPL" | "LEC" | "LTA" | "LCP" | "CBLOL";
+export type LeagueCode = "LCK" | "LPL" | "LEC" | "LCS" | "LCP" | "CBLOL";
 
 export type Player = {
   id: string;
   name: string;
+  realName?: string;
+  nativeName?: string;
   role: Role;
   secondaryRoles: Role[];
   region: Region;
   league: LeagueCode;
   currentTeam?: string;
+  rosterTier?: "main" | "academy" | "free-agent";
+  source?:
+    | "lck-2026-rounds-1-2"
+    | "lck-cl-2026-rounds-1-2"
+    | "manual-balance";
   availableForRoster: boolean;
   age: number;
   retirementAge?: number;
@@ -182,13 +189,44 @@ export type SeasonTemplate = {
   competitions: Competition[];
 };
 
+export type LateSeasonCompetitionId = "lck-rounds-3-5" | "lck-rounds-3-4";
+
+export type SeasonProfile = {
+  seasonNumber: number;
+  yearLabel: number;
+  calendarType: SeasonCalendarType;
+  templateId: SeasonTemplate["id"];
+  hasAsianGames: boolean;
+  postMsiCompetitionId: LateSeasonCompetitionId;
+  lateSeasonCompetitionId: LateSeasonCompetitionId;
+  competitionIds: CompetitionId[];
+};
+
 export type SeasonSummary = {
   seasonNumber: number;
+  yearLabel?: number;
   calendarType: SeasonCalendarType;
   lckResult: string;
   internationalResult?: string;
   asianGamesResult?: string;
   finalElo: number;
+  completedDateKey?: string;
+  finalRecord?: {
+    wins: number;
+    losses: number;
+  };
+  competitionResults?: SeasonCompetitionSummary[];
+  worldsChampionTeamName?: string;
+  expiredContractPlayerIds?: string[];
+  nextSeasonNumber?: number;
+};
+
+export type SeasonCompetitionSummary = {
+  competitionId: CompetitionId;
+  competitionName: string;
+  resultLabel: string;
+  winnerTeamName?: string;
+  userResultLabel?: string;
 };
 
 export type Opponent = {
@@ -255,9 +293,152 @@ export type MatchScheduleStatus = "scheduled" | "completed";
 
 export type SeasonProgressStatus = "idle" | "match-preview" | "match-review";
 
-export type SeasonProgressActionLabel = "진행" | "플레이" | "계속";
+export type SeasonProgressActionLabel = "진행" | "플레이" | "계속" | "다음날";
 
 export type LckCupGroupName = "baron" | "elder";
+
+export type LckRoundsGroupName = "legend" | "rise";
+
+export type AsianGamesCountryCode =
+  | "KOR"
+  | "CHN"
+  | "TPE"
+  | "JPN"
+  | "HKG"
+  | "VIE"
+  | "IND"
+  | "MAC";
+
+export type AsianGamesPlayMode = "undecided" | "manual" | "auto";
+
+export type AsianGamesStatus =
+  | "pending"
+  | "roster-selected"
+  | "decision-pending"
+  | "active"
+  | "completed";
+
+export type AsianGamesRosterMember = {
+  playerId: string;
+  playerName: string;
+  role: Role;
+  isStarter: boolean;
+  selectionReason: "role-best-form" | "sixth-best-form";
+  formAtSelection: number;
+  overallAtSelection: number;
+};
+
+export type AsianGamesMedalResult = {
+  goldTeamId: string;
+  goldTeamName: string;
+  silverTeamId: string;
+  silverTeamName: string;
+  bronzeTeamId: string;
+  bronzeTeamName: string;
+};
+
+export type AsianGamesState = {
+  status: AsianGamesStatus;
+  playMode: AsianGamesPlayMode;
+  rosterSelectedDateKey?: string;
+  playChoiceDateKey?: string;
+  tournamentStartDateKey?: string;
+  roster: AsianGamesRosterMember[];
+  medals?: AsianGamesMedalResult;
+};
+
+export type WorldsQualificationStatus =
+  | "pending-msi"
+  | "msi-seeds-decided"
+  | "lck-seeds-decided";
+
+export type MsiWorldsLeagueResult = {
+  leagueLabel: LeagueCode;
+  rank: number;
+  bestTeamId: string;
+  bestTeamName: string;
+  resultLabel: string;
+  initialSeed: number;
+};
+
+export type LckWorldsSeedStatus = "qualified" | "conditional-missed";
+
+export type LckWorldsSeed = {
+  seed: 1 | 2 | 3 | 4;
+  teamId: string;
+  teamName: string;
+  status: LckWorldsSeedStatus;
+  sourceLabel: string;
+};
+
+export type WorldsEntrantSource =
+  | "regional-base"
+  | "msi-bonus"
+  | "lcq-placeholder";
+
+export type WorldsEntrant = {
+  teamId: string;
+  teamName: string;
+  leagueLabel: LeagueCode | "LCQ";
+  seed: number;
+  slotLabel: string;
+  source: WorldsEntrantSource;
+  isPlaceholder: boolean;
+};
+
+export type WorldsQualificationState = {
+  status: WorldsQualificationStatus;
+  sourceCompetitionId: "msi";
+  decidedAtDateKey?: string;
+  bonusLeagueLabels: LeagueCode[];
+  msiLeagueResults: MsiWorldsLeagueResult[];
+  lckSeeds: LckWorldsSeed[];
+  entrants: WorldsEntrant[];
+  totalEntrants: number;
+};
+
+export type WorldsStatus =
+  | "pending"
+  | "play-in"
+  | "group-stage"
+  | "knockout"
+  | "completed";
+
+export type WorldsGroupStage = "play-in" | "group-stage";
+
+export type WorldsGroupId =
+  | "play-in-a"
+  | "play-in-b"
+  | "group-a"
+  | "group-b"
+  | "group-c"
+  | "group-d";
+
+export type WorldsGroupAssignment = {
+  stage: WorldsGroupStage;
+  groupId: WorldsGroupId;
+  teamId: string;
+  teamName: string;
+  leagueLabel: LeagueCode | "LCQ";
+  initialSeed: number;
+};
+
+export type WorldsState = {
+  status: WorldsStatus;
+  startDateKey?: string;
+  playInGroups: WorldsGroupAssignment[];
+  groupStageGroups: WorldsGroupAssignment[];
+  knockoutTeamIds: string[];
+  knockoutTeamNames: string[];
+  finalistTeamIds?: string[];
+  finalistTeamNames?: string[];
+  championTeamId?: string;
+  championTeamName?: string;
+  runnerUpTeamId?: string;
+  runnerUpTeamName?: string;
+  semifinalistTeamIds?: string[];
+  semifinalistTeamNames?: string[];
+};
 
 export type SeriesScore = {
   blueWins: number;
@@ -278,6 +459,9 @@ export type StandingEntry = {
   winRate: number;
   isUserTeam: boolean;
   lckCupGroup?: LckCupGroupName;
+  lckRoundsGroup?: LckRoundsGroupName;
+  worldsGroup?: WorldsGroupId;
+  worldsStage?: WorldsGroupStage;
 };
 
 export type MatchSchedule = {
@@ -335,6 +519,84 @@ export type StoveLeagueState = {
   completed: boolean;
 };
 
+export type OffseasonStatus =
+  | "summary"
+  | "renewal-bridge"
+  | "active"
+  | "ready-for-next-season"
+  | "career-completed";
+
+export type OffseasonMarketStatus =
+  | "not-started"
+  | "renewal-week"
+  | "free-agency"
+  | "final-day"
+  | "blocked"
+  | "completed";
+
+export type OffseasonOfferKind = "contract" | "transfer";
+
+export type OffseasonOfferStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "lost"
+  | "withdrawn";
+
+export type OffseasonOffer = {
+  id: string;
+  kind: OffseasonOfferKind;
+  fromTeamName: string;
+  toTeamName: string;
+  playerIds: string[];
+  salaryOffer: number;
+  contractType?: ContractType;
+  status: OffseasonOfferStatus;
+  createdDay: number;
+  resolvedDay?: number;
+  score?: number;
+};
+
+export type OffseasonLogType =
+  | "system"
+  | "renewal"
+  | "release"
+  | "signing"
+  | "ai-signing"
+  | "blocked";
+
+export type OffseasonLogEntry = {
+  id: string;
+  day: number;
+  week: number;
+  type: OffseasonLogType;
+  message: string;
+};
+
+export type OffseasonState = {
+  status: OffseasonStatus;
+  completedSeasonNumber: number;
+  nextSeasonNumber?: number;
+  startedDateKey: string;
+  expiredContractPlayerIds: string[];
+  renewedPlayerIds: string[];
+  summarySeasonNumber: number;
+  bridgeNote?: string;
+  currentDay?: number;
+  currentWeek?: number;
+  totalDays?: number;
+  totalWeeks?: number;
+  marketStatus?: OffseasonMarketStatus;
+  freeAgentPlayerIds?: string[];
+  pendingOffers?: OffseasonOffer[];
+  resolvedOffers?: OffseasonOffer[];
+  releasedPlayerIds?: string[];
+  signedPlayerIds?: string[];
+  resolvedExpiredPlayerIds?: string[];
+  logEntries?: OffseasonLogEntry[];
+  validationErrors?: string[];
+};
+
 export type SeasonState = {
   seasonNumber: number;
   yearLabel: number;
@@ -352,6 +614,10 @@ export type SeasonState = {
   matchRecords: MatchRecord[];
   nextMatchIds: string[];
   lastMatchRecordIds: string[];
+  asianGames?: AsianGamesState;
+  worlds?: WorldsState;
+  worldsQualification?: WorldsQualificationState;
+  offseason?: OffseasonState;
 };
 
 export type CareerSave = {

@@ -85,24 +85,25 @@ const msi: Competition = {
   order: 4,
   calendarType: "both",
   qualificationRule:
-    "LCK top 2, LPL top 2, and one team each from the 3rd-6th ranked leagues.",
-  formatSummary: "8-team custom MSI format matching the project First Stand structure.",
+    "Top two teams from each major league except CBLOL, plus the CBLOL champion. First Stand winner league grants its second seed a bracket bye.",
+  formatSummary:
+    "11-team 2026 MSI format with play-in and upper/lower bracket stage.",
   entrantsSummary:
-    "LCK 2, LPL 2, other 3rd-6th ranked leagues 1 each, total 8 teams.",
+    "LCK 2, LPL 2, LEC 2, LCS 2, LCP 2, CBLOL 1, total 11 teams.",
   stages: [
     {
-      name: "Group Stage",
-      format: "Two groups of four teams.",
-      entrants: 8,
-      advancing: 4,
-      notes: "Top two teams from each group advance.",
-    },
-    {
-      name: "Semifinals and Final",
-      format: "Four-team knockout bracket.",
+      name: "Play-In Stage",
+      format: "Four-team single elimination.",
       entrants: 4,
       advancing: 1,
-      notes: "World Cup-style single elimination.",
+      notes: "The winner joins seven direct bracket-stage teams.",
+    },
+    {
+      name: "Bracket Stage",
+      format: "Eight-team upper/lower bracket double elimination.",
+      entrants: 8,
+      advancing: 1,
+      notes: "Play-in final, upper final, lower final, and Grand Finals are BO5.",
     },
   ],
   status: "locked",
@@ -148,8 +149,10 @@ const lckRounds34: Competition = {
     },
     {
       name: "LCK Playoffs",
-      format: "Follow official-current LCK Worlds qualification postseason schedule.",
-      notes: "Exact placement around Asian Games is still a design detail.",
+      format:
+        "Season Play-In followed by upper/lower bracket LCK Playoffs, all BO5 Fearless.",
+      notes:
+        "Final 1-3 are basic Worlds candidates; final 4th is kept for MSI extra-seed scenarios.",
     },
   ],
   status: "locked",
@@ -181,17 +184,16 @@ const worldsNormal: Competition = {
   order: 6,
   calendarType: "normal",
   qualificationRule: "Based on final regional placements.",
-  formatSummary: "22-team custom Worlds format.",
+  formatSummary: "20-team custom Worlds format.",
   entrantsSummary:
-    "LCK 4, LPL 4, LCS 4, LEC 4, LCP 2, CBLOL 2, total 22 teams.",
+    "LCK/LPL/LCS/LEC base 3, LCP/CBLOL base 2, MSI bonus 2, LCQ 2, total 20 teams.",
   stages: [
     {
-      name: "Play-In Stage",
-      format: "10-team preliminary stage.",
-      entrants: 10,
-      advancing: 4,
+      name: "Qualification Pool",
+      format: "Participant pool finalized first; play-in structure is implemented later.",
+      entrants: 20,
       notes:
-        "LCK/LPL 4th seeds, LCS/LEC 3rd-4th seeds, LCP/CBLOL 1st-2nd seeds participate.",
+        "The 20-team pool is stored after MSI bonus seeds and regional results are known.",
     },
     {
       name: "Group Stage",

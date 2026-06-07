@@ -1,28 +1,33 @@
-# Personal Project Skills
+# Project Skills
 
-Project-local skills for the 3-week personal frontend project.
+이 폴더는 `moba-esports-manager-lite` 전용 AI-agent 작업 절차 모음
 
-These skills are operating procedures for future AI-agent work in this folder. Before planning, implementing, reviewing, or documenting this project, choose the most relevant skill and read it with the project source documents.
+새 에이전트가 기획, 구현, 문서화, GitHub 작업을 이어받을 때 필요한 기준 문서를 먼저 읽고, 작업 성격에 맞는 skill을 선택
 
-## Source Documents
+## 공통 기준 문서
 
-- `../project-requirements-and-agent-workflow.md`: course requirements, 3-week workflow, GitHub rules, Agent workflow, verification checkpoints.
-- `../project-topic-draft.md`: temporary topic planning document. Use until the final project topic is chosen.
-- The original Week 13 project requirement PDF in the project root, when exact mission wording matters.
+작업 전 우선순위:
+
+1. `../README.md`
+2. `../CODEX_HANDOFF.md`
+3. `../docs/development-checklist.md`
+4. `../IMPLEMENTATION_ORDER.md`
+5. 작업과 관련된 `../docs/*.md`
 
 ## Skills
 
-- `skill-creator.md`: Use when creating, revising, splitting, consolidating, or validating project-local skills.
-- `topic-scope-planner.md`: Use when choosing the project topic, defining target users, scoping the MVP, or comparing candidate ideas.
-- `github-project-manager.md`: Use when preparing repository naming, branch strategy, issues, PRs, Wiki pages, or GitHub workflow notes.
-- `frontend-project-architect.md`: Use when deciding frontend stack, project structure, page structure, or feature boundaries.
-- `agent-workflow-curator.md`: Use when designing, updating, or evaluating the personal AI-agent workflow.
-- `weekly-reflection-writer.md`: Use when writing weekly Wiki reflections or project retrospectives.
-- `mission-verifier.md`: Use before calling work complete, especially after creating plans, skills, issues, PRs, or weekly deliverables.
+- `skill-creator.md`: 프로젝트 로컬 skill 생성, 수정, 통합, 검증
+- `topic-scope-planner.md`: 프로젝트 범위, MVP, 후순위 기능, 스코프 관리
+- `github-project-manager.md`: GitHub 저장소, 브랜치, Issue, PR, Wiki 관리
+- `frontend-project-architect.md`: 프론트엔드 구조, 라우팅, 컴포넌트 경계, 테스트 구조
+- `agent-workflow-curator.md`: AI-agent 협업 흐름, 프롬프트 패턴, 검증 체크포인트
+- `weekly-reflection-writer.md`: Wiki 회고, 주간 회고, 최종 회고
+- `mission-verifier.md`: 과제 요구사항과 프로젝트 완료 조건 검증
 
-## Usage Rule
+## 사용 규칙
 
-Start with the narrowest skill that matches the request. If the task crosses planning, implementation, and verification, read the planning skill first and `mission-verifier.md` last.
-
-Do not treat these skills as final project requirements. If a skill conflicts with `project-requirements-and-agent-workflow.md`, the requirements document wins and the skill should be updated.
-
+- 가장 좁게 맞는 skill부터 읽기
+- 구현 작업은 `frontend-project-architect.md`와 관련 `docs`를 함께 확인
+- GitHub 작업은 `github-project-manager.md` 확인
+- 문서/과제 제출 전에는 `mission-verifier.md` 확인
+- skill이 실제 프로젝트 상태와 충돌하면 skill을 최신 문서 기준으로 수정

@@ -1,58 +1,50 @@
 ---
 name: topic-scope-planner
-description: Project-local skill for choosing and shaping the personal project topic. Use when comparing ideas, defining target users, writing the topic draft, deciding MVP scope, identifying deferred features, or preventing the 3-week project from becoming too broad.
+description: Project-local skill for managing product scope. Use when deciding MVP boundaries, deferring features, comparing implementation order, or preventing the LoL esports manager game from becoming too broad.
 ---
 
 # Topic Scope Planner
 
-Use this skill while the project topic, users, value, or MVP boundary is still unclear.
+Use this skill when project scope or implementation priority is unclear.
 
-## Purpose
+## Current Topic
 
-The project should become a deployable 3-week frontend project with a clear user value. This skill keeps topic selection concrete, feasible, and documented before implementation starts.
+League of Legends e스포츠 팀 매니지먼트 시뮬레이션 게임
+
+The topic is already selected. This skill now focuses on scope control.
 
 ## Inputs
 
-1. Read `../project-requirements-and-agent-workflow.md`.
-2. Read `../project-topic-draft.md`.
-3. Read any existing project plan, README draft, Wiki draft, or issue list.
-4. If candidate ideas exist in chat or notes, extract them into comparable options.
+1. Read `../README.md`.
+2. Read `../CODEX_HANDOFF.md`.
+3. Read `../docs/overview.md`.
+4. Read `../docs/mvp-scope.md`.
+5. Read `../docs/development-checklist.md`.
+6. Read `../docs/open-questions.md`.
 
 ## Workflow
 
-1. Restate the current topic status: undecided, candidate phase, selected but unscoped, or finalized.
-2. For each candidate, identify target users, core problem, main user flow, frontend learning value, and 3-week feasibility.
-3. Score candidates lightly by interest, user value, feasibility, and AI-agent workflow fit.
-4. Recommend one of these outcomes:
-   - choose a topic now,
-   - narrow a broad topic,
-   - prototype a specific risk,
-   - collect more ideas,
-   - defer a feature.
-5. Define the MVP as the smallest deployable version that demonstrates the main user flow.
-6. Separate features into core, nice-to-have, and out-of-scope.
-7. Update or prepare content for `project-topic-draft.md`.
-8. Convert the chosen scope into issue candidates when the topic is clear.
+1. Restate the current goal: 75%, 1-season MVP, v1, or long-term version.
+2. Identify what is already implemented.
+3. Separate the requested feature into:
+   - required now
+   - useful soon
+   - future expansion
+4. Check whether it affects season flow, storage, UI, or simulation balance.
+5. Recommend the smallest implementation that preserves future expansion.
+6. Convert the scope into checklist items or GitHub issue candidates.
 
 ## Scope Rules
 
-- Prefer one strong user flow over many shallow features.
-- Prefer frontend-visible interaction over hidden infrastructure.
-- Avoid backend-heavy ideas unless the backend can remain minimal or mocked.
-- Avoid external APIs with uncertain access unless they are optional.
-- Treat AI use as a workflow aid, not a reason to inflate scope.
-- Keep Week 1 focused on planning, not production implementation.
+- Prefer a complete season loop over deep single-feature polish.
+- Prefer playable feedback over hidden complexity.
+- Keep advanced champion/bandraft logic extensible but not blocking.
+- Treat MongoDB as a storage milestone, not a reason to pause all game logic.
+- Keep UI decisions aligned with the FM-style 16:9 frame.
 
-## Topic Decision Checks
+## Quality Check
 
-- The project can be explained in one sentence.
-- The target user is specific.
-- The first screen can communicate the product's value.
-- The MVP can be deployed within 3 weeks.
-- At least one useful feature can be built without waiting on complex integrations.
-- Deferred features are explicitly named.
-
-## Output
-
-Return a topic summary, MVP boundary, deferred feature list, risks, and next tasks. If the topic is not ready, say exactly what decision is still missing.
-
+- The next task is small enough to implement and test.
+- The user-facing value is clear.
+- Deferred items are named.
+- The implementation order does not break existing flows.

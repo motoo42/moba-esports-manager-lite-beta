@@ -22,6 +22,8 @@ import type {
 type SeasonCalendarProps = {
   career: CareerSave;
   competitions: Competition[];
+  viewMode?: CalendarViewMode | null;
+  onViewModeChange?: (viewMode: CalendarViewMode) => void;
   onViewCompetition: (competitionId: CompetitionId) => void;
   onViewSummary: () => void;
 };
@@ -462,10 +464,23 @@ function CalendarView({ career }: { career: CareerSave }) {
 export function SeasonCalendar({
   career,
   competitions,
+  viewMode,
+  onViewModeChange,
   onViewCompetition,
   onViewSummary,
 }: SeasonCalendarProps) {
-  const [viewMode, setViewMode] = useState<CalendarViewMode>("roadmap");
+  const [fallbackViewMode, setFallbackViewMode] =
+    useState<CalendarViewMode>("roadmap");
+  const activeViewMode = viewMode ?? fallbackViewMode;
+
+  function handleViewModeChange(nextViewMode: CalendarViewMode) {
+    if (onViewModeChange) {
+      onViewModeChange(nextViewMode);
+      return;
+    }
+
+    setFallbackViewMode(nextViewMode);
+  }
 
   return (
     <section className="season-calendar">
@@ -482,18 +497,18 @@ export function SeasonCalendar({
           <div className="season-calendar-tabs" role="tablist">
             <button
               className={`season-calendar-tab ${
-                viewMode === "roadmap" ? "season-calendar-tab-active" : ""
+                activeViewMode === "roadmap" ? "season-calendar-tab-active" : ""
               }`}
-              onClick={() => setViewMode("roadmap")}
+              onClick={() => handleViewModeChange("roadmap")}
               type="button"
             >
               로드맵
             </button>
             <button
               className={`season-calendar-tab ${
-                viewMode === "calendar" ? "season-calendar-tab-active" : ""
+                activeViewMode === "calendar" ? "season-calendar-tab-active" : ""
               }`}
-              onClick={() => setViewMode("calendar")}
+              onClick={() => handleViewModeChange("calendar")}
               type="button"
             >
               달력
@@ -505,7 +520,7 @@ export function SeasonCalendar({
         </div>
       </header>
 
-      {viewMode === "roadmap" ? (
+      {activeViewMode === "roadmap" ? (
         <RoadmapView
           career={career}
           competitions={competitions}

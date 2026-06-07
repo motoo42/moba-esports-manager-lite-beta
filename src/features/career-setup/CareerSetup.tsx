@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Button } from "../../shared/ui/Button";
 import { Card } from "../../shared/ui/Card";
 
 type CareerSetupProps = {
+  savePanel?: ReactNode;
   onStart: (teamName: string) => void;
 };
 
-export function CareerSetup({ onStart }: CareerSetupProps) {
+export function CareerSetup({ savePanel, onStart }: CareerSetupProps) {
   const [teamName, setTeamName] = useState("T1");
 
   return (
@@ -30,6 +31,7 @@ export function CareerSetup({ onStart }: CareerSetupProps) {
         </label>
         <Button onClick={() => onStart(teamName)}>Start career</Button>
       </Card>
+      {savePanel}
     </section>
   );
 }

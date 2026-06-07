@@ -1,7 +1,16 @@
 import { useGame } from "../app/GameProvider";
+import type { CompetitionSubPage } from "../app/routes";
 import { CompetitionDashboard } from "../features/competition-dashboard";
 
-export function CompetitionDashboardPage() {
+type CompetitionDashboardPageProps = {
+  subPage?: CompetitionSubPage | null;
+  onSubPageChange?: (subPage: CompetitionSubPage) => void;
+};
+
+export function CompetitionDashboardPage({
+  subPage,
+  onSubPageChange,
+}: CompetitionDashboardPageProps) {
   const { state } = useGame();
 
   if (!state.career) {
@@ -12,6 +21,8 @@ export function CompetitionDashboardPage() {
     <CompetitionDashboard
       career={state.career}
       competitionId={state.selectedCompetitionId}
+      subPage={subPage}
+      onSubPageChange={onSubPageChange}
     />
   );
 }

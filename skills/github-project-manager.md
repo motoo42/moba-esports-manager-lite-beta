@@ -1,92 +1,80 @@
 ---
 name: github-project-manager
-description: Project-local skill for managing GitHub workflow for the personal project. Use when preparing the public repository, branch strategy, GitHub issues, PR descriptions, Wiki pages, labels, milestones, or documentation workflow required by the 3-week mission.
+description: Project-local skill for GitHub workflow. Use when preparing repository setup, branch strategy, issues, PR descriptions, Wiki pages, labels, milestones, commits, or documentation evidence.
 ---
 
 # GitHub Project Manager
 
-Use this skill when the task touches repository setup, issues, branches, pull requests, Wiki documentation, or GitHub-based progress tracking.
-
-## Purpose
-
-The course requires a public GitHub repository, issue-based task management, Wiki documentation, and feature-level PRs. This skill keeps that workflow consistent and evidence-friendly.
+Use this skill when the task touches GitHub.
 
 ## Inputs
 
-1. Read `../project-requirements-and-agent-workflow.md`.
-2. Read `../project-topic-draft.md` if repository naming or issue scope depends on the topic.
-3. Read README, Wiki drafts, issue templates, and PR templates if present.
-4. Inspect git status and branches before proposing branch or commit actions.
+1. Read `../README.md`.
+2. Read `../CODEX_HANDOFF.md`.
+3. Read `../docs/development-checklist.md`.
+4. Inspect `git status` and current branch.
+5. Read changed files before suggesting commits or PR text.
 
-## Repository Rules
+## Repository
 
-- Repository should be public under `boostcampwm-snu-2026`.
-- Repository name should follow `{project-name}-{user-name}`.
-- Confirm project name and user-name format before creating the repository.
-- Keep real secrets out of README, issues, Wiki, PRs, commits, and logs.
+```text
+https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
+```
 
 ## Branch Strategy
-
-Use this default flow unless the user chooses otherwise:
 
 ```text
 main -> dev -> feature/*
 ```
 
-- `main`: stable, deployable branch.
-- `dev`: integration branch.
-- `feature/*`: small feature or documentation branches.
+- `main`: stable/submission branch
+- `dev`: integration branch
+- `feature/*`: feature or documentation branch
 
-## Issue Workflow
+## Issue Template
 
-For each issue, include:
+Each issue should include:
 
-- Goal.
-- Background.
-- Scope.
-- Acceptance criteria.
-- Verification checklist.
-- Suggested branch name.
-- Labels.
+- Goal
+- Background
+- Scope
+- Acceptance criteria
+- Verification checklist
+- Suggested branch
 
 Recommended labels:
 
 ```text
-planning, documentation, feature, bug, design, refactor, deployment, agent-workflow, week-1, week-2, week-3
+planning, documentation, feature, bug, design, refactor, test, deployment, agent-workflow
 ```
 
-## PR Workflow
+## PR Template
 
-Each feature PR should target `dev` and include:
+Each PR should include:
 
-- Summary.
-- Related issue.
-- Changed files or user-facing behavior.
-- Verification steps.
-- Screenshots for UI work when useful.
-- Known limitations.
+- Summary
+- Related issue
+- What changed
+- Verification
+- Screenshots for UI work
+- Known limitations
+- Next work
 
-## Wiki Workflow
+## Wiki Pages
 
-Prepare or update Wiki-ready content for:
+Recommended Wiki pages:
 
-- Project Overview.
-- Product Requirements.
-- Technical Stack.
-- Screen Flow.
-- Task Breakdown.
-- Agent Workflow.
-- Weekly Reflections.
+- 프로젝트 기획서
+- 기술 스택과 선택 이유
+- 화면 흐름
+- 개발 Task 관리
+- Agent 개발 Workflow
+- 검증 체크포인트
+- 주간 회고
 
 ## Quality Check
 
-- Issues are small enough to complete and review.
-- PRs map to issues or clear documentation tasks.
-- The branch name matches the task.
-- Wiki and README content do not contradict the current project plan.
-- GitHub workflow work is recorded without claiming actions that were not actually performed.
-
-## Output
-
-Report GitHub artifacts prepared or changed, remaining setup decisions, and suggested next GitHub actions.
-
+- Do not claim GitHub actions that were not actually done.
+- Keep secrets out of commits, Wiki, issues, and PRs.
+- Update README/docs when workflow changes.
+- Prefer feature-level PRs into `dev`.
