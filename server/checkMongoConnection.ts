@@ -1,9 +1,9 @@
 import { closeMongoConnection } from "./db/mongo.js";
 import { careerSaveCollectionName } from "./models/careerSave.js";
-import { getHealthStatus } from "./services/healthService.js";
+import { getDatabaseHealthStatus } from "./services/healthService.js";
 
 try {
-  const health = await getHealthStatus();
+  const health = await getDatabaseHealthStatus();
   console.log(
     JSON.stringify(
       {

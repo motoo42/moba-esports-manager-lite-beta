@@ -76,6 +76,7 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - production 배포판은 브라우저별 `betaOwnerId`를 `localStorage`에 자동 생성해 친구들의 저장 목록이 서로 섞이지 않게 한다.
 - 로그인 사용자별 저장과 정식 운영용 DB/권한 분리는 미완성.
 - Express production 서버는 Vite `dist/` 정적 파일과 `/api` 저장 API를 함께 제공하며, React Router 직접 URL 새로고침을 SPA fallback으로 처리한다.
+- Render health check용 `/api/health`는 서버 생존 확인만 빠르게 반환하고, MongoDB 연결 확인은 `/api/health/database`에서 별도로 수행한다.
 
 ### 시즌/대회
 
@@ -268,7 +269,7 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 Render 설정값:
 
 ```text
-Build Command: npm install && npm run build
+Build Command: npm install --include=dev && npm run build
 Start Command: npm run start
 NODE_ENV=production
 NODE_VERSION=20.19.0
@@ -276,6 +277,12 @@ MONGODB_URI=Render 환경변수에만 입력
 MONGODB_DB_NAME=moba_esports_manager_beta
 VITE_API_BASE_URL=/api
 ```
+
+배포 health check 보강:
+
+- `/api/health`는 MongoDB에 의존하지 않는 liveness endpoint.
+- `/api/health/database`는 MongoDB ping과 `careerSaves` index 확인용 endpoint.
+- Render가 `Waiting for internal health check`에서 멈추면 health path는 `/api/health`로 두고, DB 문제는 `/api/health/database`로 따로 확인한다.
 
 다음 작업:
 

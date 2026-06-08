@@ -30,7 +30,7 @@ Render Dashboard에서 기존 실습 Project를 재사용하거나 비운 뒤 `N
 
 ```text
 Runtime: Node
-Build Command: npm install && npm run build
+Build Command: npm install --include=dev && npm run build
 Start Command: npm run start
 ```
 
@@ -89,6 +89,7 @@ Render 배포가 끝나면 `https://...onrender.com` 주소가 생긴다.
 ```text
 https://...onrender.com
 https://...onrender.com/api/health
+https://...onrender.com/api/health/database
 https://...onrender.com/roster/main
 https://...onrender.com/saves
 ```
@@ -96,6 +97,8 @@ https://...onrender.com/saves
 확인할 동작:
 
 - 첫 화면이 열린다.
+- `/api/health`가 빠르게 열린다.
+- `/api/health/database`에서 MongoDB 연결 상태를 확인할 수 있다.
 - 커리어를 시작할 수 있다.
 - 데이터 저장 화면에서 저장할 수 있다.
 - 새로고침 후 불러오기가 된다.
@@ -120,6 +123,7 @@ PC/노트북 Chrome 또는 Edge에서 접속해줘.
 
 우선 확인:
 
+- `https://...onrender.com/api/health/database`가 성공하는지
 - Render Environment Variables에 `MONGODB_URI`가 있는지
 - MongoDB Atlas Network Access가 열려 있는지
 - `MONGODB_DB_NAME` 오타가 없는지

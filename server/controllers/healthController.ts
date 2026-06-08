@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
-import { getHealthStatus } from "../services/healthService.js";
+import {
+  getDatabaseHealthStatus,
+  getHealthStatus,
+} from "../services/healthService.js";
 
 export async function getHealthController(
   _request: Request,
@@ -8,6 +11,18 @@ export async function getHealthController(
 ) {
   try {
     response.json(await getHealthStatus());
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getDatabaseHealthController(
+  _request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    response.json(await getDatabaseHealthStatus());
   } catch (error) {
     next(error);
   }

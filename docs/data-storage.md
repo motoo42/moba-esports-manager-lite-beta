@@ -21,6 +21,7 @@ React/Vite client
 - 프론트엔드가 호출할 API 기준 URL은 `VITE_API_BASE_URL`
 - 베타 테스트 기본값은 `VITE_API_BASE_URL=/api`이며, Vite dev server가 `/api` 요청을 로컬 Express 서버로 proxy한다.
 - Render 배포판도 `VITE_API_BASE_URL=/api`를 사용하며, 같은 Express 서버가 React 정적 파일과 저장 API를 함께 제공한다.
+- Render health check용 `/api/health`는 서버 생존 확인만 빠르게 반환하고, MongoDB 연결 확인은 `/api/health/database`에서 별도로 수행한다.
 - MongoDB URI는 브라우저/Vite 클라이언트 코드에 직접 노출하지 않음
 - Atlas Project: `moba-esports-manager-lite`
 - Atlas Cluster: `moba-manager-dev`
