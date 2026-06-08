@@ -2,6 +2,8 @@
 
 이 문서는 친구들에게 `MOBA Esports Manager Lite`를 베타 테스트로 열기 위한 실행 안내, 테스트 시나리오, 피드백 수집 기준이다.
 
+친구에게 직접 전달할 짧은 안내서는 [MOBA Esports Manager Lite 베타 테스트 안내](./beta-tester-guide.md)를 사용한다.
+
 현재 권장 방식은 Render Web Service에 배포한 뒤 친구들에게 URL 하나를 전달하는 것이다. 배포 절차는 [링크 하나 베타 배포 가이드](./beta-deploy-guide.md)를 따른다.
 
 아래의 cmd 3개와 Cloudflare Quick Tunnel 방식은 배포가 막혔을 때를 위한 보조/로컬 테스트 방식이다. 친구들이 같은 와이파이를 쓰지 않는 상황을 기본으로 한다.

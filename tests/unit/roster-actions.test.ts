@@ -48,6 +48,31 @@ describe("roster action handlers", () => {
     ).toHaveLength(1);
   });
 
+  it("does not change morale when calling up or sending down a player", () => {
+    const career = activateContracts(createInitialCareer("T1"));
+    const academyPlayerId = career.userTeam.academyRosterPlayerIds[0];
+    const beforeMorale = career.lckPlayers.find(
+      (player) => player.id === academyPlayerId,
+    )?.status.morale;
+    const calledUp = gameReducer(
+      createState(career),
+      gameActions.callUpPlayer(academyPlayerId),
+    );
+    const afterCallUpMorale = calledUp.career?.lckPlayers.find(
+      (player) => player.id === academyPlayerId,
+    )?.status.morale;
+    const sentDown = gameReducer(
+      calledUp,
+      gameActions.sendDownPlayer(academyPlayerId),
+    );
+    const afterSendDownMorale = sentDown.career?.lckPlayers.find(
+      (player) => player.id === academyPlayerId,
+    )?.status.morale;
+
+    expect(afterCallUpMorale).toBe(beforeMorale);
+    expect(afterSendDownMorale).toBe(beforeMorale);
+  });
+
   it("moves a non-starter main roster player down to academy", () => {
     const career = activateContracts(createInitialCareer("T1"));
     const academyPlayerId = career.userTeam.academyRosterPlayerIds[0];
@@ -80,5 +105,37 @@ describe("roster action handlers", () => {
     expect(nextState.career?.userTeam.academyRosterPlayerIds).not.toContain(
       starterId,
     );
+  });
+
+  it("does not change morale when changing the starter slot", () => {
+    const career = activateContracts(createInitialCareer("T1"));
+    const currentStarterId = career.userTeam.roster.top!;
+    const replacementId = career.userTeam.academyRosterPlayerIds.find(
+      (playerId) => {
+        const player = career.lckPlayers.find((candidate) => candidate.id === playerId);
+
+        return player?.role === "top" && player.id !== currentStarterId;
+      },
+    );
+    const replacement = career.lckPlayers.find(
+      (player) => player.id === replacementId,
+    );
+    const beforeMorale = replacement?.status.morale;
+
+    expect(replacement).toBeDefined();
+
+    const calledUp = gameReducer(
+      createState(career),
+      gameActions.callUpPlayer(replacement!.id),
+    );
+    const nextState = gameReducer(
+      calledUp,
+      gameActions.setRosterPlayer("top", replacement!),
+    );
+    const afterMorale = nextState.career?.lckPlayers.find(
+      (player) => player.id === replacement?.id,
+    )?.status.morale;
+
+    expect(afterMorale).toBe(beforeMorale);
   });
 });

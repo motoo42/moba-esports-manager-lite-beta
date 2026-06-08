@@ -159,6 +159,104 @@ select {
   letter-spacing: 0.04em;
 }
 
+.career-team-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.career-team-card {
+  display: grid;
+  gap: 10px;
+  min-height: 154px;
+  padding: 14px;
+  border: 1px solid #2c374f;
+  border-radius: 8px;
+  background: #101827;
+  color: #e8edf6;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.career-team-card:hover {
+  border-color: #5b6f9a;
+  background: #142033;
+  transform: translateY(-1px);
+}
+
+.career-team-card-selected {
+  border-color: #7c8cff;
+  background: #17213a;
+  box-shadow: inset 0 0 0 1px rgb(124 140 255 / 45%);
+}
+
+.career-team-short-name {
+  display: inline-grid;
+  width: fit-content;
+  min-width: 42px;
+  height: 30px;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid #50607e;
+  border-radius: 6px;
+  background: #0b1020;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.career-team-card strong {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.career-team-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.career-team-card dl div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.career-team-card dt {
+  color: #9aa7bd;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.career-team-card dd {
+  margin: 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.career-team-start-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.career-team-start-row p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
 .shell-menu-groups {
   display: grid;
   align-content: start;

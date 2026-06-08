@@ -1,4 +1,3 @@
-import { applyCallUpMoraleBoost } from "../../domain/player-status";
 import {
   createContractsForRoster,
   getSelectedRosterPlayerIds,
@@ -84,18 +83,10 @@ function handleSetRosterPlayerAction(
       !mainRosterPlayerIdSet.has(playerId) &&
       (!isContractedRoster || activeContractIds.has(playerId)),
   );
-  const nextLckPlayers =
-    isContractedRoster &&
-    action.player &&
-    previousStarterId !== action.player.id
-      ? applyCallUpMoraleBoost(state.career.lckPlayers, action.player.id)
-      : state.career.lckPlayers;
-
   return {
     ...state,
     career: {
       ...state.career,
-      lckPlayers: nextLckPlayers,
       userTeam: {
         ...state.career.userTeam,
         roster: nextRoster,
@@ -122,7 +113,6 @@ function handleCallUpPlayerAction(
     ...state,
     career: {
       ...state.career,
-      lckPlayers: applyCallUpMoraleBoost(state.career.lckPlayers, action.playerId),
       userTeam: {
         ...state.career.userTeam,
         mainRosterPlayerIds: uniqueIds([

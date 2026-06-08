@@ -138,6 +138,7 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - 훈련 강도는 `고강도 훈련`, `일반 훈련`, `가벼운 훈련`, `휴식`.
 - 전략은 공격/템포/운영/시야/후반/균형 계열.
 - 사기는 숫자 대신 `최상`, `중상`, `중`, `중하`, `최하`.
+- 선발 교체, 콜업, 콜다운 조작 자체는 사기를 바꾸지 않는다. 사기 변화는 실제 경기 후 현재 선발 출전/결과 기준으로 처리한다.
 - Americas 리그 표기는 `LCS`; legacy `LTA` 저장값은 helper에서 호환 처리.
 - Worlds는 20팀 모델: LCK/LPL/LCS/LEC 기본 3팀, LCP/CBLOL 기본 2팀, MSI 보너스 2팀, LCQ placeholder 2팀.
 - Worlds 포맷은 Play-In 8팀 -> Group Stage 16팀 -> Knockout 8팀.
@@ -180,6 +181,7 @@ server/app.ts
 server/index.ts
 tsconfig.server.build.json
 docs/beta-deploy-guide.md
+docs/beta-tester-guide.md
 server/controllers/
 server/services/
 server/repositories/
@@ -221,6 +223,8 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 2. `타팀 로스터/스카우팅, 선수 카드/뉴스`
    - 다른 팀 박스 클릭 시 상대 팀 기본 로스터/선발 5인을 확인할 수 있는 화면 추가
    - FIFA식 선수 카드 리디자인과 메시지함/뉴스/일정 알림 1차 구현
+3. `A 묶음: 스토브리그 계약 UX 안정화`
+   - 제안 역할, 영입 확정 창, 예산 초과 차단, 포지션 3명 제한, 우리 팀 이적 로그 하이라이트, 연봉/예산 밸런스 1차
 
 ### 최근 완료된 베타 전 재정비
 
@@ -235,6 +239,10 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 - `1군/2군 로스터 분리와 콜업/콜다운`
   - `/roster/main`, `/roster/academy`, `/roster/contracts` 하위페이지로 분리
   - 1군 선발/후보와 2군 인원을 분리 표시하고 콜업/콜다운 action 추가
+- `베타 피드백 B 묶음`
+  - 커리어 시작 화면을 LCK 10개 팀 카드 선택으로 변경
+  - Ghost를 KT Rolster academy support로 수정
+  - 선발 교체/콜업/콜다운 조작의 즉시 사기 변화를 제거
 
 ### 남은 기말 프로젝트 뭉탱이
 
@@ -251,6 +259,37 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 - 베타 전 재정비 3번: 1군/2군 로스터 분리와 콜업/콜다운 완료
 
 ## 최근 작업 로그
+
+### 2026-06-09 - 베타 피드백 B 묶음: 커리어 시작/로스터 기초 수정
+
+작업 범위:
+
+- 커리어 시작 화면에서 직접 팀명 입력을 숨기고 LCK 10개 팀 카드 선택 UI로 변경
+- 팀 카드에 약칭, 티어, 전력, 예산, 예상 순위 표시
+- Ghost를 `KT Rolster / academy / support`로 수정
+- 선발 교체, 콜업, 콜다운 action에서 즉시 사기 상승을 제거
+- 실제 경기 후 사기 변화는 기존 경기 결과 기반 로직을 유지
+
+검증:
+
+- `npm.cmd test -- tests/integration/career-setup.test.tsx tests/unit/player-status.test.ts tests/unit/roster-actions.test.ts tests/unit/lck-2026-players.test.ts` 통과
+- `npm.cmd test -- tests/integration/app-routing.test.tsx tests/integration/roster-builder.test.tsx tests/integration/season-roster-manager.test.tsx` 통과
+
+다음 작업:
+
+- A 묶음: 스토브리그 계약 UX 안정화
+
+### 2026-06-09 - 베타 테스터 안내 문서 추가
+
+작업 범위:
+
+- 친구에게 직접 전달할 수 있는 `docs/beta-tester-guide.md` 추가
+- 접속 링크, 권장 환경, 저장 데이터 분리 주의, 10분/30분/장기 테스트 시나리오, 버그 제보 양식, 현재 알려진 미완성 항목 정리
+- 기존 `docs/beta-test-guide.md` 상단에 테스터용 안내서 링크 추가
+
+검증:
+
+- 문서 작업이므로 build/test 생략
 
 ### 2026-06-09 - 베타 전 재정비 8번: 링크 하나로 접속 가능한 배포 구조 전환
 

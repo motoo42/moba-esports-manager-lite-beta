@@ -80,6 +80,17 @@ describe("lck2026Players", () => {
     });
   });
 
+  it("registers Ghost as a KT Rolster academy support", () => {
+    const ghost = lck2026Players.find(
+      (player) => player.name === "Ghost" && player.currentTeam === "KT Rolster",
+    );
+
+    expect(ghost).toMatchObject({
+      role: "support",
+      rosterTier: "academy",
+    });
+  });
+
   it("uses the S-C team balance tier model for 2026", () => {
     expect(
       lck2026Teams.map((team) => [team.name, team.tier]),
@@ -102,6 +113,22 @@ describe("lck2026Players", () => {
 
     expect(career.userTeam.budget).toBe(1500);
     expect(career.userTeam.elo).toBe(1670);
+  });
+
+  it("starts new careers from another selected LCK team profile", () => {
+    const career = createInitialCareer("Gen.G");
+
+    expect(career.userTeam.name).toBe("Gen.G");
+    expect(career.userTeam.budget).toBe(1450);
+    expect(career.userTeam.elo).toBe(1690);
+    expect(career.seasonState.offseason?.expiredContractPlayerIds.length).toBeGreaterThan(0);
+    expect(
+      career.lckPlayers
+        .filter((player) =>
+          career.seasonState.offseason?.expiredContractPlayerIds.includes(player.id),
+        )
+        .every((player) => player.currentTeam === "Gen.G"),
+    ).toBe(true);
   });
 
   it("deduplicates names that also exist in the offseason free agent seed", () => {

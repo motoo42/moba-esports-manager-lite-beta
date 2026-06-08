@@ -82,7 +82,7 @@ export const lck2026RosterSeeds: Lck2026RosterSeed[] = [
   seed("KT Rolster", "Sero", "top", "academy", 19),
   seed("KT Rolster", "Sylvie", "jungle", "academy", 22, "Lee Seung-bok"),
   seed("KT Rolster", "Hwichan", "mid", "academy", 19),
-  seed("KT Rolster", "Ghost", "bot", "academy", 27, "Jang Yong-jun"),
+  seed("KT Rolster", "Ghost", "support", "academy", 27, "Jang Yong-jun"),
   seed("KT Rolster", "Pollu", "support", "academy", 19),
 
   seed("Dplus KIA", "Siwoo", "top", "main", 19),

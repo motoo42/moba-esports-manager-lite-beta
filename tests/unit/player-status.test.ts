@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { samplePlayers } from "../../src/data/samplePlayers";
 import {
-  applyCallUpMoraleBoost,
   applyWeeklyPlayerStatusChanges,
   clampStatusValue,
   decreaseMorale,
@@ -22,19 +21,6 @@ describe("player status", () => {
     expect(increaseMorale("very-high")).toBe("very-high");
     expect(decreaseMorale("neutral")).toBe("low");
     expect(decreaseMorale("very-low")).toBe("very-low");
-  });
-
-  it("raises morale when a contracted candidate is called up to the starters", () => {
-    const player = {
-      ...samplePlayers[0],
-      status: {
-        ...samplePlayers[0].status,
-        morale: "neutral" as const,
-      },
-    };
-    const [updatedPlayer] = applyCallUpMoraleBoost([player], player.id);
-
-    expect(updatedPlayer.status.morale).toBe("high");
   });
 
   it("changes starter status after a win and only applies training recovery to bench players", () => {

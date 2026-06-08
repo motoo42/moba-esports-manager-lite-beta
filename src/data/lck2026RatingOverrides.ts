@@ -222,7 +222,7 @@ export const lck2026RatingOverrides: Record<string, Lck2026RatingOverride> = {
     teamfight: 70,
     mental: 67,
     championPool: 67,
-    traits: ["veteran academy bot"],
+    traits: ["veteran academy support"],
   },
   Guardian: {
     ability: 68,
