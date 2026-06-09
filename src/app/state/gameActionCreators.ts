@@ -78,6 +78,12 @@ export const gameActions = {
   startNextSeason(): GameAction {
     return { type: "start-next-season" };
   },
+  markMessageRead(messageId: string): GameAction {
+    return { type: "mark-message-read", messageId };
+  },
+  markAllMessagesRead(): GameAction {
+    return { type: "mark-all-messages-read" };
+  },
   setStrategy(strategy: StrategyId): GameAction {
     return { type: "set-strategy", strategy };
   },

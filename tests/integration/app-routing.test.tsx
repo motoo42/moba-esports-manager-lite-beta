@@ -75,6 +75,9 @@ describe("App routing", () => {
     "/summary",
     "/offseason",
     "/saves",
+    "/inbox",
+    "/teams",
+    "/teams/gen-g",
     "/calendar/calendar",
     "/competitions/worlds/bracket",
   ])("guards %s when no career is loaded", async (pathname) => {
@@ -192,6 +195,24 @@ describe("App routing", () => {
     expect(screen.queryByRole("button", { name: "FA 협상" })).not.toBeInTheDocument();
   });
 
+  it("opens the LCK team info route from the season sidebar", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Start career" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason"));
+
+    fireEvent.click(await screen.findByTestId("shell-menu-lck-team-info"));
+
+    await waitFor(() => expect(window.location.pathname).toBe("/teams"));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "LCK 구단 정보" }),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Gen\.G/ }));
+
+    await waitFor(() => expect(window.location.pathname).toBe("/teams/gen-g"));
+    expect(screen.getByRole("heading", { level: 1, name: "Gen.G" })).toBeVisible();
+  });
+
   it("keeps dashboard internal navigation on the target URL without route bounce", async () => {
     const baseCareer = createInitialCareer("T1");
     const career = {
@@ -236,7 +257,7 @@ describe("App routing", () => {
     fireEvent.click(screen.getByRole("button", { name: "계약" }));
     await waitFor(() => expect(window.location.pathname).toBe("/roster/contracts"));
 
-    fireEvent.click(await screen.findByTestId("shell-menu-inbox"));
+    fireEvent.click(await screen.findByTestId("shell-menu-home"));
     await waitFor(() => expect(window.location.pathname).toBe("/hub"));
 
     fireEvent.click(getMainContent().getByRole("button", { name: "대회 현황" }));
@@ -245,7 +266,7 @@ describe("App routing", () => {
     );
     await waitFor(() => expect(window.location.pathname).not.toBe("/hub"));
 
-    fireEvent.click(await screen.findByTestId("shell-menu-inbox"));
+    fireEvent.click(await screen.findByTestId("shell-menu-home"));
     await waitFor(() => expect(window.location.pathname).toBe("/hub"));
 
     fireEvent.click(getMainContent().getByRole("button", { name: "시즌 일정" }));

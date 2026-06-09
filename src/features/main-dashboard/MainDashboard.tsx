@@ -1,12 +1,15 @@
 import { Button } from "../../shared/ui/Button";
+import { findLckTeamSeed } from "../../data/lckTeams";
 import {
   getStrategyLabel,
   getTrainingIntensityLabel,
 } from "../../domain/weekly-plan";
 import { PlayerPortrait } from "../../shared/ui/PlayerPortrait";
 import { EvaluationStars } from "../../shared/ui/EvaluationStars";
+import { TeamLogo } from "../../shared/ui/TeamLogo";
 import { analyzeOpponent, type OpponentAnalysis } from "../../domain/opponent-analysis";
 import { createLckOpponentFromSchedule } from "../../domain/opponents";
+import { careerMessageCategoryLabels } from "../../domain/messages";
 import {
   getLckCupGroupBattleTable,
   getLckCupGroupPointSummary,
@@ -20,6 +23,7 @@ import type {
   LckCupGroupName,
   MatchRecord,
   MatchSchedule,
+  CareerMessage,
   Player,
   Role,
   StandingEntry,
@@ -30,6 +34,8 @@ type MainDashboardProps = {
   onViewRoster: () => void;
   onViewCompetition: () => void;
   onViewCalendar: () => void;
+  onViewInbox: () => void;
+  onViewTeam?: (teamId: string) => void;
 };
 
 function getActiveCompetitionName(career: CareerSave) {
@@ -89,6 +95,39 @@ function getFormatLabel(match: MatchSchedule) {
 
 function getMatchTitle(match: MatchSchedule) {
   return `${match.blueTeamName} vs ${match.redTeamName}`;
+}
+
+function getTeamLabel(teamId: string, teamName: string) {
+  const lckTeam = findLckTeamSeed(teamId) ?? findLckTeamSeed(teamName);
+
+  if (!lckTeam) {
+    return <span>{teamName}</span>;
+  }
+
+  return (
+    <span className="team-name-with-logo">
+      <TeamLogo team={lckTeam} size="sm" />
+      <span>{teamName}</span>
+    </span>
+  );
+}
+
+function getLckOpponentFromMatch(
+  match: MatchSchedule | undefined,
+  userTeamId: string | undefined,
+) {
+  if (!match || !userTeamId) {
+    return null;
+  }
+
+  const opponentId =
+    match.blueTeamId === userTeamId
+      ? match.redTeamId
+      : match.redTeamId === userTeamId
+        ? match.blueTeamId
+        : null;
+
+  return opponentId ? findLckTeamSeed(opponentId) : null;
 }
 
 function getGroupLabel(group: LckCupGroupName) {
@@ -190,7 +229,11 @@ function WeeklyPreviewList({
             key={match.id}
           >
             <div>
-              <strong>{getMatchTitle(match)}</strong>
+              <strong className="match-row-title-with-logos">
+                {getTeamLabel(match.blueTeamId, match.blueTeamName)}
+                <span>vs</span>
+                {getTeamLabel(match.redTeamId, match.redTeamName)}
+              </strong>
               <span>{match.stageName}</span>
             </div>
             <div className="match-row-meta">
@@ -410,11 +453,70 @@ function OpponentAnalysisPanel({
   );
 }
 
+function getRecentMessages(messages: CareerMessage[] | undefined) {
+  return [...(messages ?? [])]
+    .sort((left, right) => {
+      const turnDiff = right.createdTurn - left.createdTurn;
+
+      if (turnDiff !== 0) {
+        return turnDiff;
+      }
+
+      return right.id.localeCompare(left.id);
+    })
+    .slice(0, 4);
+}
+
+function RecentMessagesPanel({
+  messages,
+  onViewInbox,
+}: {
+  messages: CareerMessage[] | undefined;
+  onViewInbox: () => void;
+}) {
+  const recentMessages = getRecentMessages(messages);
+  const unreadCount = (messages ?? []).filter((message) => !message.read).length;
+
+  return (
+    <div className="mini-panel dashboard-message-panel">
+      <div className="section-label-row">
+        <span>최근 메시지</span>
+        <strong>{unreadCount} unread</strong>
+      </div>
+      {recentMessages.length === 0 ? (
+        <span>아직 도착한 메시지가 없습니다.</span>
+      ) : (
+        <div className="dashboard-message-list">
+          {recentMessages.map((message) => (
+            <article
+              className={`dashboard-message-item ${
+                message.read ? "" : "dashboard-message-item-unread"
+              }`}
+              key={message.id}
+            >
+              <strong>{message.title}</strong>
+              <span>
+                {careerMessageCategoryLabels[message.category]} ·{" "}
+                {message.dateLabel}
+              </span>
+            </article>
+          ))}
+        </div>
+      )}
+      <Button variant="ghost" onClick={onViewInbox}>
+        메시지함으로 이동
+      </Button>
+    </div>
+  );
+}
+
 export function MainDashboard({
   career,
   onViewRoster,
   onViewCompetition,
   onViewCalendar,
+  onViewInbox,
+  onViewTeam,
 }: MainDashboardProps) {
   const selectedRosterSize =
     career.userTeam.mainRosterPlayerIds.length +
@@ -438,6 +540,11 @@ export function MainDashboard({
     primaryPreviewMatch ?? primaryNextMatch,
     userTeamId,
   );
+  const primaryPreviewOpponent = getLckOpponentFromMatch(
+    primaryPreviewMatch,
+    userTeamId,
+  );
+  const primaryNextOpponent = getLckOpponentFromMatch(primaryNextMatch, userTeamId);
   const isReview = career.seasonState.progressStatus === "match-review";
   const isPreview = career.seasonState.progressStatus === "match-preview";
   const matchHubTitle = isReview
@@ -540,6 +647,16 @@ export function MainDashboard({
             ) : primaryPreviewMatch ? (
               <>
                 <h3>{getMatchTitle(primaryPreviewMatch)}</h3>
+                {primaryPreviewOpponent && onViewTeam && (
+                  <button
+                    className="team-link-button team-name-with-logo match-team-link"
+                    onClick={() => onViewTeam(primaryPreviewOpponent.id)}
+                    type="button"
+                  >
+                    <TeamLogo team={primaryPreviewOpponent} size="sm" />
+                    <span>{primaryPreviewOpponent.name} 구단 정보</span>
+                  </button>
+                )}
                 <p>
                   {activeCompetitionName} {primaryPreviewMatch.week}주차 경기일입니다. 상단의
                   플레이 버튼을 누르면 오늘 {previewMatches.length}시리즈가
@@ -574,6 +691,16 @@ export function MainDashboard({
             ) : primaryNextMatch ? (
               <>
                 <h3>{getMatchTitle(primaryNextMatch)}</h3>
+                {primaryNextOpponent && onViewTeam && (
+                  <button
+                    className="team-link-button team-name-with-logo match-team-link"
+                    onClick={() => onViewTeam(primaryNextOpponent.id)}
+                    type="button"
+                  >
+                    <TeamLogo team={primaryNextOpponent} size="sm" />
+                    <span>{primaryNextOpponent.name} 구단 정보</span>
+                  </button>
+                )}
                 <p>
                   다음 우리 팀 예정 경기는 {activeCompetitionName}{" "}
                   {primaryNextMatch.week}주차입니다. 진행 버튼은 하루씩 날짜를
@@ -631,6 +758,10 @@ export function MainDashboard({
 
           <div className="match-side-stack">
             <OpponentAnalysisPanel analysis={isReview ? null : matchAnalysis} />
+            <RecentMessagesPanel
+              messages={career.messages}
+              onViewInbox={onViewInbox}
+            />
             <div className="mini-panel">
               <p className="eyebrow">Day status</p>
               <strong>

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { findLckTeamSeed } from "../../data/lckTeams";
 import type { CompetitionSubPage } from "../../app/routes";
 import { EvaluationStars } from "../../shared/ui/EvaluationStars";
+import { TeamLogo } from "../../shared/ui/TeamLogo";
 import {
   asianGamesCountryProfiles,
   asianGamesKoreaTeamId,
@@ -58,6 +60,7 @@ type CompetitionDashboardProps = {
   competitionId?: CompetitionId | null;
   subPage?: CompetitionSubPage | null;
   onSubPageChange?: (subPage: CompetitionSubPage) => void;
+  onViewTeam?: (teamId: string) => void;
 };
 
 type LckRoundsDashboardTab = "standings" | "schedule" | "tournament";
@@ -227,6 +230,31 @@ function getSetDiff(entry: StandingEntry) {
   const diff = entry.setWins - entry.setLosses;
 
   return `${diff > 0 ? "+" : ""}${diff}`;
+}
+
+function TeamNameCell({
+  entry,
+  onViewTeam,
+}: {
+  entry: StandingEntry;
+  onViewTeam?: (teamId: string) => void;
+}) {
+  const lckTeam = findLckTeamSeed(entry.teamId) ?? findLckTeamSeed(entry.teamName);
+
+  if (!lckTeam || !onViewTeam) {
+    return <strong>{entry.teamName}</strong>;
+  }
+
+  return (
+    <button
+      className="team-link-button team-name-with-logo"
+      onClick={() => onViewTeam(lckTeam.id)}
+      type="button"
+    >
+      <TeamLogo team={lckTeam} size="sm" />
+      <span>{entry.teamName}</span>
+    </button>
+  );
 }
 
 function getMatchCount(entry: StandingEntry) {
@@ -3116,10 +3144,12 @@ function LckRoundsSidePanel({
 
 function LckRoundsStandingsTable({
   competition,
+  onViewTeam,
   table,
   userTeamId,
 }: {
   competition: CompetitionState;
+  onViewTeam?: (teamId: string) => void;
   table: StandingEntry[];
   userTeamId: string | undefined;
 }) {
@@ -3177,7 +3207,7 @@ function LckRoundsStandingsTable({
                 }`}
               >
                 <span>{displayRank}</span>
-                <strong>{entry.teamName}</strong>
+                <TeamNameCell entry={entry} onViewTeam={onViewTeam} />
                 <span>{getMatchCount(entry)}</span>
                 <span>{entry.wins}</span>
                 <span>{entry.losses}</span>
@@ -4010,6 +4040,7 @@ function LckRoundsDashboard({
   competition,
   subPage,
   onSubPageChange,
+  onViewTeam,
   records,
   table,
   userTeamId,
@@ -4018,6 +4049,7 @@ function LckRoundsDashboard({
   competition: CompetitionState;
   subPage?: CompetitionSubPage | null;
   onSubPageChange?: (subPage: CompetitionSubPage) => void;
+  onViewTeam?: (teamId: string) => void;
   records: MatchRecord[];
   table: StandingEntry[];
   userTeamId: string | undefined;
@@ -4046,6 +4078,7 @@ function LckRoundsDashboard({
         {activeTab === "standings" && (
           <LckRoundsStandingsTable
             competition={competition}
+            onViewTeam={onViewTeam}
             table={table}
             userTeamId={userTeamId}
           />
@@ -4086,9 +4119,11 @@ function LckRoundsDashboard({
 }
 
 function StandingsTable({
+  onViewTeam,
   table,
   userTeamId,
 }: {
+  onViewTeam?: (teamId: string) => void;
   table: StandingEntry[];
   userTeamId: string | undefined;
 }) {
@@ -4121,7 +4156,7 @@ function StandingsTable({
             key={entry.teamId}
           >
             <span>{index + 1}</span>
-            <strong>{entry.teamName}</strong>
+            <TeamNameCell entry={entry} onViewTeam={onViewTeam} />
             <span>
               {entry.wins}-{entry.losses}
             </span>
@@ -5544,6 +5579,7 @@ export function CompetitionDashboard({
   competitionId,
   subPage,
   onSubPageChange,
+  onViewTeam,
 }: CompetitionDashboardProps) {
   const competition = getCurrentCompetition(career, competitionId);
 
@@ -5570,6 +5606,7 @@ export function CompetitionDashboard({
         competition={competition}
         subPage={subPage}
         onSubPageChange={onSubPageChange}
+        onViewTeam={onViewTeam}
         records={records}
         table={table}
         userTeamId={userTeamId}
@@ -5633,7 +5670,11 @@ export function CompetitionDashboard({
         userTeamId={userTeamId}
       />
       <div className="competition-overview-grid">
-        <StandingsTable table={table} userTeamId={userTeamId} />
+        <StandingsTable
+          onViewTeam={onViewTeam}
+          table={table}
+          userTeamId={userTeamId}
+        />
         <GroupStatusPanel
           competition={competition}
           records={records}

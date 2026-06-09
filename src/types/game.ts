@@ -242,6 +242,42 @@ export type SeasonSummary = {
   nextSeasonNumber?: number;
 };
 
+export type CareerMessageCategory =
+  | "important"
+  | "schedule"
+  | "match"
+  | "training"
+  | "transfer"
+  | "system"
+  | "news";
+
+export type CareerMessagePriority = "normal" | "important" | "urgent";
+
+export type CareerMessageSource =
+  | "system"
+  | "club"
+  | "competition"
+  | "offseason"
+  | "media"
+  | "interview"
+  | "random-news";
+
+export type CareerMessage = {
+  id: string;
+  dateKey: string;
+  dateLabel: string;
+  category: CareerMessageCategory;
+  priority: CareerMessagePriority;
+  title: string;
+  body: string;
+  read: boolean;
+  createdTurn: number;
+  source: CareerMessageSource;
+  relatedPlayerId?: string;
+  relatedTeamId?: string;
+  relatedCompetitionId?: CompetitionId;
+};
+
 export type SeasonOffseasonSummary = {
   renewedPlayerIds?: string[];
   releasedPlayerIds?: string[];
@@ -687,4 +723,5 @@ export type CareerSave = {
   weeklyPlan: WeeklyPlan;
   seasonState: SeasonState;
   seasonHistory: SeasonSummary[];
+  messages?: CareerMessage[];
 };

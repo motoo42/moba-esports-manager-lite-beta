@@ -2,7 +2,7 @@
 
 다른 ChatGPT/Codex 계정이나 에이전트가 `moba-esports-manager-lite`를 과도한 컨텍스트 없이 이어받기 위한 실전용 인수인계 문서.
 
-최종 업데이트: 2026-06-09
+최종 업데이트: 2026-06-10
 
 ## 프로젝트 위치
 
@@ -54,6 +54,9 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 
 - React, Vite, TypeScript 기반 League of Legends e스포츠 매니저 게임.
 - URL 라우팅과 대회/캘린더 하위 URL 라우팅 구현.
+- `/inbox` 메시지함 구현. 진행/경기/스토브리그 로그에서 중요한 커리어 메시지를 생성하고, 좌측 메뉴 배지와 메인 허브 최근 메시지 패널로 연결.
+- 메시지 도메인은 `src/domain/messages`에 분리했으며, 언론사 뉴스/선수 인터뷰/랜덤 뉴스/반응형 장문 뉴스는 source/type 확장 여지를 남겨둠.
+- `LCK 구단 정보` route 구현: `/teams` 목록, `/teams/:teamId` 상세 스카우팅 화면.
 - `App.tsx`는 provider/router 조립 중심으로 축소.
 - `AppContent`, route renderer, autosave/navigation/progress/Asian Games decision hook 분리.
 - 최상단 `AppErrorBoundary`와 커리어 필요 fallback 화면을 추가해 렌더링 예외/직접 URL 진입 시 빈 화면으로 죽는 상황을 완화.
@@ -100,6 +103,10 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
   - 사진은 Leaguepedia 선수 페이지 대표 이미지를 WebP로 내려받아 `public/assets/players/lck/2026/main/`에 저장.
   - `src/data/lck2026PlayerPortraits.ts`에서 로컬 asset 경로와 원본 선수 페이지 URL을 관리.
   - 일부 사진은 현재 시즌 증명사진이 아니라 Leaguepedia 대표/과거 사진일 수 있으므로 후속 교체 가능.
+- LCK 팀 로고 10개와 LCK 리그 로고 1개 1차 적용 완료.
+  - 팀 로고는 Leaguepedia 2026 LCK 페이지의 최신 팀 아이콘을 WebP로 내려받아 `public/assets/logos/lck/teams/2026/`에 저장.
+  - LCK 로고는 Wikimedia Commons SVG를 `public/assets/logos/lck/lck-logo.svg`에 저장.
+  - `lck2026Teams`에서 `logoUrl`, `logoSourceUrl`을 관리하고, 공통 `TeamLogo`가 로딩 실패 시 약칭 fallback을 표시한다.
 - 사용자 메모 기반 핵심 선수 능력치 1차 세부조정 완료.
 - 스탯 기반 후보표는 참고용 문서로만 보관.
 - LCK 팀 밸런스는 `S~C` 4단계 프로필로 관리. 2026 기본값에 팀별 ELO, strength, 예산, 연봉계수, 팀 매력도 보정이 들어감.
@@ -110,6 +117,8 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - `src/domain/players/playerEvaluation.ts`가 숨겨진 선수 품질, 완만한 폼 보정, 사기, 피로도를 합산해 평가 점수와 0.5~5.0성 별점을 계산한다.
 - `evaluationForm`은 `previous * 0.85 + form * 0.15`로 완만하게 갱신하고, 별점 경계에는 1점 완충을 둬 경계값 근처 흔들림만 줄인다.
 - 공통 `EvaluationStars`, `PlayerCard` 컴포넌트로 로스터, 허브, 스토브리그, 로스터 빌더의 선수 카드 표기를 통일한다.
+- 타팀 로스터/스카우팅 화면은 `PlayerCard`와 `평가` 별점을 재사용해 선발 5인, 1군 후보, 2군 일부를 읽기 전용으로 표시한다.
+- LCK 순위표 팀명과 메인 허브의 다음 상대 링크는 LCK 구단 상세 화면으로 연결된다.
 - 다음 시즌 전환 시 나이 증가, 상태 회복, 성장/하락, 시장가치 기반 `salaryExpectation`/`cost`, 은퇴 후보 플래그 반영.
 - 오프시즌 시작 시 은퇴 대상과 병역 `pending` 선수는 계약/선발/로스터/FA 시장에서 제외.
 - 3시즌 기말 목표에서는 신규 유망주 생성 로직을 만들지 않고, 3군/FA/해외리거/가상선수 공급 방식은 장기 과제로 보류.
@@ -140,7 +149,7 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 ## 중요한 설계 결정
 
 - 개인 프로젝트이므로 실제 League of Legends, LCK, MSI, Worlds, First Stand, Asian Games, 실제 팀명/선수명 사용.
-- 현재 베타 테스트 편의를 위해 2026 LCK 1군 선수 사진 asset을 repo에 포함했다. 공개 배포/제출 전에는 저작권 리스크를 재검토하고, 필요하면 asset을 제외하거나 대체 이미지/fallback으로 전환한다.
+- 현재 베타 테스트 편의를 위해 2026 LCK 1군 선수 사진과 LCK 팀/리그 로고 asset을 repo에 포함했다. 공개 배포/제출 전에는 저작권 리스크를 재검토하고, 필요하면 asset을 제외하거나 대체 이미지/fallback으로 전환한다.
 - UI는 16:9 가로 화면 우선, 전체 프레임 고정, 패널 내부 스크롤 우선.
 - 좌측 메뉴는 `관리`, `시즌`, `시스템` 그룹으로 나눈 한글 라벨 중심 사이드바. 약어는 보조 아이콘처럼만 사용.
 - 모바일은 전체 반응형 지원이 아니라 작은 화면/세로 화면 미지원 안내 오버레이 정책. PC/노트북 또는 태블릿 가로 화면 이용을 권장.
@@ -180,8 +189,11 @@ src/data/lck2026RatingOverrides.ts
 src/data/lck2026PlayerPortraits.ts
 src/data/lck2026Players.ts
 public/assets/players/lck/2026/main/
+public/assets/logos/lck/
 src/shared/ui/PlayerPortrait.tsx
+src/shared/ui/TeamLogo.tsx
 src/features/competition-dashboard/CompetitionDashboard.tsx
+src/features/lck-team-info/LckTeamInfo.tsx
 src/features/offseason/OffseasonMarket.tsx
 src/features/roster-management/SeasonRosterManager.tsx
 src/features/season-summary/SeasonSummary.tsx
@@ -228,15 +240,32 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 
 ### 기능 작업 후보
 
-1. `타팀 로스터/스카우팅`
-   - 다른 팀 박스 클릭 시 상대 팀 기본 로스터/선발 5인을 확인할 수 있는 화면 추가
-   - 새 `평가` 별점과 `PlayerCard` 컴포넌트를 재사용해 내부 OVR/POT를 숨긴 스카우팅 화면으로 만든다.
-2. `메시지함/뉴스`
-   - 메시지함/뉴스/일정 알림 1차 구현
-   - 메시지함/뉴스 1차 구현 때 우리 팀 이적 로그를 메시지함에도 노출해야 함
+1. `연봉/예산 밸런싱`
+   - 2군/하위권/상위권 연봉과 팀 예산을 실제 플레이 감각 기준으로 재조정
+   - 스토브리그 영입 가능성과 AI 보강 안정성을 함께 확인
+2. `저장 데이터 삭제`
+   - `/saves` 저장 목록에서 삭제 버튼/확인 플로우 추가
+   - 서버 DELETE API와 UI feedback, 자동 저장 메타 정리 확인
 
 ### 최근 완료된 베타 전 재정비
 
+- `메시지함/뉴스/일정 알림 1차`
+  - `/inbox` route와 좌측 `메시지함` 메뉴 추가
+  - `CareerSave.messages`와 `CareerMessage` 타입 추가
+  - 진행 결과, 오늘/다가오는 일정, 선수 상태 경고, 우리 팀 스토브리그 로그를 메시지로 누적
+  - 메시지 dedupe와 최신 120개 보관 적용
+  - 언론사 뉴스/선수 인터뷰/랜덤 뉴스는 후속 generator 확장 여지로 유지
+- `팀/LCK 로고 에셋 적용`
+  - LCK 팀 로고 10개와 LCK 리그 로고 1개를 로컬 asset으로 저장
+  - `TeamLogo` 공통 컴포넌트 추가
+  - 커리어 시작, 사이드바 내 팀 마크, LCK 구단 정보, LCK standings, 메인 허브 일정/상대 링크에 로고 표시
+  - 공개 제출/정식 배포 전 로고 asset 저작권 리스크 재검토 필요
+- `타팀 로스터/스카우팅 화면`
+  - 좌측 시즌 그룹에 `LCK 구단 정보` 추가
+  - `/teams` LCK 10개 구단 카드 목록과 `/teams/:teamId` 상세 화면 구현
+  - 상세 화면은 선발 5인, 1군 후보, 2군/아카데미를 읽기 전용으로 표시
+  - 내부 OVR/POT는 숨기고 공통 `PlayerCard`와 `평가` 별점을 재사용
+  - LCK standings 팀명과 메인 허브 다음 상대에서 구단 상세 화면으로 이동 가능
 - `선수 평가 공개 정책 + 선수 카드 리디자인`
   - UI에서 내부 OVR/POT/포텐셜 직접 표기 제거
   - 흰색 별점 `평가`와 공통 선수 카드 컴포넌트 도입
@@ -280,9 +309,73 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 - 베타 전 재정비 2번: 2026 시작 전 프리시즌 스토브리그 완료
 - 베타 전 재정비 3번: 1군/2군 로스터 분리와 콜업/콜다운 완료
 - 베타 전 재정비 4번: 닫힌 스토브리그 정보 화면 완료
+- 베타 전 재정비 5번: 타팀 로스터/스카우팅 화면 완료
 - 베타 전 재정비 6번: 선수 평가 공개 정책 + 선수 카드 리디자인 완료
+- 베타 전 재정비 7번: 메시지함/뉴스/일정 알림 1차 완료
 
 ## 최근 작업 로그
+
+### 2026-06-10 - 베타 전 재정비 7번: 메시지함/뉴스/일정 알림 1차
+
+작업 범위:
+
+- `CareerSave.messages?: CareerMessage[]` 추가
+- `src/domain/messages`에 메시지 생성, dedupe, 최대 120개 보관, 읽음 처리 helper 추가
+- `/inbox` route, `InboxPage`, 필터/목록/상세/모두 읽음 UI 추가
+- 좌측 `관리` 그룹에서 `홈`과 `메시지함`을 분리하고 읽지 않은 중요 메시지 배지 표시
+- 메인 허브에 최근 메시지 패널과 `메시지함으로 이동` 버튼 추가
+- 진행 결과에서 경기 결과/일정/선수 상태 메시지 생성
+- 우리 팀 관련 스토브리그 로그를 `transfer` 메시지로 복사
+- 언론사 뉴스, 선수 인터뷰, 랜덤 뉴스, 반응형 장문 뉴스는 후속 확장 source/type만 열어둠
+
+검증:
+
+- `npm.cmd test -- tests/unit/routes.test.ts tests/unit/messages.test.ts tests/integration/inbox.test.tsx tests/integration/app-routing.test.tsx` 통과
+- `npm.cmd run build` 통과. Vite chunk-size 경고는 기존 번들 크기 경고
+
+다음 작업:
+
+- 저장 데이터 삭제 기능 추가
+
+### 2026-06-09 - #9 팀/LCK 로고 에셋 적용
+
+작업 범위:
+
+- Leaguepedia 2026 LCK 팀 아이콘 10개를 WebP 로컬 asset으로 저장
+- Wikimedia Commons LCK 로고 SVG 저장
+- `lck2026Teams`에 `logoUrl`, `logoSourceUrl` 추가
+- `TeamLogo` 공통 컴포넌트 추가
+- 커리어 시작 팀 카드, 좌측 내 팀 마크, LCK 구단 정보 목록/상세, LCK standings, 메인 허브 일정/상대 링크에 로고 표시
+
+검증:
+
+- `npm.cmd test -- tests/unit/lck-2026-players.test.ts tests/integration/team-logo.test.tsx tests/integration/career-setup.test.tsx tests/integration/lck-team-info.test.tsx tests/integration/competition-dashboard.test.tsx` 통과
+
+다음 작업:
+
+- #10 연봉/예산 밸런싱 추가 조정
+
+### 2026-06-09 - 베타 전 재정비 5번: 타팀 로스터/스카우팅 화면
+
+작업 범위:
+
+- `AppRoute`에 `lck-team-info` 추가
+- `/teams`, `/teams/:teamId` 라우팅 추가
+- 좌측 `시즌` 그룹에 `LCK 구단 정보` 메뉴 추가
+- `src/features/lck-team-info/LckTeamInfo.tsx` 추가
+- LCK 10팀 카드 목록과 구단별 읽기 전용 상세 화면 구현
+- 상세 화면에 팀 요약, 최근 LCK standing, 선발 5인, 1군 후보, 2군/아카데미 표시
+- LCK standings 팀명과 메인 허브 다음 상대 팀 링크를 구단 상세 화면으로 연결
+- 선수 표기는 `PlayerCard`/`평가` 별점만 사용하고 내부 OVR/POT는 노출하지 않음
+
+검증:
+
+- `npm.cmd test -- tests/unit/routes.test.ts tests/integration/lck-team-info.test.tsx tests/integration/app-routing.test.tsx` 통과
+- `npm.cmd test -- tests/integration/competition-dashboard.test.tsx` 통과
+
+다음 작업:
+
+- 메시지함/뉴스/일정 알림 1차 구현
 
 ### 2026-06-09 - 베타 전 재정비 6번: 선수 평가 공개 정책 + 선수 카드 리디자인
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lck2026Players } from "../../src/data/lck2026Players";
 import { lck2026MainPortraitCount } from "../../src/data/lck2026PlayerPortraits";
-import { lck2026Teams } from "../../src/data/lckTeams";
+import { lck2026Teams, lckLeagueLogo } from "../../src/data/lckTeams";
 import { offseasonFreeAgentSeeds } from "../../src/data/offseasonFreeAgents";
 import { samplePlayers } from "../../src/data/samplePlayers";
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
@@ -106,6 +106,18 @@ describe("lck2026Players", () => {
       ["Kiwoom DRX", "C"],
       ["DN SOOPers", "C"],
     ]);
+  });
+
+  it("attaches local logo assets to every 2026 LCK team", () => {
+    expect(lckLeagueLogo.logoUrl).toBe("/assets/logos/lck/lck-logo.svg");
+    expect(lckLeagueLogo.logoSourceUrl).toContain("wikimedia.org");
+
+    for (const team of lck2026Teams) {
+      expect(team.logoUrl, team.name).toMatch(
+        /^\/assets\/logos\/lck\/teams\/2026\/.+\.webp$/,
+      );
+      expect(team.logoSourceUrl, team.name).toContain("lol.fandom.com");
+    }
   });
 
   it("starts new careers from the selected team balance profile", () => {

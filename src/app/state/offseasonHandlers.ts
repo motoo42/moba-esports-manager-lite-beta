@@ -8,6 +8,7 @@ import {
   submitOffseasonRenewalOffer,
   startNextSeasonFromOffseason,
 } from "../../domain/season";
+import { appendOffseasonLogMessages } from "../../domain/messages";
 import type { GameAction } from "./gameActions";
 import type { GameState } from "./gameState";
 import { getRouteForCareer } from "./routeSelectors";
@@ -36,13 +37,15 @@ export function handleOffseasonAction(
   }
 
   if (action.type === "renew-expired-contracts") {
+    const nextCareer = renewExpiredContractsForOffseason({
+      career: state.career,
+      contractTypes: action.contractTypes,
+    });
+
     return {
       ...state,
       route: "season-summary",
-      career: renewExpiredContractsForOffseason({
-        career: state.career,
-        contractTypes: action.contractTypes,
-      }),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
@@ -52,49 +55,59 @@ export function handleOffseasonAction(
     return {
       ...state,
       route: getRouteForCareer(nextCareer),
-      career: nextCareer,
+      career: appendOffseasonLogMessages(state.career, nextCareer),
       lastMatch: null,
       selectedCompetitionId: nextCareer.seasonState.currentCompetitionId,
     };
   }
 
   if (action.type === "submit-offseason-renewal-offer") {
+    const nextCareer = submitOffseasonRenewalOffer(state.career, action.offer);
+
     return {
       ...state,
       route: "offseason",
-      career: submitOffseasonRenewalOffer(state.career, action.offer),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
   if (action.type === "release-expired-offseason-player") {
+    const nextCareer = releaseExpiredOffseasonPlayer(state.career, action.playerId);
+
     return {
       ...state,
       route: "offseason",
-      career: releaseExpiredOffseasonPlayer(state.career, action.playerId),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
   if (action.type === "submit-free-agent-offer") {
+    const nextCareer = submitFreeAgentOffer(state.career, action.offer);
+
     return {
       ...state,
       route: "offseason",
-      career: submitFreeAgentOffer(state.career, action.offer),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
   if (action.type === "confirm-free-agent-signing") {
+    const nextCareer = confirmFreeAgentSigning(state.career, action.offerId);
+
     return {
       ...state,
       route: "offseason",
-      career: confirmFreeAgentSigning(state.career, action.offerId),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
   if (action.type === "cancel-free-agent-signing") {
+    const nextCareer = cancelFreeAgentSigning(state.career, action.offerId);
+
     return {
       ...state,
       route: "offseason",
-      career: cancelFreeAgentSigning(state.career, action.offerId),
+      career: appendOffseasonLogMessages(state.career, nextCareer),
     };
   }
 
@@ -103,7 +116,7 @@ export function handleOffseasonAction(
   return {
     ...state,
     route: getRouteForCareer(nextCareer),
-    career: nextCareer,
+    career: appendOffseasonLogMessages(state.career, nextCareer),
     lastMatch: null,
     selectedCompetitionId: nextCareer.seasonState.currentCompetitionId,
   };

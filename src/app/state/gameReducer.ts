@@ -2,6 +2,7 @@ import { handleCareerAction } from "./careerHandlers";
 import type { GameAction } from "./gameActions";
 import type { GameState } from "./gameState";
 import { handleOffseasonAction } from "./offseasonHandlers";
+import { handleMessageAction } from "./messageHandlers";
 import { handleRosterAction } from "./rosterHandlers";
 import { handleRouteAction } from "./routeHandlers";
 import { handleSeasonProgressAction } from "./seasonProgressHandlers";
@@ -31,8 +32,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "submit-offseason-renewal-offer":
     case "release-expired-offseason-player":
     case "submit-free-agent-offer":
+    case "confirm-free-agent-signing":
+    case "cancel-free-agent-signing":
     case "start-next-season":
       return handleOffseasonAction(state, action);
+    case "mark-message-read":
+    case "mark-all-messages-read":
+      return handleMessageAction(state, action);
     case "set-asian-games-play-mode":
     case "simulate-next-match":
     case "progress-season":

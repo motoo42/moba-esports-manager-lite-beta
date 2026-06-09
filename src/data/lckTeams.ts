@@ -4,6 +4,8 @@ export type LckTeamSeed = {
   id: string;
   name: string;
   shortName: string;
+  logoUrl?: string;
+  logoSourceUrl?: string;
   tier: TeamBalanceTier;
   baseElo: number;
   strength: number;
@@ -13,11 +15,21 @@ export type LckTeamSeed = {
   previousSeasonRank: number;
 };
 
+const lckTeamLogoBasePath = "/assets/logos/lck/teams/2026";
+
+export const lckLeagueLogo = {
+  logoUrl: "/assets/logos/lck/lck-logo.svg",
+  logoSourceUrl:
+    "https://commons.wikimedia.org/wiki/File:League_of_Legends_Champions_Korea_logo.svg",
+};
+
 export const lck2026Teams: LckTeamSeed[] = [
   {
     id: "gen-g",
     name: "Gen.G",
     shortName: "GEN",
+    logoUrl: `${lckTeamLogoBasePath}/gen-g.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:Gen.Glogo_std.png",
     tier: "S",
     baseElo: 1690,
     strength: 89,
@@ -30,6 +42,9 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "hanwha-life-esports",
     name: "Hanwha Life Esports",
     shortName: "HLE",
+    logoUrl: `${lckTeamLogoBasePath}/hanwha-life-esports.webp`,
+    logoSourceUrl:
+      "https://lol.fandom.com/wiki/File:Hanwha_Life_Esportslogo_std.png",
     tier: "S",
     baseElo: 1680,
     strength: 88,
@@ -42,6 +57,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "t1",
     name: "T1",
     shortName: "T1",
+    logoUrl: `${lckTeamLogoBasePath}/t1.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:T1logo_std.png",
     tier: "S",
     baseElo: 1670,
     strength: 87,
@@ -54,6 +71,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "kt-rolster",
     name: "KT Rolster",
     shortName: "KT",
+    logoUrl: `${lckTeamLogoBasePath}/kt-rolster.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:KT_Rolsterlogo_std.png",
     tier: "A",
     baseElo: 1615,
     strength: 82,
@@ -66,6 +85,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "dplus-kia",
     name: "Dplus KIA",
     shortName: "DK",
+    logoUrl: `${lckTeamLogoBasePath}/dplus-kia.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:Dplus_Kialogo_std.png",
     tier: "A",
     baseElo: 1605,
     strength: 81,
@@ -78,6 +99,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "hanjin-brion",
     name: "Hanjin BRION",
     shortName: "BRO",
+    logoUrl: `${lckTeamLogoBasePath}/hanjin-brion.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:BRIONlogo_std.png",
     tier: "B",
     baseElo: 1535,
     strength: 75,
@@ -90,6 +113,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "bnk-fearx",
     name: "BNK FEARX",
     shortName: "BFX",
+    logoUrl: `${lckTeamLogoBasePath}/bnk-fearx.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:FearXlogo_std.png",
     tier: "B",
     baseElo: 1515,
     strength: 73,
@@ -102,6 +127,9 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "nongshim-redforce",
     name: "Nongshim RedForce",
     shortName: "NS",
+    logoUrl: `${lckTeamLogoBasePath}/nongshim-redforce.webp`,
+    logoSourceUrl:
+      "https://lol.fandom.com/wiki/File:Nongshim_RedForcelogo_std.png",
     tier: "B",
     baseElo: 1530,
     strength: 75,
@@ -114,6 +142,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "kiwoom-drx",
     name: "Kiwoom DRX",
     shortName: "DRX",
+    logoUrl: `${lckTeamLogoBasePath}/kiwoom-drx.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:Kiwoom_DRXlogo_std.png",
     tier: "C",
     baseElo: 1490,
     strength: 72,
@@ -126,6 +156,8 @@ export const lck2026Teams: LckTeamSeed[] = [
     id: "dn-soopers",
     name: "DN SOOPers",
     shortName: "DNF",
+    logoUrl: `${lckTeamLogoBasePath}/dn-soopers.webp`,
+    logoSourceUrl: "https://lol.fandom.com/wiki/File:DN_SOOPerslogo_std.png",
     tier: "C",
     baseElo: 1460,
     strength: 69,

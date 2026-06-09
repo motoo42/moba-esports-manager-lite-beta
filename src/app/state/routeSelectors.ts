@@ -1,6 +1,10 @@
 import type {
   CareerProgressResult,
 } from "../../domain/game-progress/progressCareer";
+import {
+  appendOffseasonLogMessages,
+  appendProgressMessages,
+} from "../../domain/messages";
 import type { CareerSave, CompetitionId } from "../../types/game";
 import type { AppRoute } from "../routes";
 import type { GameState } from "./gameState";
@@ -42,11 +46,18 @@ export function commitProgressResult(
   state: GameState,
   result: CareerProgressResult,
 ): GameState {
+  const career = state.career
+    ? appendOffseasonLogMessages(
+        state.career,
+        appendProgressMessages(state.career, result.career, result.lastMatch),
+      )
+    : result.career;
+
   return {
     ...state,
-    route: getRouteForCareer(result.career),
-    career: result.career,
+    route: getRouteForCareer(career),
+    career,
     lastMatch: result.lastMatch,
-    selectedCompetitionId: result.career.seasonState.currentCompetitionId,
+    selectedCompetitionId: career.seasonState.currentCompetitionId,
   };
 }

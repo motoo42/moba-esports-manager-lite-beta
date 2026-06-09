@@ -3,7 +3,9 @@ import {
   getStrategyLabel,
   getTrainingIntensityLabel,
 } from "../../domain/weekly-plan";
+import { findLckTeamSeed } from "../../data/lckTeams";
 import { getSeasonProgressActionLabel } from "../../domain/season";
+import { TeamLogo } from "../ui/TeamLogo";
 import type {
   AppRoute,
   CalendarSubPage,
@@ -37,6 +39,7 @@ type AppShellProps = PropsWithChildren<{
     route: AppRoute,
     options?: {
       competitionId?: CompetitionId | null;
+      teamId?: string | null;
       subPage?: RouteSubPage | null;
     },
   ) => void;
@@ -72,11 +75,18 @@ const shellMenuGroups: ShellMenuGroup[] = [
     label: "관리",
     items: [
       {
-        id: "inbox",
+        id: "home",
         label: "홈",
         icon: "HB",
         route: "main-dashboard",
-        subItems: ["중요 알림", "뉴스", "일정 알림"],
+        subItems: ["대시보드", "최근 메시지", "다음 일정"],
+      },
+      {
+        id: "inbox",
+        label: "메시지함",
+        icon: "MS",
+        route: "inbox",
+        subItems: ["전체", "중요", "일정", "이적"],
       },
       {
         id: "roster",
@@ -119,6 +129,13 @@ const shellMenuGroups: ShellMenuGroup[] = [
         route: "offseason",
         subItems: ["시장 개요", "FA 명단", "일정 안내", "이적 로그"],
       },
+      {
+        id: "lck-team-info",
+        label: "LCK 구단 정보",
+        icon: "TM",
+        route: "lck-team-info",
+        subItems: ["구단 목록", "선발 5인", "1군 후보", "2군"],
+      },
     ],
   },
   {
@@ -158,6 +175,10 @@ function getActiveMenuItem(route: AppRoute) {
     return getMenuItemById("training");
   }
 
+  if (route === "inbox") {
+    return getMenuItemById("inbox");
+  }
+
   if (route === "competition-dashboard") {
     return getMenuItemById("competition");
   }
@@ -174,11 +195,15 @@ function getActiveMenuItem(route: AppRoute) {
     return getMenuItemById("offseason");
   }
 
+  if (route === "lck-team-info") {
+    return getMenuItemById("lck-team-info");
+  }
+
   if (route === "save-manager") {
     return getMenuItemById("save");
   }
 
-  return getMenuItemById("inbox");
+  return getMenuItemById("home");
 }
 
 function getActiveCompetitionName(career: CareerSave | null) {
@@ -545,13 +570,25 @@ export function AppShell({
     career.seasonState.phase === "completed" ||
     isProgressing ||
     isProgressBlocked;
+  const userTeamSeed = career ? findLckTeamSeed(career.userTeam.name) : undefined;
+  const unreadImportantMessageCount =
+    career?.messages?.filter(
+      (message) =>
+        !message.read &&
+        (message.priority !== "normal" || message.category === "important"),
+    ).length ?? 0;
 
   return (
     <div className={`app-shell ${isProgressing ? "app-shell-busy" : ""}`}>
       <aside className="shell-sidebar" aria-label="Main navigation">
         <div className="shell-sidebar-header">
           <div className="club-mark">
-            {career?.userTeam.name.slice(0, 2).toUpperCase() ?? "LM"}
+            <TeamLogo
+              fallbackLabel={career?.userTeam.name.slice(0, 2).toUpperCase() ?? "LM"}
+              size="md"
+              team={userTeamSeed}
+              teamName={career?.userTeam.name}
+            />
           </div>
           <div>
             <span>Manager</span>
@@ -584,6 +621,14 @@ export function AppShell({
                           {item.icon}
                         </span>
                         <span className="shell-menu-label">{item.label}</span>
+                        {item.id === "inbox" && unreadImportantMessageCount > 0 && (
+                          <span
+                            aria-label={`읽지 않은 중요 메시지 ${unreadImportantMessageCount}개`}
+                            className="shell-menu-badge"
+                          >
+                            {unreadImportantMessageCount}
+                          </span>
+                        )}
                       </button>
 
                       {isActiveMenu && subMenuItems.length > 0 && (

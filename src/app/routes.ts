@@ -2,10 +2,12 @@ import type { CompetitionId } from "../types/game";
 
 export type AppRoute =
   | "career-setup"
+  | "inbox"
   | "roster-builder"
   | "main-dashboard"
   | "match-week"
   | "competition-dashboard"
+  | "lck-team-info"
   | "season-calendar"
   | "save-manager"
   | "offseason"
@@ -27,10 +29,12 @@ export type RouteSubPage = CompetitionSubPage | CalendarSubPage | RosterSubPage;
 
 export const appRoutes: AppRoute[] = [
   "career-setup",
+  "inbox",
   "roster-builder",
   "main-dashboard",
   "match-week",
   "competition-dashboard",
+  "lck-team-info",
   "season-calendar",
   "save-manager",
   "offseason",
@@ -39,10 +43,12 @@ export const appRoutes: AppRoute[] = [
 
 const routePathByRoute: Record<AppRoute, string> = {
   "career-setup": "/",
+  inbox: "/inbox",
   "roster-builder": "/roster",
   "main-dashboard": "/hub",
   "match-week": "/match",
   "competition-dashboard": "/competitions",
+  "lck-team-info": "/teams",
   "season-calendar": "/calendar",
   "save-manager": "/saves",
   offseason: "/offseason",
@@ -75,6 +81,7 @@ const rosterSubPages = new Set<RosterSubPage>(["main", "academy", "contracts"]);
 export type RouteMatch = {
   route: AppRoute;
   competitionId?: CompetitionId | null;
+  teamId?: string | null;
   competitionSubPage?: CompetitionSubPage | null;
   calendarSubPage?: CalendarSubPage | null;
   rosterSubPage?: RosterSubPage | null;
@@ -100,15 +107,19 @@ export function isRosterSubPage(value: string): value is RosterSubPage {
 
 export function getPathForRoute(
   route: AppRoute,
-  competitionId?: CompetitionId | null,
+  routeId?: CompetitionId | string | null,
   subPage?: RouteSubPage | null,
 ) {
-  if (route === "competition-dashboard" && competitionId) {
+  if (route === "competition-dashboard" && routeId && isCompetitionId(routeId)) {
     if (subPage && isCompetitionSubPage(subPage)) {
-      return `/competitions/${competitionId}/${subPage}`;
+      return `/competitions/${routeId}/${subPage}`;
     }
 
-    return `/competitions/${competitionId}`;
+    return `/competitions/${routeId}`;
+  }
+
+  if (route === "lck-team-info") {
+    return routeId ? `/teams/${routeId}` : routePathByRoute[route];
   }
 
   if (route === "season-calendar") {
@@ -148,12 +159,26 @@ export function getRouteMatchFromPath(pathname: string): RouteMatch {
     return { route: "main-dashboard" };
   }
 
+  if (pathname === "/inbox") {
+    return { route: "inbox" };
+  }
+
   if (pathname === "/match") {
     return { route: "match-week" };
   }
 
   if (pathname === "/calendar") {
     return { route: "season-calendar", calendarSubPage: null };
+  }
+
+  if (pathname === "/teams") {
+    return { route: "lck-team-info", teamId: null };
+  }
+
+  const teamMatch = pathname.match(/^\/teams\/([^/]+)$/);
+
+  if (teamMatch) {
+    return { route: "lck-team-info", teamId: teamMatch[1] };
   }
 
   if (pathname === "/saves") {

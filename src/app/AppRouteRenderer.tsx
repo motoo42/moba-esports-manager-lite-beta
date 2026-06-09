@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { CareerSetupPage } from "../pages/CareerSetupPage";
 import { CompetitionDashboardPage } from "../pages/CompetitionDashboardPage";
+import { InboxPage } from "../pages/InboxPage";
+import { LckTeamInfoPage } from "../pages/LckTeamInfoPage";
 import { MainDashboardPage } from "../pages/MainDashboardPage";
 import { MatchWeekPage } from "../pages/MatchWeekPage";
 import { OffseasonPage } from "../pages/OffseasonPage";
@@ -22,12 +24,14 @@ type AppRouteRendererProps = {
   competitionId?: CompetitionId | null;
   competitionSubPage?: CompetitionSubPage | null;
   rosterSubPage?: RosterSubPage | null;
+  teamId?: string | null;
   onCalendarSubPageChange: (subPage: CalendarSubPage) => void;
   onCompetitionSubPageChange: (subPage: CompetitionSubPage) => void;
   onGoTo: (
     route: AppRoute,
     options?: {
       competitionId?: CompetitionId | null;
+      teamId?: string | null;
       subPage?: RouteSubPage | null;
     },
   ) => void;
@@ -40,6 +44,7 @@ export function AppRouteRenderer({
   competitionId,
   competitionSubPage,
   rosterSubPage,
+  teamId,
   onCalendarSubPageChange,
   onCompetitionSubPageChange,
   onGoTo,
@@ -58,6 +63,10 @@ export function AppRouteRenderer({
     return <MainDashboardPage onGoTo={onGoTo} />;
   }
 
+  if (route === "inbox") {
+    return <InboxPage />;
+  }
+
   if (route === "match-week") {
     return <MatchWeekPage onGoTo={onGoTo} />;
   }
@@ -68,8 +77,13 @@ export function AppRouteRenderer({
         competitionId={competitionId}
         subPage={competitionSubPage}
         onSubPageChange={onCompetitionSubPageChange}
+        onGoTo={onGoTo}
       />
     );
+  }
+
+  if (route === "lck-team-info") {
+    return <LckTeamInfoPage teamId={teamId} onGoTo={onGoTo} />;
   }
 
   if (route === "season-calendar") {

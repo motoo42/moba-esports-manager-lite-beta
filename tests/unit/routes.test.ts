@@ -70,6 +70,13 @@ describe("app routes", () => {
     expect(getPathForRoute("save-manager")).toBe("/saves");
   });
 
+  it("parses and creates the inbox route", () => {
+    expect(getRouteMatchFromPath("/inbox")).toEqual({
+      route: "inbox",
+    });
+    expect(getPathForRoute("inbox")).toBe("/inbox");
+  });
+
   it("parses and creates roster subpage routes", () => {
     expect(getRouteMatchFromPath("/roster")).toEqual({
       route: "roster-builder",
@@ -94,5 +101,26 @@ describe("app routes", () => {
     expect(getPathForRoute("roster-builder", null, "academy")).toBe(
       "/roster/academy",
     );
+  });
+
+  it("parses and creates LCK team info routes", () => {
+    expect(getRouteMatchFromPath("/teams")).toEqual({
+      route: "lck-team-info",
+      teamId: null,
+    });
+    expect(getRouteMatchFromPath("/teams/gen-g")).toEqual({
+      route: "lck-team-info",
+      teamId: "gen-g",
+    });
+    expect(getRouteMatchFromPath("/teams/t1")).toEqual({
+      route: "lck-team-info",
+      teamId: "t1",
+    });
+    expect(getRouteMatchFromPath("/teams/unknown")).toEqual({
+      route: "lck-team-info",
+      teamId: "unknown",
+    });
+    expect(getPathForRoute("lck-team-info")).toBe("/teams");
+    expect(getPathForRoute("lck-team-info", "gen-g")).toBe("/teams/gen-g");
   });
 });

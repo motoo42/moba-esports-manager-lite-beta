@@ -4,6 +4,7 @@ import { getLck2026PlayerPortrait } from "../../data/lck2026PlayerPortraits";
 import { ensurePlayerEvaluationStatus } from "../players";
 import type {
   CareerSave,
+  CareerMessage,
   OffseasonLogEntry,
   OffseasonOffer,
   Player,
@@ -32,6 +33,59 @@ function asLogEntries(value: unknown): OffseasonLogEntry[] {
 
 function asOffers(value: unknown): OffseasonOffer[] {
   return Array.isArray(value) ? (value as OffseasonOffer[]) : [];
+}
+
+function normalizeMessages(value: unknown): CareerMessage[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map((message) => {
+      const dateKey =
+        typeof message.dateKey === "string" ? message.dateKey : "unknown-date";
+      const title = typeof message.title === "string" ? message.title : "알림";
+
+      return {
+        id:
+          typeof message.id === "string"
+            ? message.id
+            : `legacy-message-${dateKey}-${title}`,
+        dateKey,
+        dateLabel:
+          typeof message.dateLabel === "string" ? message.dateLabel : dateKey,
+        category:
+          typeof message.category === "string"
+            ? (message.category as CareerMessage["category"])
+            : "system",
+        priority:
+          typeof message.priority === "string"
+            ? (message.priority as CareerMessage["priority"])
+            : "normal",
+        title,
+        body: typeof message.body === "string" ? message.body : "",
+        read: Boolean(message.read),
+        createdTurn:
+          typeof message.createdTurn === "number" ? message.createdTurn : 0,
+        source:
+          typeof message.source === "string"
+            ? (message.source as CareerMessage["source"])
+            : "system",
+        relatedPlayerId:
+          typeof message.relatedPlayerId === "string"
+            ? message.relatedPlayerId
+            : undefined,
+        relatedTeamId:
+          typeof message.relatedTeamId === "string"
+            ? message.relatedTeamId
+            : undefined,
+        relatedCompetitionId:
+          typeof message.relatedCompetitionId === "string"
+            ? (message.relatedCompetitionId as CareerMessage["relatedCompetitionId"])
+            : undefined,
+      };
+    });
 }
 
 function normalizeWeeklyPlan(value: Partial<WeeklyPlan> | undefined): WeeklyPlan {
@@ -306,6 +360,7 @@ export function normalizeCareerSave(value: CareerSave): CareerSave {
     weeklyPlan: normalizeWeeklyPlan(value.weeklyPlan),
     seasonState: normalizeSeasonState(value.seasonState, fallback.seasonState),
     seasonHistory,
+    messages: normalizeMessages(value.messages),
   };
 
   if (

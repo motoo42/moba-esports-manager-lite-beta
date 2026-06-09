@@ -31,6 +31,7 @@ export function useAppNavigation({
       route: AppRoute,
       options: {
         competitionId?: CompetitionId | null;
+        teamId?: string | null;
         subPage?: RouteSubPage | null;
       } = {},
     ) => {
@@ -44,8 +45,10 @@ export function useAppNavigation({
             selectedCompetitionId ??
             career?.seasonState.currentCompetitionId
           : null;
+      const routeId =
+        route === "lck-team-info" ? options.teamId ?? null : competitionId;
 
-      const targetPath = getPathForRoute(route, competitionId, options.subPage);
+      const targetPath = getPathForRoute(route, routeId, options.subPage);
 
       if (location.pathname !== targetPath) {
         recordRouteDebugTrace({

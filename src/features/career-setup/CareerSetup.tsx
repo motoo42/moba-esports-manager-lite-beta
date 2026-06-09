@@ -3,6 +3,7 @@ import { lck2026Teams } from "../../data/lckTeams";
 import { formatSalaryAmount } from "../../shared/format/money";
 import { Button } from "../../shared/ui/Button";
 import { Card } from "../../shared/ui/Card";
+import { TeamLogo } from "../../shared/ui/TeamLogo";
 
 type CareerSetupProps = {
   savePanel?: ReactNode;
@@ -17,12 +18,15 @@ export function CareerSetup({ savePanel, onStart }: CareerSetupProps) {
 
   return (
     <section className="stack">
-      <header>
-        <p className="eyebrow">Career setup</p>
-        <h1>LCK 팀을 선택하세요</h1>
-        <p className="lede">
-          2026 LCK 기존 선수단으로 프리시즌 스토브리그를 시작합니다.
-        </p>
+      <header className="career-setup-heading">
+        <TeamLogo variant="league" size="lg" />
+        <div>
+          <p className="eyebrow">Career setup</p>
+          <h1>LCK 팀을 선택하세요</h1>
+          <p className="lede">
+            2026 LCK 기존 선수단으로 프리시즌 스토브리그를 시작합니다.
+          </p>
+        </div>
       </header>
 
       <Card>
@@ -38,8 +42,15 @@ export function CareerSetup({ savePanel, onStart }: CareerSetupProps) {
                 onClick={() => setSelectedTeamId(team.id)}
                 type="button"
               >
-                <span className="career-team-short-name">{team.shortName}</span>
-                <strong>{team.name}</strong>
+                <div className="career-team-card-header">
+                  <TeamLogo team={team} size="md" />
+                  <div>
+                    <span className="career-team-short-name">
+                      {team.shortName}
+                    </span>
+                    <strong>{team.name}</strong>
+                  </div>
+                </div>
                 <dl>
                   <div>
                     <dt>티어</dt>

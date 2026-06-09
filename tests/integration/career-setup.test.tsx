@@ -15,6 +15,9 @@ describe("CareerSetup", () => {
       ).toBeVisible();
     }
 
+    expect(screen.getByRole("img", { name: "LCK logo" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "T1 logo" })).toBeVisible();
+
     fireEvent.click(screen.getByRole("button", { name: /Gen\.G/ }));
     fireEvent.click(screen.getByRole("button", { name: "Start career" }));
 

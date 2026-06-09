@@ -80,6 +80,7 @@ export function AppContent() {
           calendarSubPage={routeMatch.calendarSubPage}
           competitionSubPage={routeMatch.competitionSubPage}
           rosterSubPage={routeMatch.rosterSubPage}
+          teamId={routeMatch.teamId}
           onCalendarSubPageChange={handleCalendarSubPageChange}
           onCompetitionSubPageChange={handleCompetitionSubPageChange}
           onGoTo={goToRoute}

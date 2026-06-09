@@ -1,0 +1,1 @@
+export { LckTeamInfo } from "./LckTeamInfo";

@@ -9,6 +9,7 @@ type MainDashboardPageProps = {
     route: AppRoute,
     options?: {
       competitionId?: CompetitionId | null;
+      teamId?: string | null;
       subPage?: RouteSubPage | null;
     },
   ) => void;
@@ -27,6 +28,8 @@ export function MainDashboardPage({ onGoTo }: MainDashboardPageProps) {
       onViewRoster={() => onGoTo("roster-builder")}
       onViewCompetition={() => onGoTo("competition-dashboard")}
       onViewCalendar={() => onGoTo("season-calendar")}
+      onViewInbox={() => onGoTo("inbox")}
+      onViewTeam={(teamId) => onGoTo("lck-team-info", { teamId })}
     />
   );
 }
