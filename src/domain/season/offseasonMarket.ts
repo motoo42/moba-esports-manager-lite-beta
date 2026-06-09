@@ -8,6 +8,7 @@ import type {
   OffseasonNegotiationContext,
   OffseasonOffer,
   OffseasonOfferStatus,
+  OffseasonRequestedRosterRole,
   Player,
   PlayerContract,
   Role,
@@ -29,6 +30,7 @@ export type OffseasonContractOfferInput = {
   playerId: string;
   contractType: ContractType;
   salaryOffer: number;
+  requestedRosterRole?: OffseasonRequestedRosterRole;
 };
 
 export type OffseasonRosterValidation = {
@@ -42,6 +44,7 @@ export type OffseasonRosterValidation = {
 };
 
 const roleOrder: Role[] = ["top", "jungle", "mid", "bot", "support"];
+const maxPlayersPerRolePerTeam = 3;
 
 function createContract({
   contractType,
@@ -391,10 +394,12 @@ function getMarketStatusForDay(day: number): OffseasonMarketStatus {
 
 function createLogEntry({
   career,
+  isUserTeamRelated,
   message,
   type,
 }: {
   career: CareerSave;
+  isUserTeamRelated?: boolean;
   message: string;
   type: OffseasonLogEntry["type"];
 }): OffseasonLogEntry {
@@ -408,6 +413,7 @@ function createLogEntry({
     week,
     type,
     message,
+    isUserTeamRelated,
   };
 }
 
@@ -415,6 +421,7 @@ function appendLog(
   career: CareerSave,
   type: OffseasonLogEntry["type"],
   message: string,
+  options: { isUserTeamRelated?: boolean } = {},
 ): CareerSave {
   const offseason = career.seasonState.offseason;
 
@@ -430,7 +437,12 @@ function appendLog(
         ...offseason,
         logEntries: [
           ...(offseason.logEntries ?? []),
-          createLogEntry({ career, type, message }),
+          createLogEntry({
+            career,
+            isUserTeamRelated: options.isUserTeamRelated,
+            type,
+            message,
+          }),
         ],
       },
     },
@@ -540,20 +552,121 @@ function replaceContract(team: Team, contract: PlayerContract): Team {
   };
 }
 
-function addPlayerToAcademy(team: Team, playerId: string): Team {
-  const existingIds = new Set([
-    ...Object.values(team.roster).filter((id): id is string => Boolean(id)),
-    ...team.mainRosterPlayerIds,
-    ...team.academyRosterPlayerIds,
-  ]);
+function removePlayerFromRosterPlacement(team: Team, playerId: string): Team {
+  const nextRoster = { ...team.roster };
 
-  if (existingIds.has(playerId)) {
-    return team;
-  }
+  Object.entries(nextRoster).forEach(([role, starterId]) => {
+    if (starterId === playerId) {
+      delete nextRoster[role as Role];
+    }
+  });
 
   return {
     ...team,
-    academyRosterPlayerIds: [...team.academyRosterPlayerIds, playerId],
+    roster: nextRoster,
+    mainRosterPlayerIds: team.mainRosterPlayerIds.filter((id) => id !== playerId),
+    academyRosterPlayerIds: team.academyRosterPlayerIds.filter(
+      (id) => id !== playerId,
+    ),
+  };
+}
+
+function addUniqueValue(values: string[], value: string) {
+  return values.includes(value) ? values : [...values, value];
+}
+
+function getRequestedRosterRole(
+  requestedRosterRole?: OffseasonRequestedRosterRole,
+) {
+  return requestedRosterRole ?? "academy";
+}
+
+function getRequestedRosterRoleLabel(
+  requestedRosterRole?: OffseasonRequestedRosterRole,
+) {
+  const rosterRole = getRequestedRosterRole(requestedRosterRole);
+
+  if (rosterRole === "starter") {
+    return "1군 주전";
+  }
+
+  if (rosterRole === "sixth-man") {
+    return "식스맨";
+  }
+
+  return "2군";
+}
+
+function getRosterRoleForPlacement({
+  player,
+  requestedRosterRole,
+  team,
+}: {
+  player: Player;
+  requestedRosterRole?: OffseasonRequestedRosterRole;
+  team: Team;
+}) {
+  if (requestedRosterRole) {
+    return requestedRosterRole;
+  }
+
+  if (team.roster[player.role] === player.id) {
+    return "starter";
+  }
+
+  if (team.mainRosterPlayerIds.includes(player.id)) {
+    return "sixth-man";
+  }
+
+  return "academy";
+}
+
+function applyRequestedRosterRole({
+  player,
+  requestedRosterRole,
+  team,
+}: {
+  player: Player;
+  requestedRosterRole?: OffseasonRequestedRosterRole;
+  team: Team;
+}): Team {
+  const placement = getRosterRoleForPlacement({
+    player,
+    requestedRosterRole,
+    team,
+  });
+  const previousStarterId = team.roster[player.role];
+  const baseTeam = removePlayerFromRosterPlacement(team, player.id);
+
+  if (placement === "starter") {
+    return {
+      ...baseTeam,
+      roster: {
+        ...baseTeam.roster,
+        [player.role]: player.id,
+      },
+      mainRosterPlayerIds: addUniqueValue(
+        previousStarterId && previousStarterId !== player.id
+          ? addUniqueValue(baseTeam.mainRosterPlayerIds, previousStarterId)
+          : baseTeam.mainRosterPlayerIds,
+        player.id,
+      ),
+    };
+  }
+
+  if (placement === "sixth-man") {
+    return {
+      ...baseTeam,
+      mainRosterPlayerIds: addUniqueValue(baseTeam.mainRosterPlayerIds, player.id),
+    };
+  }
+
+  return {
+    ...baseTeam,
+    academyRosterPlayerIds: addUniqueValue(
+      baseTeam.academyRosterPlayerIds,
+      player.id,
+    ),
   };
 }
 
@@ -695,6 +808,7 @@ function createOffer({
   minAcceptableSalary,
   moodScore,
   rejectionReason,
+  requestedRosterRole,
   salaryOffer,
   status,
   toTeamName = "Free Agent",
@@ -708,6 +822,7 @@ function createOffer({
   minAcceptableSalary?: number;
   moodScore?: number;
   rejectionReason?: string;
+  requestedRosterRole?: OffseasonRequestedRosterRole;
   salaryOffer: number;
   status: OffseasonOfferStatus;
   toTeamName?: string;
@@ -733,6 +848,7 @@ function createOffer({
     minAcceptableSalary,
     moodScore,
     rejectionReason,
+    requestedRosterRole,
     visibleDemand,
   };
 }
@@ -888,6 +1004,7 @@ export function submitOffseasonRenewalOffer(
     moodScore: snapshot.moodScore,
     negotiationContext: "renewal",
     playerId: offerInput.playerId,
+    requestedRosterRole: offerInput.requestedRosterRole,
     salaryOffer: offerInput.salaryOffer,
     status: "pending",
     toTeamName: career.userTeam.name,
@@ -909,7 +1026,10 @@ export function submitOffseasonRenewalOffer(
   return appendLog(
     nextCareer,
     "renewal",
-    `${player.name}에게 ${Math.round(offerInput.salaryOffer)} 규모의 재계약을 제안했습니다. 다음날 수락 여부를 확인합니다.`,
+    `${player.name}에게 ${Math.round(offerInput.salaryOffer)} 규모의 ${getRequestedRosterRoleLabel(
+      offerInput.requestedRosterRole,
+    )} 재계약을 제안했습니다. 다음날 수락 여부를 확인합니다.`,
+    { isUserTeamRelated: true },
   );
 }
 
@@ -961,6 +1081,7 @@ export function releaseExpiredOffseasonPlayer(
     nextCareer,
     "release",
     `${player.name}을 방출했습니다. 해당 선수는 FA 시장에 등록됐습니다.`,
+    { isUserTeamRelated: true },
   );
 }
 
@@ -1006,6 +1127,10 @@ function getTeamNeedScore({
     teamName === career.userTeam.name
       ? getContractedRoleCount(career, player.role)
       : getAiRoleCount(career.lckPlayers, teamName, player.role);
+
+  if (roleCount >= maxPlayersPerRolePerTeam) {
+    return 0;
+  }
 
   if (roleCount === 0) {
     return 18;
@@ -1269,6 +1394,7 @@ function resolveRenewalOffers(career: CareerSave): CareerSave {
         nextCareer,
         "rejection",
         `${player.name}이 재계약 제안을 거절했습니다. 협상 분위기 ${evaluated.moodScore}%입니다.`,
+        { isUserTeamRelated: true },
       );
     }
 
@@ -1285,7 +1411,11 @@ function resolveRenewalOffers(career: CareerSave): CareerSave {
         player.id,
         currentCareer.userTeam.name,
       ),
-      userTeam: replaceContract(currentCareer.userTeam, nextContract),
+      userTeam: applyRequestedRosterRole({
+        player,
+        requestedRosterRole: userOffer.requestedRosterRole,
+        team: replaceContract(currentCareer.userTeam, nextContract),
+      }),
       seasonState: {
         ...currentCareer.seasonState,
         offseason: {
@@ -1311,7 +1441,10 @@ function resolveRenewalOffers(career: CareerSave): CareerSave {
     return appendLog(
       nextCareer,
       "renewal",
-      `${player.name}과 ${Math.round(userOffer.salaryOffer)} 규모의 ${contractType} 재계약에 합의했습니다.`,
+      `${player.name}과 ${Math.round(userOffer.salaryOffer)} 규모의 ${contractType} 재계약에 합의했습니다. 역할: ${getRequestedRosterRoleLabel(
+        userOffer.requestedRosterRole,
+      )}.`,
+      { isUserTeamRelated: true },
     );
   }, career);
 }
@@ -1337,7 +1470,6 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
       return currentCareer;
     }
 
-    const userContractType = userOffer.contractType ?? "one-year";
     const evaluatedUserOffer = evaluateOffer({
       career: currentCareer,
       context: "free-agent",
@@ -1372,7 +1504,7 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
       status: !winningOffer
         ? "rejected"
         : userWins
-          ? "accepted"
+          ? "confirmation-pending"
           : evaluatedUserOffer.isAcceptable
             ? "lost"
             : "rejected",
@@ -1414,26 +1546,13 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
         nextCareer,
         "rejection",
         `${player.name}이 모든 제안을 거절했습니다. 협상 분위기 ${evaluatedUserOffer.moodScore}%입니다.`,
+        { isUserTeamRelated: true },
       );
     }
 
     if (userWins) {
-      const nextContract = createContract({
-        playerId,
-        contractType: userContractType,
-        salaryOffer: userOffer.salaryOffer,
-      });
       const nextCareer: CareerSave = {
         ...currentCareer,
-        lckPlayers: setPlayerCurrentTeam(
-          currentCareer.lckPlayers,
-          playerId,
-          currentCareer.userTeam.name,
-        ),
-        userTeam: addPlayerToAcademy(
-          replaceContract(currentCareer.userTeam, nextContract),
-          playerId,
-        ),
         seasonState: {
           ...currentCareer.seasonState,
           offseason: {
@@ -1444,14 +1563,6 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
               resolvedUserOffer,
               ...rejectedAiOffers,
             ],
-            freeAgentPlayerIds: removeValue(
-              currentOffseason.freeAgentPlayerIds ?? [],
-              playerId,
-            ),
-            signedPlayerIds: addUnique(
-              currentOffseason.signedPlayerIds ?? [],
-              playerId,
-            ),
             validationErrors: [],
           },
         },
@@ -1460,7 +1571,12 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
       return appendLog(
         nextCareer,
         "signing",
-        `${player.name} 영입 경쟁에서 승리했습니다. 제안 연봉 ${Math.round(userOffer.salaryOffer)}.`,
+        `${player.name} 영입 경쟁에서 승리했습니다. 제안 연봉 ${Math.round(
+          userOffer.salaryOffer,
+        )}, 역할 ${getRequestedRosterRoleLabel(
+          userOffer.requestedRosterRole,
+        )}. 최종 영입 확정을 기다립니다.`,
+        { isUserTeamRelated: true },
       );
     }
 
@@ -1502,6 +1618,7 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
       nextCareer,
       "ai-signing",
       `${player.name} 영입 경쟁에서 ${aiTeamName}이 승리했습니다.`,
+      { isUserTeamRelated: true },
     );
   }, career);
 }
@@ -1513,11 +1630,13 @@ function getAvailableFreeAgentPlayers(
   const freeAgentIds = new Set(
     career.seasonState.offseason?.freeAgentPlayerIds ?? [],
   );
+  const confirmationPendingIds = getConfirmationPendingPlayerIds(career);
 
   return career.lckPlayers.filter(
     (player) =>
       player.availableForRoster &&
       freeAgentIds.has(player.id) &&
+      !confirmationPendingIds.has(player.id) &&
       !excludedPlayerIds.has(player.id),
   );
 }
@@ -1659,6 +1778,188 @@ function resolveAiDepthSignings(
   return nextCareer;
 }
 
+function getConfirmationPendingOffer(career: CareerSave, offerId: string) {
+  return (career.seasonState.offseason?.resolvedOffers ?? []).find(
+    (offer) =>
+      offer.id === offerId &&
+      offer.status === "confirmation-pending" &&
+      offer.fromTeamName === career.userTeam.name &&
+      (offer.negotiationContext ?? "free-agent") === "free-agent",
+  );
+}
+
+function getConfirmationPendingPlayerIds(career: CareerSave) {
+  return new Set(
+    (career.seasonState.offseason?.resolvedOffers ?? [])
+      .filter((offer) => offer.status === "confirmation-pending")
+      .flatMap((offer) => offer.playerIds),
+  );
+}
+
+function getRoleLimitError(career: CareerSave, player: Player) {
+  const roleCount = getContractedRoleCount(career, player.role);
+
+  if (roleCount >= maxPlayersPerRolePerTeam) {
+    return `${player.role.toUpperCase()} 포지션은 1군과 2군을 합쳐 최대 ${maxPlayersPerRolePerTeam}명까지만 보유할 수 있습니다.`;
+  }
+
+  return null;
+}
+
+function getBudgetLimitError(career: CareerSave, salaryOffer: number) {
+  const nextSalaryTotal = getContractSalaryTotal(career.userTeam) + salaryOffer;
+
+  if (nextSalaryTotal > career.userTeam.budget) {
+    return `예산 초과: 현재 연봉 여유 금액을 초과해 영입할 수 없습니다.`;
+  }
+
+  return null;
+}
+
+function setOffseasonValidationErrors(career: CareerSave, errors: string[]) {
+  const offseason = career.seasonState.offseason;
+
+  if (!offseason) {
+    return career;
+  }
+
+  return {
+    ...career,
+    seasonState: {
+      ...career.seasonState,
+      offseason: {
+        ...offseason,
+        validationErrors: errors,
+      },
+    },
+  };
+}
+
+export function confirmFreeAgentSigning(
+  career: CareerSave,
+  offerId: string,
+): CareerSave {
+  const offseason = career.seasonState.offseason;
+  const offer = getConfirmationPendingOffer(career, offerId);
+  const playerId = offer?.playerIds[0];
+  const player = playerId ? getPlayer(career, playerId) : undefined;
+
+  if (
+    career.seasonState.phase !== "offseason" ||
+    !offseason ||
+    offseason.status !== "active" ||
+    !offer ||
+    !player ||
+    !player.availableForRoster ||
+    !(offseason.freeAgentPlayerIds ?? []).includes(player.id)
+  ) {
+    return career;
+  }
+
+  const errors = [
+    getBudgetLimitError(career, offer.salaryOffer),
+    getRoleLimitError(career, player),
+  ].filter((error): error is string => Boolean(error));
+
+  if (errors.length > 0) {
+    return appendLog(
+      setOffseasonValidationErrors(career, errors),
+      "blocked",
+      `${player.name} 영입 확정에 실패했습니다. ${errors[0]}`,
+      { isUserTeamRelated: true },
+    );
+  }
+
+  const contractType = offer.contractType ?? "one-year";
+  const nextContract = createContract({
+    playerId: player.id,
+    contractType,
+    salaryOffer: offer.salaryOffer,
+  });
+  const updatedOffer: OffseasonOffer = {
+    ...offer,
+    status: "accepted",
+    resolvedDay: getCurrentOffseasonDay(career),
+  };
+  const nextCareer: CareerSave = {
+    ...career,
+    lckPlayers: setPlayerCurrentTeam(
+      career.lckPlayers,
+      player.id,
+      career.userTeam.name,
+    ),
+    userTeam: applyRequestedRosterRole({
+      player,
+      requestedRosterRole: offer.requestedRosterRole,
+      team: replaceContract(career.userTeam, nextContract),
+    }),
+    seasonState: {
+      ...career.seasonState,
+      offseason: {
+        ...offseason,
+        resolvedOffers: (offseason.resolvedOffers ?? []).map((candidate) =>
+          candidate.id === offer.id ? updatedOffer : candidate,
+        ),
+        freeAgentPlayerIds: removeValue(
+          offseason.freeAgentPlayerIds ?? [],
+          player.id,
+        ),
+        signedPlayerIds: addUnique(offseason.signedPlayerIds ?? [], player.id),
+        validationErrors: [],
+      },
+    },
+  };
+
+  return appendLog(
+    nextCareer,
+    "signing",
+    `${player.name} 영입을 확정했습니다. 역할: ${getRequestedRosterRoleLabel(
+      offer.requestedRosterRole,
+    )}.`,
+    { isUserTeamRelated: true },
+  );
+}
+
+export function cancelFreeAgentSigning(
+  career: CareerSave,
+  offerId: string,
+): CareerSave {
+  const offseason = career.seasonState.offseason;
+  const offer = getConfirmationPendingOffer(career, offerId);
+  const playerId = offer?.playerIds[0];
+  const player = playerId ? getPlayer(career, playerId) : undefined;
+
+  if (
+    career.seasonState.phase !== "offseason" ||
+    !offseason ||
+    offseason.status !== "active" ||
+    !offer
+  ) {
+    return career;
+  }
+
+  const updatedOffer: OffseasonOffer = {
+    ...offer,
+    status: "withdrawn",
+    resolvedDay: getCurrentOffseasonDay(career),
+    rejectionReason: "user-cancelled-confirmation",
+  };
+  const nextCareer = setOffseasonState(career, {
+    ...offseason,
+    resolvedOffers: (offseason.resolvedOffers ?? []).map((candidate) =>
+      candidate.id === offer.id ? updatedOffer : candidate,
+    ),
+    validationErrors: [],
+  });
+
+  return appendLog(
+    nextCareer,
+    "signing",
+    `${player?.name ?? playerId ?? "선수"} 영입을 취소했습니다. 해당 선수는 FA 시장에 남습니다.`,
+    { isUserTeamRelated: true },
+  );
+}
+
 export function submitFreeAgentOffer(
   career: CareerSave,
   offerInput: OffseasonContractOfferInput,
@@ -1687,8 +1988,15 @@ export function submitFreeAgentOffer(
       (offer.negotiationContext ?? "free-agent") === "free-agent" &&
       offer.playerIds.includes(player.id),
   );
+  const hasConfirmationPendingOffer = (offseason.resolvedOffers ?? []).some(
+    (offer) =>
+      offer.status === "confirmation-pending" &&
+      offer.fromTeamName === career.userTeam.name &&
+      (offer.negotiationContext ?? "free-agent") === "free-agent" &&
+      offer.playerIds.includes(player.id),
+  );
 
-  if (hasPendingOffer) {
+  if (hasPendingOffer || hasConfirmationPendingOffer) {
     return career;
   }
 
@@ -1707,6 +2015,7 @@ export function submitFreeAgentOffer(
     moodScore: snapshot.moodScore,
     negotiationContext: "free-agent",
     playerId: player.id,
+    requestedRosterRole: offerInput.requestedRosterRole,
     salaryOffer: offerInput.salaryOffer,
     status: "pending",
     visibleDemand: snapshot.visibleDemand,
@@ -1726,12 +2035,17 @@ export function submitFreeAgentOffer(
   return appendLog(
     nextCareer,
     "signing",
-    `${player.name}에게 ${Math.round(offerInput.salaryOffer)} 규모의 FA 계약을 제안했습니다. 다음날 AI 경쟁 제안과 함께 결과가 확정됩니다.`,
+    `${player.name}에게 ${Math.round(offerInput.salaryOffer)} 규모의 FA 계약을 제안했습니다. 제안 역할: ${getRequestedRosterRoleLabel(
+      offerInput.requestedRosterRole,
+    )}. 다음날 AI 경쟁 제안과 함께 결과가 확정됩니다.`,
+    { isUserTeamRelated: true },
   );
 }
 
 function getContractSalaryTotal(team: Team) {
-  return team.contracts.reduce((total, contract) => total + contract.salary, 0);
+  return team.contracts
+    .filter((contract) => contract.remainingYears > 0)
+    .reduce((total, contract) => total + contract.salary, 0);
 }
 
 export function validateOffseasonRoster(
@@ -1808,6 +2122,16 @@ export function validateOffseasonRoster(
 
   if (yearlySalary > career.userTeam.budget) {
     errors.push("계약 총액이 팀 예산을 초과했습니다.");
+  }
+
+  const confirmationPendingCount = (
+    career.seasonState.offseason?.resolvedOffers ?? []
+  ).filter((offer) => offer.status === "confirmation-pending").length;
+
+  if (confirmationPendingCount > 0) {
+    errors.push(
+      `영입 확정 대기 중인 제안 ${confirmationPendingCount}건을 먼저 처리해야 합니다.`,
+    );
   }
 
   roleOrder.forEach((role) => {

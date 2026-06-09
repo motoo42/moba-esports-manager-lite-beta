@@ -1,4 +1,6 @@
 import {
+  cancelFreeAgentSigning,
+  confirmFreeAgentSigning,
   initializeOffseasonMarket,
   releaseExpiredOffseasonPlayer,
   renewExpiredContractsForOffseason,
@@ -19,6 +21,8 @@ type OffseasonAction = Extract<
       | "submit-offseason-renewal-offer"
       | "release-expired-offseason-player"
       | "submit-free-agent-offer"
+      | "confirm-free-agent-signing"
+      | "cancel-free-agent-signing"
       | "start-next-season";
   }
 >;
@@ -75,6 +79,22 @@ export function handleOffseasonAction(
       ...state,
       route: "offseason",
       career: submitFreeAgentOffer(state.career, action.offer),
+    };
+  }
+
+  if (action.type === "confirm-free-agent-signing") {
+    return {
+      ...state,
+      route: "offseason",
+      career: confirmFreeAgentSigning(state.career, action.offerId),
+    };
+  }
+
+  if (action.type === "cancel-free-agent-signing") {
+    return {
+      ...state,
+      route: "offseason",
+      career: cancelFreeAgentSigning(state.career, action.offerId),
     };
   }
 

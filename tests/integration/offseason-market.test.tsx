@@ -108,6 +108,8 @@ describe("OffseasonMarket", () => {
     render(
       <OffseasonMarket
         career={career}
+        onCancelFreeAgentSigning={vi.fn()}
+        onConfirmFreeAgentSigning={vi.fn()}
         onReleaseExpiredPlayer={vi.fn()}
         onSubmitFreeAgentOffer={vi.fn()}
         onSubmitRenewalOffer={vi.fn()}
@@ -143,6 +145,8 @@ describe("OffseasonMarket", () => {
     render(
       <OffseasonMarket
         career={createActiveOffseasonCareer()}
+        onCancelFreeAgentSigning={vi.fn()}
+        onConfirmFreeAgentSigning={vi.fn()}
         onReleaseExpiredPlayer={vi.fn()}
         onSubmitFreeAgentOffer={vi.fn()}
         onSubmitRenewalOffer={onSubmitRenewalOffer}
@@ -155,6 +159,7 @@ describe("OffseasonMarket", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "재계약 협상" }));
     expect(screen.getByRole("dialog", { name: "재계약 협상" })).toBeVisible();
+    expect(screen.getByLabelText("제안 역할")).toBeVisible();
     expect(screen.getByText("협상 분위기")).toBeVisible();
     expect(screen.queryByText("현재 최소 수락선")).not.toBeInTheDocument();
     expect(screen.queryByText("수락권")).not.toBeInTheDocument();
@@ -173,6 +178,7 @@ describe("OffseasonMarket", () => {
       expect.objectContaining({
         playerId: "lck-top-01",
         contractType: "one-year",
+        requestedRosterRole: "starter",
       }),
     );
   });
@@ -196,6 +202,8 @@ describe("OffseasonMarket", () => {
     render(
       <OffseasonMarket
         career={weekTwoCareer}
+        onCancelFreeAgentSigning={vi.fn()}
+        onConfirmFreeAgentSigning={vi.fn()}
         onReleaseExpiredPlayer={vi.fn()}
         onSubmitFreeAgentOffer={onSubmitFreeAgentOffer}
         onSubmitRenewalOffer={vi.fn()}
@@ -208,6 +216,7 @@ describe("OffseasonMarket", () => {
     expect(screen.getByText("BeryL")).toBeVisible();
     fireEvent.click(screen.getAllByRole("button", { name: "FA 협상" })[0]);
     expect(screen.getByRole("dialog", { name: "FA 계약 협상" })).toBeVisible();
+    expect(screen.getByLabelText("제안 역할")).toBeVisible();
     expect(screen.getByText("선수 측 요구액")).toBeVisible();
     expect(screen.getByText("협상 분위기")).toBeVisible();
     expect(screen.queryByText("현재 최소 수락선")).not.toBeInTheDocument();
@@ -216,7 +225,82 @@ describe("OffseasonMarket", () => {
     expect(onSubmitFreeAgentOffer).toHaveBeenCalledWith(
       expect.objectContaining({
         playerId: "fa-2026-beryl",
+        requestedRosterRole: "academy",
       }),
     );
+  });
+
+  it("renders confirmation pending signings and highlights user-team logs", () => {
+    const onConfirmFreeAgentSigning = vi.fn();
+    const onCancelFreeAgentSigning = vi.fn();
+    const career = createActiveOffseasonCareer();
+    const weekTwoCareer: CareerSave = {
+      ...career,
+      userTeam: {
+        ...career.userTeam,
+        budget: 3000,
+      },
+      seasonState: {
+        ...career.seasonState,
+        offseason: {
+          ...career.seasonState.offseason!,
+          currentDay: 9,
+          currentWeek: 2,
+          marketStatus: "free-agency",
+          resolvedOffers: [
+            ...(career.seasonState.offseason?.resolvedOffers ?? []),
+            {
+              id: "pending-beryl",
+              kind: "contract",
+              fromTeamName: "T1",
+              toTeamName: "Free Agent",
+              playerIds: ["fa-2026-beryl"],
+              salaryOffer: 120,
+              contractType: "one-year",
+              status: "confirmation-pending",
+              createdDay: 8,
+              resolvedDay: 9,
+              negotiationContext: "free-agent",
+              requestedRosterRole: "sixth-man",
+            },
+          ],
+          logEntries: [
+            ...(career.seasonState.offseason?.logEntries ?? []),
+            {
+              id: "user-log",
+              day: 9,
+              week: 2,
+              type: "signing",
+              message: "BeryL 영입 경쟁에서 승리했습니다.",
+              isUserTeamRelated: true,
+            },
+          ],
+        },
+      },
+    };
+
+    render(
+      <OffseasonMarket
+        career={weekTwoCareer}
+        onCancelFreeAgentSigning={onCancelFreeAgentSigning}
+        onConfirmFreeAgentSigning={onConfirmFreeAgentSigning}
+        onReleaseExpiredPlayer={vi.fn()}
+        onSubmitFreeAgentOffer={vi.fn()}
+        onSubmitRenewalOffer={vi.fn()}
+        onViewRoster={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "FA 시장" }));
+
+    expect(screen.getByText("영입 확정 대기")).toBeVisible();
+    expect(screen.getByText("제안 역할 식스맨")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "영입 확정" }));
+    expect(onConfirmFreeAgentSigning).toHaveBeenCalledWith("pending-beryl");
+
+    fireEvent.click(screen.getByRole("button", { name: "이적 로그" }));
+    expect(
+      screen.getByText("BeryL 영입 경쟁에서 승리했습니다.").closest("article"),
+    ).toHaveClass("offseason-log-user-team");
   });
 });

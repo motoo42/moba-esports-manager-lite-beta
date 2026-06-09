@@ -26,6 +26,12 @@ export function OffseasonPage({ onGoTo }: OffseasonPageProps) {
   return (
     <OffseasonMarket
       career={career}
+      onCancelFreeAgentSigning={(offerId) =>
+        dispatch(gameActions.cancelFreeAgentSigning(offerId))
+      }
+      onConfirmFreeAgentSigning={(offerId) =>
+        dispatch(gameActions.confirmFreeAgentSigning(offerId))
+      }
       onReleaseExpiredPlayer={(playerId) =>
         dispatch(gameActions.releaseExpiredOffseasonPlayer(playerId))
       }

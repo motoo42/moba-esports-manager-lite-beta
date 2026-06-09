@@ -102,13 +102,13 @@ export function getCareerAutoSaveCheckpoint(career: CareerSave) {
         seasonState.offseason.pendingOffers
           ?.map(
             (offer) =>
-              `${offer.id}:${offer.status}:${offer.negotiationContext ?? "legacy"}:${offer.playerIds.join(",")}:${offer.salaryOffer}:${offer.minAcceptableSalary ?? "no-min"}`,
+              `${offer.id}:${offer.status}:${offer.negotiationContext ?? "legacy"}:${offer.playerIds.join(",")}:${offer.salaryOffer}:${offer.minAcceptableSalary ?? "no-min"}:${offer.requestedRosterRole ?? "no-role"}`,
           )
           .join(",") ?? "",
         seasonState.offseason.resolvedOffers
           ?.map(
             (offer) =>
-              `${offer.id}:${offer.status}:${offer.negotiationContext ?? "legacy"}:${offer.playerIds.join(",")}:${offer.salaryOffer}:${offer.minAcceptableSalary ?? "no-min"}:${offer.rejectionReason ?? "no-reason"}`,
+              `${offer.id}:${offer.status}:${offer.negotiationContext ?? "legacy"}:${offer.playerIds.join(",")}:${offer.salaryOffer}:${offer.minAcceptableSalary ?? "no-min"}:${offer.rejectionReason ?? "no-reason"}:${offer.requestedRosterRole ?? "no-role"}`,
           )
           .join(",") ?? "",
         seasonState.offseason.logEntries?.length ?? 0,

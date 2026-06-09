@@ -38,6 +38,8 @@ export type GameAction =
     }
   | { type: "release-expired-offseason-player"; playerId: string }
   | { type: "submit-free-agent-offer"; offer: OffseasonContractOfferInput }
+  | { type: "confirm-free-agent-signing"; offerId: string }
+  | { type: "cancel-free-agent-signing"; offerId: string }
   | { type: "start-next-season" }
   | { type: "set-strategy"; strategy: StrategyId }
   | { type: "set-training-intensity"; trainingIntensity: TrainingIntensity }

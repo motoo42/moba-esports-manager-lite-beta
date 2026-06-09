@@ -114,6 +114,8 @@ export {
   getOffseasonNegotiationSnapshot,
   getOffseasonVisibleDemandSalary,
   getUnresolvedExpiredPlayerIds,
+  cancelFreeAgentSigning,
+  confirmFreeAgentSigning,
   initializeOffseasonMarket,
   progressOffseasonDay,
   releaseExpiredOffseasonPlayer,

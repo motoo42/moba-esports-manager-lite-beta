@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
 import { progressCareer } from "../../src/domain/game-progress/progressCareer";
 import {
+  cancelFreeAgentSigning,
   completeSeasonAfterWorlds,
+  confirmFreeAgentSigning,
   getOffseasonMoodColor,
   initializeOffseasonMarket,
   getOffseasonMinimumAcceptableSalary,
@@ -238,6 +240,7 @@ describe("offseason market", () => {
     const pendingAccepted = submitOffseasonRenewalOffer(rejected, {
       playerId: "lck-top-01",
       contractType: "two-year",
+      requestedRosterRole: "academy",
       salaryOffer: 200,
     });
     const accepted = progressOffseasonDay(progressOffseasonDay(pendingAccepted));
@@ -250,6 +253,8 @@ describe("offseason market", () => {
         (contract) => contract.playerId === "lck-top-01",
       )?.remainingYears,
     ).toBe(2);
+    expect(accepted.userTeam.academyRosterPlayerIds).toContain("lck-top-01");
+    expect(accepted.userTeam.roster.top).toBeUndefined();
   });
 
   it("resolves day-seven renewal offers before blocking week two", () => {
@@ -291,7 +296,7 @@ describe("offseason market", () => {
     );
   });
 
-  it("resolves FA offers on the next day with AI competition", () => {
+  it("holds user-won FA offers for confirmation before signing", () => {
     const renewed = progressOffseasonDay(
       progressOffseasonDay(
         submitOffseasonRenewalOffer(startMarket(), {
@@ -303,6 +308,10 @@ describe("offseason market", () => {
     );
     const weekTwoCareer: CareerSave = {
       ...renewed,
+      userTeam: {
+        ...renewed.userTeam,
+        budget: 3000,
+      },
       seasonState: {
         ...renewed.seasonState,
         offseason: {
@@ -320,14 +329,145 @@ describe("offseason market", () => {
     });
     const nextDay = progressOffseasonDay(offered);
     const resolved = progressOffseasonDay(nextDay);
+    const pendingOffer = resolved.seasonState.offseason?.resolvedOffers?.find(
+      (offer) =>
+        offer.status === "confirmation-pending" &&
+        offer.playerIds.includes("fa-2026-beryl"),
+    );
 
-    expect(resolved.seasonState.offseason?.signedPlayerIds).toContain(
+    expect(pendingOffer).toBeDefined();
+    expect(resolved.seasonState.offseason?.signedPlayerIds).not.toContain(
       "fa-2026-beryl",
     );
     expect(
       resolved.lckPlayers.find((player) => player.id === "fa-2026-beryl")
         ?.currentTeam,
+    ).toBeUndefined();
+
+    const confirmed = confirmFreeAgentSigning(resolved, pendingOffer!.id);
+
+    expect(confirmed.seasonState.offseason?.signedPlayerIds).toContain(
+      "fa-2026-beryl",
+    );
+    expect(
+      confirmed.lckPlayers.find((player) => player.id === "fa-2026-beryl")
+        ?.currentTeam,
     ).toBe("T1");
+  });
+
+  it("can cancel a user-won FA offer before final registration", () => {
+    const renewed = progressOffseasonDay(
+      progressOffseasonDay(
+        submitOffseasonRenewalOffer(startMarket(), {
+          playerId: "lck-top-01",
+          contractType: "two-year",
+          salaryOffer: 200,
+        }),
+      ),
+    );
+    const weekTwoCareer: CareerSave = {
+      ...renewed,
+      userTeam: {
+        ...renewed.userTeam,
+        budget: 3000,
+      },
+      seasonState: {
+        ...renewed.seasonState,
+        offseason: {
+          ...renewed.seasonState.offseason!,
+          currentDay: 8,
+          currentWeek: 2,
+          marketStatus: "free-agency",
+        },
+      },
+    };
+    const offered = submitFreeAgentOffer(weekTwoCareer, {
+      playerId: "fa-2026-beryl",
+      contractType: "two-year",
+      salaryOffer: 300,
+    });
+    const resolved = progressOffseasonDay(progressOffseasonDay(offered));
+    const pendingOffer = resolved.seasonState.offseason?.resolvedOffers?.find(
+      (offer) =>
+        offer.status === "confirmation-pending" &&
+        offer.playerIds.includes("fa-2026-beryl"),
+    );
+
+    const cancelled = cancelFreeAgentSigning(resolved, pendingOffer!.id);
+
+    expect(
+      cancelled.seasonState.offseason?.resolvedOffers?.find(
+        (offer) => offer.id === pendingOffer!.id,
+      )?.status,
+    ).toBe("withdrawn");
+    expect(cancelled.seasonState.offseason?.freeAgentPlayerIds).toContain(
+      "fa-2026-beryl",
+    );
+    expect(
+      cancelled.lckPlayers.find((player) => player.id === "fa-2026-beryl")
+        ?.currentTeam,
+    ).toBeUndefined();
+  });
+
+  it("blocks final FA registration when budget or role limits fail", () => {
+    const renewed = progressOffseasonDay(
+      progressOffseasonDay(
+        submitOffseasonRenewalOffer(startMarket(), {
+          playerId: "lck-top-01",
+          contractType: "two-year",
+          salaryOffer: 200,
+        }),
+      ),
+    );
+    const supportDepth = renewed.lckPlayers
+      .filter((player) => player.role === "support" && player.id !== "fa-2026-beryl")
+      .slice(0, 3)
+      .map((player) => player.id);
+    const weekTwoCareer: CareerSave = {
+      ...renewed,
+      userTeam: {
+        ...renewed.userTeam,
+        budget: 1,
+        contracts: [
+          ...renewed.userTeam.contracts,
+          ...supportDepth.map((playerId) => createContract(playerId)),
+        ],
+      },
+      seasonState: {
+        ...renewed.seasonState,
+        offseason: {
+          ...renewed.seasonState.offseason!,
+          currentDay: 8,
+          currentWeek: 2,
+          marketStatus: "free-agency",
+        },
+      },
+    };
+    const offered = submitFreeAgentOffer(weekTwoCareer, {
+      playerId: "fa-2026-beryl",
+      contractType: "two-year",
+      salaryOffer: 300,
+    });
+    const resolved = progressOffseasonDay(progressOffseasonDay(offered));
+    const pendingOffer = resolved.seasonState.offseason?.resolvedOffers?.find(
+      (offer) =>
+        offer.status === "confirmation-pending" &&
+        offer.playerIds.includes("fa-2026-beryl"),
+    );
+
+    const blocked = confirmFreeAgentSigning(resolved, pendingOffer!.id);
+
+    expect(
+      blocked.seasonState.offseason?.resolvedOffers?.find(
+        (offer) => offer.id === pendingOffer!.id,
+      )?.status,
+    ).toBe("confirmation-pending");
+    expect(blocked.seasonState.offseason?.validationErrors?.join(" ")).toContain(
+      "예산",
+    );
+    expect(blocked.seasonState.offseason?.validationErrors?.join(" ")).toContain(
+      "SUPPORT",
+    );
   });
 
   it("keeps a player in the FA pool when every offer is below the minimum", () => {

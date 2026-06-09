@@ -69,6 +69,12 @@ export const gameActions = {
   submitFreeAgentOffer(offer: OffseasonContractOfferInput): GameAction {
     return { type: "submit-free-agent-offer", offer };
   },
+  confirmFreeAgentSigning(offerId: string): GameAction {
+    return { type: "confirm-free-agent-signing", offerId };
+  },
+  cancelFreeAgentSigning(offerId: string): GameAction {
+    return { type: "cancel-free-agent-signing", offerId };
+  },
   startNextSeason(): GameAction {
     return { type: "start-next-season" };
   },

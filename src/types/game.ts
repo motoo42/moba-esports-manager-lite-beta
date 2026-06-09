@@ -574,10 +574,16 @@ export type OffseasonNegotiationContext =
 
 export type OffseasonOfferStatus =
   | "pending"
+  | "confirmation-pending"
   | "accepted"
   | "rejected"
   | "lost"
   | "withdrawn";
+
+export type OffseasonRequestedRosterRole =
+  | "starter"
+  | "sixth-man"
+  | "academy";
 
 export type OffseasonOffer = {
   id: string;
@@ -595,6 +601,7 @@ export type OffseasonOffer = {
   minAcceptableSalary?: number;
   visibleDemand?: number;
   moodScore?: number;
+  requestedRosterRole?: OffseasonRequestedRosterRole;
   rejectionReason?: string;
 };
 
@@ -615,6 +622,7 @@ export type OffseasonLogEntry = {
   week: number;
   type: OffseasonLogType;
   message: string;
+  isUserTeamRelated?: boolean;
 };
 
 export type OffseasonState = {
