@@ -71,6 +71,7 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - Express API 서버와 MongoDB Atlas `careerSaves` 저장/불러오기 구현.
 - 저장 목록 조회, 수동 저장, 새 저장, 불러오기, 첫 자동 저장, 체크포인트 자동 저장 구현.
 - 저장 관리는 `/saves` 전용 `데이터 저장` 화면으로 이동했고, 상단바에는 자동 저장 상태 배지만 남김.
+- `/saves` 저장 슬롯 삭제 기능 구현. 삭제 확인 모달, DELETE API 연결, 삭제 후 목록 새로고침, 현재 active save 삭제 시 active save meta 초기화를 처리한다.
 - 커리어 시작 전 화면의 저장/불러오기 패널은 유지.
 - 저장 `revision` 기반 충돌 감지와 409 피드백 구현.
 - 자동 저장 fingerprint는 로스터, 주간 전략/훈련, 대회 상태, 경기 기록, 시즌 히스토리/오프시즌 요약, 오프시즌, Worlds, 선수 생애주기/상태/시장가치 변화를 반영.
@@ -109,7 +110,10 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
   - `lck2026Teams`에서 `logoUrl`, `logoSourceUrl`을 관리하고, 공통 `TeamLogo`가 로딩 실패 시 약칭 fallback을 표시한다.
 - 사용자 메모 기반 핵심 선수 능력치 1차 세부조정 완료.
 - 스탯 기반 후보표는 참고용 문서로만 보관.
-- LCK 팀 밸런스는 `S~C` 4단계 프로필로 관리. 2026 기본값에 팀별 ELO, strength, 예산, 연봉계수, 팀 매력도 보정이 들어감.
+- LCK 팀 밸런스는 `S~C` 4단계 프로필로 관리. 2026 기본값에 팀별 ELO, strength, 예산, 팀 매력도 보정이 들어감.
+- 2026 LCK 팀 예산은 사용자 확정값으로 낮춤: HLE 90억, Gen.G 88억, T1 90억, KT 55억, DK 48억, NS 43억, BRO 37억, DN 37억, BFX 35억, DRX 33억.
+- 2026 선수 연봉은 `src/data/lck2026SalaryOverrides.ts`에서 최종 override로 관리하며, 팀 연봉계수 적용 이후 마지막 단계에서 `salaryExpectation`/`cost`에 반영한다.
+- 1군 연봉 내림차순 문서는 `docs/lck-2026-main-salary-list.md`에 정리했다.
 - 2027/2028 다음 시즌 진입 시 직전 LCK 순위가 기대 순위보다 높거나 낮으면 ELO/예산/strength가 소폭 보정됨.
 - 연봉/예산 내부 단위는 `1 = 1천만원`, 예: `130 = 13억`. UI 표시에는 한국식 금액 formatter를 사용.
 - `src/domain/players`에 선수 상태, 계약, 시장가치, 시즌 롤오버 helper 분리.
@@ -240,15 +244,20 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 
 ### 기능 작업 후보
 
-1. `연봉/예산 밸런싱`
-   - 2군/하위권/상위권 연봉과 팀 예산을 실제 플레이 감각 기준으로 재조정
-   - 스토브리그 영입 가능성과 AI 보강 안정성을 함께 확인
-2. `저장 데이터 삭제`
-   - `/saves` 저장 목록에서 삭제 버튼/확인 플로우 추가
-   - 서버 DELETE API와 UI feedback, 자동 저장 메타 정리 확인
+1. `베타 테스트 피드백 반영`
+   - 친구 플레이 중 진행 불가, 저장 불가, 화면 깨짐, 밸런스 문제를 최우선으로 수집/분류
+   - 수정 후 Render 배포 링크에서 실제 새 빌드가 반영되는지 확인
+2. `스토브리그/연봉 밸런스 2차`
+   - 실제 베타 플레이 피드백을 바탕으로 예산 압박감, AI 영입, 식스맨 운영 난이도를 다시 조정
 
 ### 최근 완료된 베타 전 재정비
 
+- `저장 데이터 삭제 + LCK 연봉/예산 1차 재조정`
+  - `/saves` 저장 슬롯 삭제 버튼과 확인 모달 추가
+  - 현재 active save 삭제 시 커리어는 메모리에 유지하고 active save meta만 초기화
+  - 2026 LCK 팀 예산을 확정값으로 낮추고, 선수 연봉 최종 override 적용
+  - T1 2군 총액은 8억, 다른 2군은 평균 1억 전후로 재조정
+  - `docs/lck-2026-main-salary-list.md`에 2026 LCK 1군 연봉 내림차순 목록 작성
 - `메시지함/뉴스/일정 알림 1차`
   - `/inbox` route와 좌측 `메시지함` 메뉴 추가
   - `CareerSave.messages`와 `CareerMessage` 타입 추가
@@ -335,7 +344,30 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 
 다음 작업:
 
-- 저장 데이터 삭제 기능 추가
+- 베타 테스트 피드백 반영
+
+### 2026-06-10 - 저장 데이터 삭제 + LCK 연봉/예산 1차 재조정
+
+작업 범위:
+
+- `SaveManager`에 저장 슬롯 삭제 버튼과 삭제 확인 모달 추가
+- 프론트 저장 API에 `DELETE /api/saves/:saveId` 연결
+- 삭제 성공 시 저장 목록을 새로고침하고, 삭제 대상이 현재 active save이면 active save meta를 비움
+- 2026 LCK 팀 예산을 사용자 확정값으로 재조정
+- `src/data/lck2026SalaryOverrides.ts`에 선수별 최종 연봉 override 추가
+- `lck2026Players` 생성 시 팀 multiplier 이후 최종 override가 적용되도록 연결
+- `docs/lck-2026-main-salary-list.md`에 2026 LCK 1군 연봉 내림차순 목록과 팀별 총액표 작성
+
+검증:
+
+- `npm.cmd test -- tests/integration/save-manager.test.tsx tests/unit/lck-2026-players.test.ts tests/unit/money-format.test.ts` 통과
+- `npm.cmd test -- tests/unit/player-lifecycle.test.ts tests/unit/season-end.test.ts tests/unit/career-progress-debug-runner.test.ts` 통과
+- `npm.cmd test` 통과: 51 files / 231 tests
+- `npm.cmd run build` 통과. Vite 500kB chunk 경고는 기존 번들 크기 경고
+
+남은 문제:
+
+- 실제 베타 플레이에서 예산 압박감과 스토브리그 영입 난이도 피드백을 받아 2차 조정 필요
 
 ### 2026-06-09 - #9 팀/LCK 로고 에셋 적용
 
@@ -353,7 +385,7 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 
 다음 작업:
 
-- #10 연봉/예산 밸런싱 추가 조정
+- 저장 데이터 삭제와 연봉/예산 1차 재조정 완료 후 베타 테스트 피드백 반영
 
 ### 2026-06-09 - 베타 전 재정비 5번: 타팀 로스터/스카우팅 화면
 
@@ -1024,7 +1056,7 @@ VITE_API_BASE_URL=/api
 기말 프로젝트 최우선 목표는 LCK 3시즌 작동입니다. 2026, 2027, 2028 시즌을 진행해 2028 Worlds 종료 후 시즌 요약/스토브리그까지 안정적으로 도달하는 것을 기준으로 작업 우선순위를 잡아주세요.
 현재 2027, 2028 일반 시즌 반복은 debug runner로 검증 완료됐습니다.
 2026 시작 상태에서 2029 LCK Cup 진입까지 3시즌 자동 debug runner 검증도 완료됐습니다.
-다음 기능 작업 후보는 베타 전 재정비 4번인 닫힌 스토브리그 정보 화면입니다.
+다음 기능 작업 후보는 베타 테스트 피드백 반영입니다. 진행 불가, 저장 불가, 화면 깨짐, 밸런스 문제를 우선순위로 잡아주세요.
 파일을 수정할 때는 사용자 변경을 되돌리지 말고, 구현 후 build/test와 필요한 UI 검증 결과를 요약해주세요.
 작업을 마치면 CODEX_HANDOFF.md의 현재 상태와 최근 작업 로그를 짧게 업데이트해주세요.
 ```

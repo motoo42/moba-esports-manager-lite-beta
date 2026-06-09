@@ -201,3 +201,17 @@ export async function updateCareerSave({
 
   return normalizeCareerSaveDto(body.save);
 }
+
+export async function deleteCareerSave(saveId: string) {
+  const response = await fetch(createUrl(`/saves/${saveId}`), {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Save delete failed.",
+    );
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   createCareerSave,
+  deleteCareerSave,
   getCareerSave,
   isSaveConflictError,
   listCareerSaves,
@@ -60,13 +61,17 @@ export function SaveManager({
   const [saves, setSaves] = useState<CareerSaveDto[]>([]);
   const [selectedSaveId, setSelectedSaveId] = useState(activeSaveId ?? "");
   const [statusMessage, setStatusMessage] = useState("");
-  const canSave = Boolean(career) && !disabled && !isBusy;
-  const canLoad = Boolean(selectedSaveId) && !disabled && !isBusy;
-  const isPanel = variant === "panel";
+  const [deleteTargetSave, setDeleteTargetSave] = useState<CareerSaveDto | null>(
+    null,
+  );
   const selectedSave = useMemo(
     () => saves.find((save) => save.id === selectedSaveId),
     [saves, selectedSaveId],
   );
+  const canSave = Boolean(career) && !disabled && !isBusy;
+  const canLoad = Boolean(selectedSaveId) && !disabled && !isBusy;
+  const canDelete = Boolean(selectedSave) && !disabled && !isBusy;
+  const isPanel = variant === "panel";
 
   useEffect(() => {
     setSaveName((current) => current || getDefaultSaveName(career));
@@ -91,20 +96,23 @@ export function SaveManager({
     setSaveName(committedSave.saveName);
   }, [committedSave]);
 
-  async function refreshSaves() {
+  async function refreshSaves(nextSelectedSaveId = selectedSaveId) {
     setIsBusy(true);
 
     try {
       const nextSaves = await listCareerSaves();
+      const nextSelectedExists = nextSaves.some(
+        (save) => save.id === nextSelectedSaveId,
+      );
+      const nextSelectedId = nextSelectedExists
+        ? nextSelectedSaveId
+        : nextSaves[0]?.id ?? "";
 
       setSaves(nextSaves);
+      setSelectedSaveId(nextSelectedId);
       setStatusMessage(
         nextSaves.length > 0 ? "저장 목록 동기화됨" : "저장 슬롯 없음",
       );
-
-      if (!selectedSaveId && nextSaves[0]) {
-        setSelectedSaveId(nextSaves[0].id);
-      }
     } catch {
       setStatusMessage("저장 서버 연결 대기 중");
     } finally {
@@ -203,6 +211,32 @@ export function SaveManager({
     }
   }
 
+  async function handleDeleteConfirmed() {
+    if (!deleteTargetSave) {
+      return;
+    }
+
+    const deletedSaveId = deleteTargetSave.id;
+
+    setIsBusy(true);
+
+    try {
+      await deleteCareerSave(deletedSaveId);
+
+      if (activeSaveId === deletedSaveId) {
+        onActiveSaveChange(null);
+      }
+
+      setDeleteTargetSave(null);
+      setStatusMessage("저장 슬롯 삭제됨");
+      await refreshSaves("");
+    } catch {
+      setStatusMessage("저장 삭제 실패");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   return (
     <section className={`save-manager save-manager-${variant}`}>
       {isPanel && (
@@ -248,8 +282,20 @@ export function SaveManager({
         <button disabled={!canLoad} onClick={handleLoad} type="button">
           불러오기
         </button>
-        <button disabled={disabled || isBusy} onClick={refreshSaves} type="button">
+        <button
+          disabled={disabled || isBusy}
+          onClick={() => void refreshSaves()}
+          type="button"
+        >
           새로고침
+        </button>
+        <button
+          className="save-manager-delete-button"
+          disabled={!canDelete}
+          onClick={() => selectedSave && setDeleteTargetSave(selectedSave)}
+          type="button"
+        >
+          삭제
         </button>
       </div>
       <span className="save-manager-status">
@@ -263,6 +309,52 @@ export function SaveManager({
         >
           {autoSaveStatus.message}
         </span>
+      )}
+      {deleteTargetSave && (
+        <div
+          aria-label="저장 삭제 확인"
+          aria-modal="true"
+          className="save-manager-confirm-backdrop"
+          role="dialog"
+        >
+          <div className="save-manager-confirm-card">
+            <p className="eyebrow">Delete Save</p>
+            <h3>저장 슬롯을 삭제할까요?</h3>
+            <p>
+              <strong>{deleteTargetSave.saveName}</strong> 저장을 삭제합니다. 이
+              작업은 되돌릴 수 없습니다.
+            </p>
+            <dl>
+              <div>
+                <dt>최근 저장</dt>
+                <dd>
+                  {new Date(deleteTargetSave.updatedAt).toLocaleString("ko-KR")}
+                </dd>
+              </div>
+              <div>
+                <dt>진행 상황</dt>
+                <dd>{deleteTargetSave.summary.currentDateLabel}</dd>
+              </div>
+            </dl>
+            <div className="save-manager-confirm-actions">
+              <button
+                disabled={isBusy}
+                onClick={() => setDeleteTargetSave(null)}
+                type="button"
+              >
+                취소
+              </button>
+              <button
+                className="save-manager-delete-confirm"
+                disabled={isBusy}
+                onClick={handleDeleteConfirmed}
+                type="button"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

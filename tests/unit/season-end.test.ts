@@ -254,7 +254,7 @@ describe("season end transition", () => {
       strengthDelta: 2,
     });
     expect(nextCareer.userTeam.elo).toBe(1740);
-    expect(nextCareer.userTeam.budget).toBe(1570);
+    expect(nextCareer.userTeam.budget).toBe(970);
     expect(nextCareer.seasonState.teamBalanceAdjustments).toContainEqual(
       expect.objectContaining({
         teamName: "T1",

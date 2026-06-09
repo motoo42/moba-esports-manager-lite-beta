@@ -41,13 +41,17 @@ function createPlayableCareerForSeason(seasonNumber: number): CareerSave {
     .map((player) => player.id);
   const contractPlayerIds = [...mainRosterIds, ...academyRosterIds];
   const contracts: PlayerContract[] = contractPlayerIds.map(
-    (playerId, index) => ({
-      playerId,
-      salary: index === 0 ? 70 : 75,
-      type: index === 0 ? "one-year" : "two-year",
-      guaranteedYears: index === 0 ? 1 : 2,
-      remainingYears: index === 0 ? 1 : 2,
-    }),
+    (playerId, index) => {
+      const player = t1Players.find((candidate) => candidate.id === playerId);
+
+      return {
+        playerId,
+        salary: player?.salaryExpectation ?? 0,
+        type: index === 0 ? "one-year" : "two-year",
+        guaranteedYears: index === 0 ? 1 : 2,
+        remainingYears: index === 0 ? 1 : 2,
+      };
+    },
   );
   const roster = roleOrder.reduce<Team["roster"]>((nextRoster, role, index) => {
     return {

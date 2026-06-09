@@ -76,7 +76,7 @@ describe("lck2026Players", () => {
       ability: 86,
       overall: 86,
       potential: 87,
-      salaryExpectation: 132,
+      salaryExpectation: 130,
     });
   });
 
@@ -120,10 +120,51 @@ describe("lck2026Players", () => {
     }
   });
 
+  it("uses the first-pass 2026 LCK salary budget profile", () => {
+    expect(
+      Object.fromEntries(lck2026Teams.map((team) => [team.name, team.budget])),
+    ).toEqual({
+      "BNK FEARX": 350,
+      "DN SOOPers": 370,
+      "Dplus KIA": 480,
+      "Gen.G": 880,
+      "Hanjin BRION": 370,
+      "Hanwha Life Esports": 900,
+      "KT Rolster": 550,
+      "Kiwoom DRX": 330,
+      "Nongshim RedForce": 430,
+      T1: 900,
+    });
+
+    expect(lck2026Players.find((player) => player.name === "Faker"))
+      .toMatchObject({ salaryExpectation: 250 });
+    expect(lck2026Players.find((player) => player.name === "Keria"))
+      .toMatchObject({ salaryExpectation: 240 });
+    expect(lck2026Players.find((player) => player.name === "Chovy"))
+      .toMatchObject({ salaryExpectation: 300 });
+
+    for (const team of lck2026Teams) {
+      const salaryTotal = lck2026Players
+        .filter((player) => player.currentTeam === team.name)
+        .reduce((total, player) => total + player.salaryExpectation, 0);
+
+      expect(salaryTotal, team.name).toBeLessThanOrEqual(team.budget);
+    }
+
+    const t1AcademyTotal = lck2026Players
+      .filter(
+        (player) =>
+          player.currentTeam === "T1" && player.rosterTier === "academy",
+      )
+      .reduce((total, player) => total + player.salaryExpectation, 0);
+
+    expect(t1AcademyTotal).toBe(80);
+  });
+
   it("starts new careers from the selected team balance profile", () => {
     const career = createInitialCareer("T1");
 
-    expect(career.userTeam.budget).toBe(1500);
+    expect(career.userTeam.budget).toBe(900);
     expect(career.userTeam.elo).toBe(1670);
   });
 
@@ -131,7 +172,7 @@ describe("lck2026Players", () => {
     const career = createInitialCareer("Gen.G");
 
     expect(career.userTeam.name).toBe("Gen.G");
-    expect(career.userTeam.budget).toBe(1450);
+    expect(career.userTeam.budget).toBe(880);
     expect(career.userTeam.elo).toBe(1690);
     expect(career.seasonState.offseason?.expiredContractPlayerIds.length).toBeGreaterThan(0);
     expect(

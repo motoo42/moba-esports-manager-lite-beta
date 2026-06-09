@@ -52,4 +52,34 @@ describe("player lifecycle", () => {
     expect(nextPlayer.retirementCandidate).toBe(true);
     expect(nextPlayer.availableForRoster).toBe(veteran.availableForRoster);
   });
+
+  it("keeps academy salary expectations near the intended CL scale", () => {
+    const academyProspect = {
+      ...samplePlayers[0],
+      rosterTier: "academy" as const,
+      age: 18,
+      overall: 72,
+      ability: 72,
+      potential: 84,
+      salaryExpectation: 14,
+      cost: 14,
+      marketProfile: {
+        ...samplePlayers[0].marketProfile,
+        marketability: 55,
+        fanbase: 45,
+        brandRisk: 5,
+      },
+      development: {
+        ...samplePlayers[0].development,
+        growthRate: 80,
+        peakAgeStart: 22,
+        peakAgeEnd: 27,
+      },
+    };
+    const nextPlayer = rollPlayerIntoNextSeason(academyProspect);
+
+    expect(nextPlayer.salaryExpectation).toBeGreaterThanOrEqual(6);
+    expect(nextPlayer.salaryExpectation).toBeLessThanOrEqual(24);
+    expect(nextPlayer.cost).toBe(nextPlayer.salaryExpectation);
+  });
 });

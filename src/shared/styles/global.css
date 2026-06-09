@@ -803,6 +803,12 @@ select {
   opacity: 0.46;
 }
 
+.save-manager-actions .save-manager-delete-button {
+  border-color: rgba(248, 113, 113, 0.44);
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+}
+
 .save-manager-status {
   grid-column: 1 / -1;
   overflow: hidden;
@@ -850,6 +856,84 @@ select {
 
 .save-manager-page {
   align-content: start;
+}
+
+.save-manager-confirm-backdrop {
+  position: fixed;
+  z-index: 180;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(3 7 18 / 72%);
+  backdrop-filter: blur(8px);
+}
+
+.save-manager-confirm-card {
+  display: grid;
+  gap: 14px;
+  width: min(440px, 100%);
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 8px;
+  padding: 20px;
+  background: #111827;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 48%);
+}
+
+.save-manager-confirm-card h3,
+.save-manager-confirm-card p {
+  margin: 0;
+}
+
+.save-manager-confirm-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.save-manager-confirm-card dl div {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  border: 1px solid #303a52;
+  border-radius: 6px;
+  padding: 9px 10px;
+  background: #0d1424;
+}
+
+.save-manager-confirm-card dt {
+  color: #9aa7bd;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.save-manager-confirm-card dd {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 850;
+}
+
+.save-manager-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-manager-confirm-actions button {
+  min-height: 36px;
+  border: 1px solid #3b4761;
+  border-radius: 6px;
+  padding: 7px 12px;
+  background: #141b2d;
+  color: #d7deeb;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.save-manager-confirm-actions .save-manager-delete-confirm {
+  border-color: rgba(248, 113, 113, 0.58);
+  background: #7f1d1d;
+  color: #ffffff;
 }
 
 .save-manager-layout {

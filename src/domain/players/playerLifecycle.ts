@@ -57,6 +57,7 @@ export function rollPlayerIntoNextSeason(player: Player): Player {
   const salaryExpectation = blendPlayerSalaryExpectation(
     ratingUpdatedPlayer.salaryExpectation,
     marketValue,
+    ratingUpdatedPlayer,
   );
 
   const nextStatus = {
