@@ -55,6 +55,8 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - React, Vite, TypeScript 기반 League of Legends e스포츠 매니저 게임.
 - URL 라우팅과 대회/캘린더 하위 URL 라우팅 구현.
 - `/inbox` 메시지함 구현. 진행/경기/스토브리그 로그에서 중요한 커리어 메시지를 생성하고, 좌측 메뉴 배지와 메인 허브 최근 메시지 패널로 연결.
+- `/inbox/:subPage`, `/offseason/:subPage`, `/settings` 구현. 좌측 하위 메뉴는 실제 URL/필터/섹션 이동으로 연결했고, 데이터 저장/시즌 결산의 의미 없는 하위 메뉴는 제거.
+- 홈 하위 메뉴는 `/hub#dashboard`, `/hub#recent-messages`, `/hub#schedule` 해시 이동으로 연결.
 - 메시지 도메인은 `src/domain/messages`에 분리했으며, 언론사 뉴스/선수 인터뷰/랜덤 뉴스/반응형 장문 뉴스는 source/type 확장 여지를 남겨둠.
 - `LCK 구단 정보` route 구현: `/teams` 목록, `/teams/:teamId` 상세 스카우팅 화면.
 - `App.tsx`는 provider/router 조립 중심으로 축소.
@@ -155,7 +157,7 @@ https://github.com/boostcampwm-snu-2026-1/esports-manager-lite-motoo42
 - 개인 프로젝트이므로 실제 League of Legends, LCK, MSI, Worlds, First Stand, Asian Games, 실제 팀명/선수명 사용.
 - 현재 베타 테스트 편의를 위해 2026 LCK 1군 선수 사진과 LCK 팀/리그 로고 asset을 repo에 포함했다. 공개 배포/제출 전에는 저작권 리스크를 재검토하고, 필요하면 asset을 제외하거나 대체 이미지/fallback으로 전환한다.
 - UI는 16:9 가로 화면 우선, 전체 프레임 고정, 패널 내부 스크롤 우선.
-- 좌측 메뉴는 `관리`, `시즌`, `시스템` 그룹으로 나눈 한글 라벨 중심 사이드바. 약어는 보조 아이콘처럼만 사용.
+- 좌측 메뉴는 `관리`, `시즌`, `시스템` 그룹으로 나눈 한글 라벨 중심 사이드바. `HB`, `MS` 같은 약어는 제거하고 inline SVG 아이콘을 사용.
 - 모바일은 전체 반응형 지원이 아니라 작은 화면/세로 화면 미지원 안내 오버레이 정책. PC/노트북 또는 태블릿 가로 화면 이용을 권장.
 - 계약 타입은 1년, 2년, 1+1년.
 - 훈련 강도는 `고강도 훈련`, `일반 훈련`, `가벼운 훈련`, `휴식`.
@@ -252,6 +254,13 @@ UI 변경 후 가능하면 16:9와 모바일 폭을 확인한다.
 
 ### 최근 완료된 베타 전 재정비
 
+- `#21/#23/#24/#25/#26/#27/#33 베타 피드백: 좌측 메뉴 / 하위 메뉴 UX 정리`
+  - 스토브리그 하위 메뉴를 `/offseason/overview`, `/offseason/free-agents`, `/offseason/schedule`, `/offseason/log`로 연결
+  - 메시지함 하위 메뉴를 `/inbox`, `/inbox/important`, `/inbox/schedule`, `/inbox/transfer`로 연결
+  - 홈 하위 메뉴를 대시보드/최근 메시지/다음 일정 해시 섹션 이동으로 연결
+  - LCK 구단 정보는 `구단 목록`만 남기고, 데이터 저장/시즌 결산 하위 메뉴는 제거
+  - 시스템 그룹에 `/settings` 설정 화면 추가
+  - 좌측 메뉴 약어 아이콘을 inline SVG 아이콘으로 교체
 - `#16 베타 피드백: LCK 일정 규칙 보정`
   - LCK Cup Group Battle을 2주 BO3 일반 경기와 1주 Super Week BO5 고정 경기로 압축
   - Super Week는 Baron/Elder 동일 선택 순위 팀끼리 수~일 하루 1경기, 5위 선택부터 1위 선택 순서로 진행

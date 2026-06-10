@@ -59,8 +59,31 @@ describe("app routes", () => {
   it("parses and creates the offseason route", () => {
     expect(getRouteMatchFromPath("/offseason")).toEqual({
       route: "offseason",
+      offseasonSubPage: null,
     });
     expect(getPathForRoute("offseason")).toBe("/offseason");
+    expect(getRouteMatchFromPath("/offseason/free-agents")).toEqual({
+      route: "offseason",
+      offseasonSubPage: "free-agents",
+    });
+    expect(getRouteMatchFromPath("/offseason/schedule")).toEqual({
+      route: "offseason",
+      offseasonSubPage: "schedule",
+    });
+    expect(getRouteMatchFromPath("/offseason/log")).toEqual({
+      route: "offseason",
+      offseasonSubPage: "log",
+    });
+    expect(getRouteMatchFromPath("/offseason/unknown")).toEqual({
+      route: "offseason",
+      offseasonSubPage: null,
+    });
+    expect(getPathForRoute("offseason", null, "overview")).toBe(
+      "/offseason/overview",
+    );
+    expect(getPathForRoute("offseason", null, "free-agents")).toBe(
+      "/offseason/free-agents",
+    );
   });
 
   it("parses and creates the save manager route", () => {
@@ -73,8 +96,35 @@ describe("app routes", () => {
   it("parses and creates the inbox route", () => {
     expect(getRouteMatchFromPath("/inbox")).toEqual({
       route: "inbox",
+      inboxSubPage: null,
     });
     expect(getPathForRoute("inbox")).toBe("/inbox");
+    expect(getRouteMatchFromPath("/inbox/important")).toEqual({
+      route: "inbox",
+      inboxSubPage: "important",
+    });
+    expect(getRouteMatchFromPath("/inbox/schedule")).toEqual({
+      route: "inbox",
+      inboxSubPage: "schedule",
+    });
+    expect(getRouteMatchFromPath("/inbox/transfer")).toEqual({
+      route: "inbox",
+      inboxSubPage: "transfer",
+    });
+    expect(getRouteMatchFromPath("/inbox/unknown")).toEqual({
+      route: "inbox",
+      inboxSubPage: null,
+    });
+    expect(getPathForRoute("inbox", null, "important")).toBe(
+      "/inbox/important",
+    );
+  });
+
+  it("parses and creates the settings route", () => {
+    expect(getRouteMatchFromPath("/settings")).toEqual({
+      route: "settings",
+    });
+    expect(getPathForRoute("settings")).toBe("/settings");
   });
 
   it("parses and creates roster subpage routes", () => {

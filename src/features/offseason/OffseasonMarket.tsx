@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { OffseasonSubPage } from "../../app/routes";
 import { offseasonFreeAgentSeeds } from "../../data/offseasonFreeAgents";
 import {
   getOffseasonMarketViewStatus,
@@ -27,11 +28,13 @@ import type {
 
 type OffseasonMarketProps = {
   career: CareerSave;
+  subPage?: OffseasonSubPage | null;
   onCancelFreeAgentSigning: (offerId: string) => void;
   onConfirmFreeAgentSigning: (offerId: string) => void;
   onReleaseExpiredPlayer: (playerId: string) => void;
   onSubmitFreeAgentOffer: (offer: OffseasonContractOfferInput) => void;
   onSubmitRenewalOffer: (offer: OffseasonContractOfferInput) => void;
+  onSubPageChange?: (subPage: OffseasonSubPage) => void;
   onViewRoster: () => void;
 };
 
@@ -78,6 +81,40 @@ const tabs: Array<{ id: OffseasonTab; label: string }> = [
   { id: "roster", label: "로스터 현황" },
   { id: "log", label: "이적 로그" },
 ];
+
+function getOffseasonSubPageFromTab(tab: OffseasonTab): OffseasonSubPage {
+  if (tab === "free-agents") {
+    return "free-agents";
+  }
+
+  if (tab === "log") {
+    return "log";
+  }
+
+  if (tab === "roster") {
+    return "schedule";
+  }
+
+  return "overview";
+}
+
+function getOffseasonTabFromSubPage(
+  subPage: OffseasonSubPage | null | undefined,
+): OffseasonTab {
+  if (subPage === "free-agents") {
+    return "free-agents";
+  }
+
+  if (subPage === "log") {
+    return "log";
+  }
+
+  if (subPage === "schedule") {
+    return "roster";
+  }
+
+  return "contracts";
+}
 
 const roleOptions: Array<{ value: Role; label: string }> = [
   { value: "top", label: "탑" },
@@ -1246,13 +1283,13 @@ function ClosedMarketLogPanel({ career }: { career: CareerSave }) {
   );
 }
 
-function ClosedOffseasonInfo({ career }: { career: CareerSave }) {
+function ClosedMarketOverviewPanel({ career }: { career: CareerSave }) {
   const validation = validateOffseasonRoster(career);
   const activeSalaryTotal = getActiveSalaryTotal(career);
   const remainingBudget = career.userTeam.budget - activeSalaryTotal;
 
   return (
-    <section className="stack offseason-page">
+    <>
       <Card>
         <div className="offseason-closed-hero">
           <div>
@@ -1295,7 +1332,12 @@ function ClosedOffseasonInfo({ career }: { career: CareerSave }) {
           </article>
         </div>
       </Card>
+    </>
+  );
+}
 
+function ClosedMarketSchedulePanel() {
+  return (
       <Card>
         <div className="section-label-row">
           <span>일정 안내</span>
@@ -1314,28 +1356,51 @@ function ClosedOffseasonInfo({ career }: { career: CareerSave }) {
           </article>
         </div>
       </Card>
+  );
+}
 
-      <ClosedMarketFreeAgentPanel career={career} />
-      <ClosedMarketLogPanel career={career} />
+function ClosedOffseasonInfo({
+  career,
+  subPage,
+}: {
+  career: CareerSave;
+  subPage?: OffseasonSubPage | null;
+}) {
+  const activeSubPage = subPage ?? "overview";
+
+  return (
+    <section className="stack offseason-page">
+      {activeSubPage === "overview" && <ClosedMarketOverviewPanel career={career} />}
+      {activeSubPage === "free-agents" && (
+        <ClosedMarketFreeAgentPanel career={career} />
+      )}
+      {activeSubPage === "schedule" && <ClosedMarketSchedulePanel />}
+      {activeSubPage === "log" && <ClosedMarketLogPanel career={career} />}
     </section>
   );
 }
 
 export function OffseasonMarket({
   career,
+  subPage,
   onCancelFreeAgentSigning,
   onConfirmFreeAgentSigning,
   onReleaseExpiredPlayer,
   onSubmitFreeAgentOffer,
   onSubmitRenewalOffer,
+  onSubPageChange,
   onViewRoster,
 }: OffseasonMarketProps) {
-  const [activeTab, setActiveTab] = useState<OffseasonTab>("contracts");
+  const [fallbackActiveTab, setFallbackActiveTab] =
+    useState<OffseasonTab>("contracts");
   const [negotiationTarget, setNegotiationTarget] =
     useState<NegotiationTarget | null>(null);
   const offseason = career.seasonState.offseason;
   const validationErrors = offseason?.validationErrors ?? [];
   const marketViewStatus = getOffseasonMarketViewStatus(career);
+  const activeTab = subPage
+    ? getOffseasonTabFromSubPage(subPage)
+    : fallbackActiveTab;
 
   const activePanel = useMemo(() => {
     if (activeTab === "contracts") {
@@ -1374,7 +1439,7 @@ export function OffseasonMarket({
   ]);
 
   if (marketViewStatus === "closed-info") {
-    return <ClosedOffseasonInfo career={career} />;
+    return <ClosedOffseasonInfo career={career} subPage={subPage} />;
   }
 
   return (
@@ -1395,7 +1460,10 @@ export function OffseasonMarket({
                 activeTab === tab.id ? "offseason-tab-active" : ""
               }`}
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setFallbackActiveTab(tab.id);
+                onSubPageChange?.(getOffseasonSubPageFromTab(tab.id));
+              }}
               type="button"
             >
               {tab.label}

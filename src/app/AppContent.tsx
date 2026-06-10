@@ -1,4 +1,5 @@
 import { AppShell } from "../shared/layout/AppShell";
+import { useLocation } from "react-router-dom";
 import { AppRouteRenderer } from "./AppRouteRenderer";
 import { useGameDispatch, useGameSelector } from "./GameProvider";
 import { useAppNavigation } from "./hooks/useAppNavigation";
@@ -10,6 +11,7 @@ import { AsianGamesDecisionModal } from "./modals/AsianGamesDecisionModal";
 import { SmallScreenGuard } from "./SmallScreenGuard";
 
 export function AppContent() {
+  const location = useLocation();
   const career = useGameSelector((state) => state.career);
   const route = useGameSelector((state) => state.route);
   const selectedCompetitionId = useGameSelector(
@@ -47,6 +49,8 @@ export function AppContent() {
     goToRoute,
     handleCalendarSubPageChange,
     handleCompetitionSubPageChange,
+    handleInboxSubPageChange,
+    handleOffseasonSubPageChange,
   } = useAppNavigation({
     career,
     dispatch,
@@ -72,6 +76,9 @@ export function AppContent() {
         competitionSubPage={routeMatch.competitionSubPage}
         calendarSubPage={routeMatch.calendarSubPage}
         rosterSubPage={routeMatch.rosterSubPage}
+        inboxSubPage={routeMatch.inboxSubPage}
+        offseasonSubPage={routeMatch.offseasonSubPage}
+        currentHash={location.hash}
         autoSaveStatus={career ? autoSaveStatus : undefined}
         onGoTo={goToRoute}
         onProgress={handleProgress}
@@ -79,10 +86,14 @@ export function AppContent() {
         <AppRouteRenderer
           calendarSubPage={routeMatch.calendarSubPage}
           competitionSubPage={routeMatch.competitionSubPage}
+          inboxSubPage={routeMatch.inboxSubPage}
+          offseasonSubPage={routeMatch.offseasonSubPage}
           rosterSubPage={routeMatch.rosterSubPage}
           teamId={routeMatch.teamId}
           onCalendarSubPageChange={handleCalendarSubPageChange}
           onCompetitionSubPageChange={handleCompetitionSubPageChange}
+          onInboxSubPageChange={handleInboxSubPageChange}
+          onOffseasonSubPageChange={handleOffseasonSubPageChange}
           onGoTo={goToRoute}
           competitionId={renderedCompetitionId}
           route={renderedRoute}

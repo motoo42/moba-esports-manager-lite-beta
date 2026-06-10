@@ -74,10 +74,13 @@ describe("App routing", () => {
     "/hub",
     "/summary",
     "/offseason",
+    "/offseason/log",
     "/saves",
     "/inbox",
+    "/inbox/important",
     "/teams",
     "/teams/gen-g",
+    "/settings",
     "/calendar/calendar",
     "/competitions/worlds/bracket",
   ])("guards %s when no career is loaded", async (pathname) => {
@@ -211,6 +214,84 @@ describe("App routing", () => {
 
     await waitFor(() => expect(window.location.pathname).toBe("/teams/gen-g"));
     expect(screen.getByRole("heading", { level: 1, name: "Gen.G" })).toBeVisible();
+  });
+
+  it("connects sidebar submenus to real pages, filters, and dashboard sections", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Start career" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason"));
+    const sidebar = within(document.querySelector(".shell-sidebar") as HTMLElement);
+
+    fireEvent.click(await screen.findByTestId("shell-menu-home"));
+    await waitFor(() => expect(window.location.pathname).toBe("/hub"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "최근 메시지" }));
+    await waitFor(() => expect(window.location.hash).toBe("#recent-messages"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "다음 일정" }));
+    await waitFor(() => expect(window.location.hash).toBe("#schedule"));
+
+    fireEvent.click(await screen.findByTestId("shell-menu-inbox"));
+    await waitFor(() => expect(window.location.pathname).toBe("/inbox"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "중요" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/inbox/important"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "이적" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/inbox/transfer"));
+
+    fireEvent.click(await screen.findByTestId("shell-menu-offseason"));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "FA 명단" }));
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/offseason/free-agents"),
+    );
+    expect(screen.getByText("FA 명단")).toBeVisible();
+
+    fireEvent.click(sidebar.getByRole("button", { name: "일정 안내" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason/schedule"));
+    expect(screen.getByText("최종 등록")).toBeVisible();
+
+    fireEvent.click(sidebar.getByRole("button", { name: "이적 로그" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason/log"));
+    expect(screen.getAllByText("이적 로그").length).toBeGreaterThan(0);
+  });
+
+  it("removes unnecessary submenus and opens the settings page", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Start career" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason"));
+
+    const sidebar = within(document.querySelector(".shell-sidebar") as HTMLElement);
+
+    fireEvent.click(await screen.findByTestId("shell-menu-lck-team-info"));
+    await waitFor(() => expect(window.location.pathname).toBe("/teams"));
+    expect(sidebar.getByRole("button", { name: "구단 목록" })).toBeVisible();
+    expect(sidebar.queryByRole("button", { name: "1군 후보" })).not.toBeInTheDocument();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-save"));
+    await waitFor(() => expect(window.location.pathname).toBe("/saves"));
+    expect(sidebar.queryByRole("button", { name: "저장 슬롯" })).not.toBeInTheDocument();
+    expect(sidebar.queryByRole("button", { name: "불러오기" })).not.toBeInTheDocument();
+    expect(sidebar.queryByRole("button", { name: "자동 저장" })).not.toBeInTheDocument();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-other"));
+    await waitFor(() => expect(window.location.pathname).toBe("/summary"));
+    expect(sidebar.queryByRole("button", { name: "기록" })).not.toBeInTheDocument();
+    expect(sidebar.queryByRole("button", { name: "시즌 요약" })).not.toBeInTheDocument();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-settings"));
+    await waitFor(() => expect(window.location.pathname).toBe("/settings"));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "설정" }),
+    ).toBeVisible();
+
+    for (const abbreviation of ["HB", "MS", "RS", "TR", "CP", "CA", "FA", "TM", "SV", "LG"]) {
+      expect(sidebar.queryByText(abbreviation)).not.toBeInTheDocument();
+    }
   });
 
   it("keeps dashboard internal navigation on the target URL without route bounce", async () => {

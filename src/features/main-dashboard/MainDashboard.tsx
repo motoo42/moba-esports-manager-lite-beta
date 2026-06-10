@@ -478,7 +478,7 @@ function RecentMessagesPanel({
   const unreadCount = (messages ?? []).filter((message) => !message.read).length;
 
   return (
-    <div className="mini-panel dashboard-message-panel">
+    <div className="mini-panel dashboard-message-panel" id="recent-messages" tabIndex={-1}>
       <div className="section-label-row">
         <span>최근 메시지</span>
         <strong>{unreadCount} unread</strong>
@@ -554,7 +554,7 @@ export function MainDashboard({
       : "다음 경기";
 
   return (
-    <section className="main-hub">
+    <section className="main-hub" id="dashboard" tabIndex={-1}>
       <section className="hub-panel starter-panel">
         <div className="panel-title-row">
           <div>
@@ -587,7 +587,7 @@ export function MainDashboard({
         </div>
       </section>
 
-      <section className="hub-panel match-hub-panel">
+      <section className="hub-panel match-hub-panel" id="schedule" tabIndex={-1}>
         <div className="panel-title-row">
           <div>
             <p className="eyebrow">Match hub</p>

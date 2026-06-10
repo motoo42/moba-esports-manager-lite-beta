@@ -1,33 +1,28 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { InboxSubPage } from "../../app/routes";
 import {
   careerMessageCategoryLabels,
   careerMessagePriorityLabels,
   careerMessageSourceLabels,
 } from "../../domain/messages";
 import { Button } from "../../shared/ui/Button";
-import type {
-  CareerMessage,
-  CareerMessageCategory,
-  CareerSave,
-} from "../../types/game";
+import type { CareerMessage, CareerSave } from "../../types/game";
 
-type InboxFilter = "all" | CareerMessageCategory;
+type InboxFilter = InboxSubPage;
 
 type InboxProps = {
   career: CareerSave;
+  subPage?: InboxSubPage | null;
   onMarkAllRead: () => void;
   onMarkRead: (messageId: string) => void;
+  onSubPageChange: (subPage: InboxSubPage) => void;
 };
 
 const filterOptions: Array<{ id: InboxFilter; label: string }> = [
   { id: "all", label: "전체" },
   { id: "important", label: "중요" },
   { id: "schedule", label: "일정" },
-  { id: "match", label: "경기" },
-  { id: "training", label: "훈련" },
   { id: "transfer", label: "이적" },
-  { id: "system", label: "시스템" },
-  { id: "news", label: "뉴스" },
 ];
 
 function sortMessages(messages: CareerMessage[]) {
@@ -123,8 +118,14 @@ function MessageDetail({ message }: { message: CareerMessage | undefined }) {
   );
 }
 
-export function Inbox({ career, onMarkAllRead, onMarkRead }: InboxProps) {
-  const [activeFilter, setActiveFilter] = useState<InboxFilter>("all");
+export function Inbox({
+  career,
+  onMarkAllRead,
+  onMarkRead,
+  onSubPageChange,
+  subPage,
+}: InboxProps) {
+  const activeFilter = subPage ?? "all";
   const messages = career.messages ?? [];
   const filteredMessages = useMemo(
     () => getFilteredMessages(messages, activeFilter),
@@ -137,6 +138,10 @@ export function Inbox({ career, onMarkAllRead, onMarkRead }: InboxProps) {
     filteredMessages.find((message) => message.id === selectedMessageId) ??
     filteredMessages[0];
   const unreadCount = getUnreadCount(messages);
+
+  useEffect(() => {
+    setSelectedMessageId(null);
+  }, [activeFilter]);
 
   function handleSelectMessage(message: CareerMessage) {
     setSelectedMessageId(message.id);
@@ -176,8 +181,7 @@ export function Inbox({ career, onMarkAllRead, onMarkRead }: InboxProps) {
             }`}
             key={filter.id}
             onClick={() => {
-              setActiveFilter(filter.id);
-              setSelectedMessageId(null);
+              onSubPageChange(filter.id);
             }}
             role="tab"
             type="button"

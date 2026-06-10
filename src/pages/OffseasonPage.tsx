@@ -1,5 +1,5 @@
 import { useGameDispatch, useGameSelector } from "../app/GameProvider";
-import type { AppRoute, RouteSubPage } from "../app/routes";
+import type { AppRoute, OffseasonSubPage, RouteSubPage } from "../app/routes";
 import { gameActions } from "../app/state";
 import { OffseasonMarket } from "../features/offseason";
 import { CareerRequiredFallback } from "./CareerRequiredFallback";
@@ -10,12 +10,20 @@ type OffseasonPageProps = {
     route: AppRoute,
     options?: {
       competitionId?: CompetitionId | null;
+      teamId?: string | null;
       subPage?: RouteSubPage | null;
+      hash?: string | null;
     },
   ) => void;
+  subPage?: OffseasonSubPage | null;
+  onSubPageChange: (subPage: OffseasonSubPage) => void;
 };
 
-export function OffseasonPage({ onGoTo }: OffseasonPageProps) {
+export function OffseasonPage({
+  onGoTo,
+  onSubPageChange,
+  subPage,
+}: OffseasonPageProps) {
   const career = useGameSelector((state) => state.career);
   const dispatch = useGameDispatch();
 
@@ -26,6 +34,7 @@ export function OffseasonPage({ onGoTo }: OffseasonPageProps) {
   return (
     <OffseasonMarket
       career={career}
+      subPage={subPage}
       onCancelFreeAgentSigning={(offerId) =>
         dispatch(gameActions.cancelFreeAgentSigning(offerId))
       }
@@ -41,6 +50,7 @@ export function OffseasonPage({ onGoTo }: OffseasonPageProps) {
       onSubmitRenewalOffer={(offer) =>
         dispatch(gameActions.submitOffseasonRenewalOffer(offer))
       }
+      onSubPageChange={onSubPageChange}
       onViewRoster={() => onGoTo("roster-builder")}
     />
   );

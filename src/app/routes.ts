@@ -11,7 +11,8 @@ export type AppRoute =
   | "season-calendar"
   | "save-manager"
   | "offseason"
-  | "season-summary";
+  | "season-summary"
+  | "settings";
 
 export type CompetitionSubPage =
   | "overview"
@@ -25,7 +26,16 @@ export type CalendarSubPage = "roadmap" | "calendar";
 
 export type RosterSubPage = "main" | "academy" | "contracts";
 
-export type RouteSubPage = CompetitionSubPage | CalendarSubPage | RosterSubPage;
+export type InboxSubPage = "all" | "important" | "schedule" | "transfer";
+
+export type OffseasonSubPage = "overview" | "free-agents" | "schedule" | "log";
+
+export type RouteSubPage =
+  | CompetitionSubPage
+  | CalendarSubPage
+  | RosterSubPage
+  | InboxSubPage
+  | OffseasonSubPage;
 
 export const appRoutes: AppRoute[] = [
   "career-setup",
@@ -39,6 +49,7 @@ export const appRoutes: AppRoute[] = [
   "save-manager",
   "offseason",
   "season-summary",
+  "settings",
 ];
 
 const routePathByRoute: Record<AppRoute, string> = {
@@ -53,6 +64,7 @@ const routePathByRoute: Record<AppRoute, string> = {
   "save-manager": "/saves",
   offseason: "/offseason",
   "season-summary": "/summary",
+  settings: "/settings",
 };
 
 const competitionIds = new Set<CompetitionId>([
@@ -77,6 +89,18 @@ const competitionSubPages = new Set<CompetitionSubPage>([
 
 const calendarSubPages = new Set<CalendarSubPage>(["roadmap", "calendar"]);
 const rosterSubPages = new Set<RosterSubPage>(["main", "academy", "contracts"]);
+const inboxSubPages = new Set<InboxSubPage>([
+  "all",
+  "important",
+  "schedule",
+  "transfer",
+]);
+const offseasonSubPages = new Set<OffseasonSubPage>([
+  "overview",
+  "free-agents",
+  "schedule",
+  "log",
+]);
 
 export type RouteMatch = {
   route: AppRoute;
@@ -85,6 +109,8 @@ export type RouteMatch = {
   competitionSubPage?: CompetitionSubPage | null;
   calendarSubPage?: CalendarSubPage | null;
   rosterSubPage?: RosterSubPage | null;
+  inboxSubPage?: InboxSubPage | null;
+  offseasonSubPage?: OffseasonSubPage | null;
 };
 
 export function isCompetitionId(value: string): value is CompetitionId {
@@ -103,6 +129,14 @@ export function isCalendarSubPage(value: string): value is CalendarSubPage {
 
 export function isRosterSubPage(value: string): value is RosterSubPage {
   return rosterSubPages.has(value as RosterSubPage);
+}
+
+export function isInboxSubPage(value: string): value is InboxSubPage {
+  return inboxSubPages.has(value as InboxSubPage);
+}
+
+export function isOffseasonSubPage(value: string): value is OffseasonSubPage {
+  return offseasonSubPages.has(value as OffseasonSubPage);
 }
 
 export function getPathForRoute(
@@ -138,6 +172,22 @@ export function getPathForRoute(
     return routePathByRoute[route];
   }
 
+  if (route === "inbox") {
+    if (subPage && isInboxSubPage(subPage) && subPage !== "all") {
+      return `/inbox/${subPage}`;
+    }
+
+    return routePathByRoute[route];
+  }
+
+  if (route === "offseason") {
+    if (subPage && isOffseasonSubPage(subPage)) {
+      return `/offseason/${subPage}`;
+    }
+
+    return routePathByRoute[route];
+  }
+
   return routePathByRoute[route];
 }
 
@@ -160,7 +210,16 @@ export function getRouteMatchFromPath(pathname: string): RouteMatch {
   }
 
   if (pathname === "/inbox") {
-    return { route: "inbox" };
+    return { route: "inbox", inboxSubPage: null };
+  }
+
+  const inboxMatch = pathname.match(/^\/inbox\/([^/]+)$/);
+
+  if (inboxMatch) {
+    return {
+      route: "inbox",
+      inboxSubPage: isInboxSubPage(inboxMatch[1]) ? inboxMatch[1] : null,
+    };
   }
 
   if (pathname === "/match") {
@@ -200,8 +259,23 @@ export function getRouteMatchFromPath(pathname: string): RouteMatch {
     return { route: "season-summary" };
   }
 
+  if (pathname === "/settings") {
+    return { route: "settings" };
+  }
+
   if (pathname === "/offseason") {
-    return { route: "offseason" };
+    return { route: "offseason", offseasonSubPage: null };
+  }
+
+  const offseasonMatch = pathname.match(/^\/offseason\/([^/]+)$/);
+
+  if (offseasonMatch) {
+    return {
+      route: "offseason",
+      offseasonSubPage: isOffseasonSubPage(offseasonMatch[1])
+        ? offseasonMatch[1]
+        : null,
+    };
   }
 
   if (pathname === "/competitions") {

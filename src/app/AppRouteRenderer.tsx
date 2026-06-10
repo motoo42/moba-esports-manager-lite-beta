@@ -10,10 +10,13 @@ import { RosterBuilderPage } from "../pages/RosterBuilderPage";
 import { SaveManagerPage } from "../pages/SaveManagerPage";
 import { SeasonCalendarPage } from "../pages/SeasonCalendarPage";
 import { SeasonSummaryPage } from "../pages/SeasonSummaryPage";
+import { SettingsPage } from "../pages/SettingsPage";
 import type {
   AppRoute,
   CalendarSubPage,
   CompetitionSubPage,
+  InboxSubPage,
+  OffseasonSubPage,
   RosterSubPage,
   RouteSubPage,
 } from "./routes";
@@ -23,17 +26,22 @@ type AppRouteRendererProps = {
   calendarSubPage?: CalendarSubPage | null;
   competitionId?: CompetitionId | null;
   competitionSubPage?: CompetitionSubPage | null;
+  inboxSubPage?: InboxSubPage | null;
+  offseasonSubPage?: OffseasonSubPage | null;
   rosterSubPage?: RosterSubPage | null;
   teamId?: string | null;
   onCalendarSubPageChange: (subPage: CalendarSubPage) => void;
   onCompetitionSubPageChange: (subPage: CompetitionSubPage) => void;
+  onInboxSubPageChange: (subPage: InboxSubPage) => void;
+  onOffseasonSubPageChange: (subPage: OffseasonSubPage) => void;
   onGoTo: (
     route: AppRoute,
     options?: {
-      competitionId?: CompetitionId | null;
-      teamId?: string | null;
-      subPage?: RouteSubPage | null;
-    },
+        competitionId?: CompetitionId | null;
+        teamId?: string | null;
+        subPage?: RouteSubPage | null;
+        hash?: string | null;
+      },
   ) => void;
   route: AppRoute;
   savePanel?: ReactNode;
@@ -43,10 +51,14 @@ export function AppRouteRenderer({
   calendarSubPage,
   competitionId,
   competitionSubPage,
+  inboxSubPage,
+  offseasonSubPage,
   rosterSubPage,
   teamId,
   onCalendarSubPageChange,
   onCompetitionSubPageChange,
+  onInboxSubPageChange,
+  onOffseasonSubPageChange,
   onGoTo,
   route,
   savePanel,
@@ -64,7 +76,12 @@ export function AppRouteRenderer({
   }
 
   if (route === "inbox") {
-    return <InboxPage />;
+    return (
+      <InboxPage
+        subPage={inboxSubPage}
+        onSubPageChange={onInboxSubPageChange}
+      />
+    );
   }
 
   if (route === "match-week") {
@@ -97,11 +114,21 @@ export function AppRouteRenderer({
   }
 
   if (route === "offseason") {
-    return <OffseasonPage onGoTo={onGoTo} />;
+    return (
+      <OffseasonPage
+        onGoTo={onGoTo}
+        subPage={offseasonSubPage}
+        onSubPageChange={onOffseasonSubPageChange}
+      />
+    );
   }
 
   if (route === "save-manager") {
     return <SaveManagerPage savePanel={savePanel} />;
+  }
+
+  if (route === "settings") {
+    return <SettingsPage />;
   }
 
   return <SeasonSummaryPage onGoTo={onGoTo} />;

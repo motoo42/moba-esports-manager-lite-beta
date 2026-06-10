@@ -7,6 +7,8 @@ import {
   type AppRoute,
   type CalendarSubPage,
   type CompetitionSubPage,
+  type InboxSubPage,
+  type OffseasonSubPage,
   type RouteSubPage,
 } from "../routes";
 import { gameActions, type GameAction } from "../state";
@@ -33,6 +35,7 @@ export function useAppNavigation({
         competitionId?: CompetitionId | null;
         teamId?: string | null;
         subPage?: RouteSubPage | null;
+        hash?: string | null;
       } = {},
     ) => {
       if (isProgressing) {
@@ -49,17 +52,19 @@ export function useAppNavigation({
         route === "lck-team-info" ? options.teamId ?? null : competitionId;
 
       const targetPath = getPathForRoute(route, routeId, options.subPage);
+      const targetUrl = options.hash ? `${targetPath}#${options.hash}` : targetPath;
+      const currentUrl = `${location.pathname}${location.hash}`;
 
-      if (location.pathname !== targetPath) {
+      if (currentUrl !== targetUrl) {
         recordRouteDebugTrace({
-          fromPath: location.pathname,
+          fromPath: currentUrl,
           reason: "user-navigation",
           source: "navigation",
           stateRoute: route,
-          toPath: targetPath,
+          toPath: targetUrl,
           urlRoute: getRouteMatchFromPath(location.pathname).route,
         });
-        navigate(targetPath);
+        navigate(targetUrl);
         return;
       }
 
@@ -70,6 +75,7 @@ export function useAppNavigation({
       dispatch,
       isProgressing,
       location.pathname,
+      location.hash,
       navigate,
       selectedCompetitionId,
     ],
@@ -113,9 +119,33 @@ export function useAppNavigation({
     [location.pathname, navigate],
   );
 
+  const handleInboxSubPageChange = useCallback(
+    (subPage: InboxSubPage) => {
+      const targetPath = getPathForRoute("inbox", null, subPage);
+
+      if (location.pathname !== targetPath) {
+        navigate(targetPath);
+      }
+    },
+    [location.pathname, navigate],
+  );
+
+  const handleOffseasonSubPageChange = useCallback(
+    (subPage: OffseasonSubPage) => {
+      const targetPath = getPathForRoute("offseason", null, subPage);
+
+      if (location.pathname !== targetPath) {
+        navigate(targetPath);
+      }
+    },
+    [location.pathname, navigate],
+  );
+
   return {
     goToRoute,
     handleCalendarSubPageChange,
     handleCompetitionSubPageChange,
+    handleInboxSubPageChange,
+    handleOffseasonSubPageChange,
   };
 }

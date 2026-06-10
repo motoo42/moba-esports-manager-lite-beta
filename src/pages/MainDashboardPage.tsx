@@ -11,6 +11,7 @@ type MainDashboardPageProps = {
       competitionId?: CompetitionId | null;
       teamId?: string | null;
       subPage?: RouteSubPage | null;
+      hash?: string | null;
     },
   ) => void;
 };

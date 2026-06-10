@@ -561,6 +561,11 @@ select {
   letter-spacing: 0.02em;
 }
 
+.shell-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .shell-menu-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1434,6 +1439,12 @@ h1 {
 .main-hub {
   display: grid;
   gap: 18px;
+}
+
+#dashboard:focus,
+#recent-messages:focus,
+#schedule:focus {
+  outline: none;
 }
 
 .hub-panel {
@@ -6705,6 +6716,65 @@ h1 {
   padding-bottom: 0;
 }
 
+.settings-page {
+  max-width: 1180px;
+}
+
+.settings-hero {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.settings-hero h1 {
+  margin: 0.25rem 0 0.45rem;
+}
+
+.settings-hero p {
+  color: var(--muted);
+  margin: 0;
+  max-width: 42rem;
+}
+
+.settings-status-chip {
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.38rem 0.65rem;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-card-content {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.settings-card-content span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.settings-card-content strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.settings-card-content p {
+  color: var(--muted);
+  margin: 0;
+}
+
 @media (max-width: 980px) {
   .inbox-filter-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6721,5 +6791,13 @@ h1 {
 
   .inbox-detail-meta {
     grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-hero {
+    flex-direction: column;
   }
 }

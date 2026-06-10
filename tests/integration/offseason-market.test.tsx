@@ -113,25 +113,34 @@ describe("OffseasonMarket", () => {
       },
     };
 
-    render(
+    const baseProps = {
+      career: competitionCareer,
+      onCancelFreeAgentSigning: vi.fn(),
+      onConfirmFreeAgentSigning: vi.fn(),
+      onReleaseExpiredPlayer: vi.fn(),
+      onSubmitFreeAgentOffer: vi.fn(),
+      onSubmitRenewalOffer: vi.fn(),
+      onViewRoster: vi.fn(),
+    };
+    const { rerender } = render(
       <OffseasonMarket
-        career={competitionCareer}
-        onCancelFreeAgentSigning={vi.fn()}
-        onConfirmFreeAgentSigning={vi.fn()}
-        onReleaseExpiredPlayer={vi.fn()}
-        onSubmitFreeAgentOffer={vi.fn()}
-        onSubmitRenewalOffer={vi.fn()}
-        onViewRoster={vi.fn()}
+        {...baseProps}
+        subPage="overview"
       />,
     );
 
     expect(screen.getByText("현재 이적시장은 닫혀 있습니다.")).toBeVisible();
     expect(screen.getByText("시장 개요")).toBeVisible();
+    expect(screen.queryByText("FA 명단")).not.toBeInTheDocument();
+
+    rerender(<OffseasonMarket {...baseProps} subPage="free-agents" />);
     expect(screen.getByText("FA 명단")).toBeVisible();
-    expect(screen.getByText("MSI 전후 단기 시장")).toBeVisible();
     expect(screen.getByText("BeryL")).toBeVisible();
     expect(screen.queryByText("Chovy")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "FA 협상" })).not.toBeInTheDocument();
+
+    rerender(<OffseasonMarket {...baseProps} subPage="schedule" />);
+    expect(screen.getByText("MSI 전후 단기 시장")).toBeVisible();
   });
 
   it("renders the new career preseason renewals and true FA market filters", () => {
