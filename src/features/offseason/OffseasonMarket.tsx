@@ -16,6 +16,7 @@ import { formatSalaryAmount, formatSalaryRange } from "../../shared/format/money
 import { Button } from "../../shared/ui/Button";
 import { Card } from "../../shared/ui/Card";
 import { EvaluationStars } from "../../shared/ui/EvaluationStars";
+import { PlayerDetailModal } from "../../shared/ui/PlayerDetailModal";
 import { PlayerPortrait } from "../../shared/ui/PlayerPortrait";
 import type {
   CareerSave,
@@ -559,69 +560,39 @@ function handleRowActivation(
   onActivate();
 }
 
-function OffseasonPlayerDetailModal({
-  onClose,
+function OffseasonPlayerMarketDetails({
   player,
 }: {
-  onClose: () => void;
   player: Player;
 }) {
   return (
-    <div className="modal-backdrop" onMouseDown={onClose} role="presentation">
-      <section
-        aria-label={`${player.name} 선수 상세`}
-        aria-modal="true"
-        className="offseason-player-detail-modal"
-        onMouseDown={(event) => event.stopPropagation()}
-        role="dialog"
-      >
-        <button
-          aria-label="닫기"
-          className="modal-close-button"
-          onClick={onClose}
-          type="button"
-        >
-          ×
-        </button>
-        <div className="offseason-player-detail-hero">
-          <PlayerPortrait player={player} size="lg" />
-          <div>
-            <p className="eyebrow">Player Profile</p>
-            <h2>{player.name}</h2>
-            <span>
-              {getRoleLabel(player.role)} · {player.age}세 ·{" "}
-              {getRosterTierLabel(player)}
-            </span>
-            <EvaluationStars player={player} />
-          </div>
+    <section className="player-detail-section">
+      <div className="panel-title-row">
+        <div>
+          <p className="eyebrow">Market</p>
+          <h3>시장 정보</h3>
         </div>
-        <div className="offseason-player-detail-grid">
-          <article>
-            <span>현재 소속</span>
-            <strong>{getMarketTeamLabel(player)}</strong>
-          </article>
-          <article>
-            <span>리그</span>
-            <strong>{player.league}</strong>
-          </article>
-          <article>
-            <span>기대 연봉</span>
-            <strong>{formatSalaryAmount(player.salaryExpectation)}</strong>
-          </article>
-          <article>
-            <span>시장 가치</span>
-            <strong>{formatSalaryAmount(player.cost)}</strong>
-          </article>
-        </div>
-        <div className="offseason-player-detail-note">
-          <strong>스카우팅 메모</strong>
-          <span>
-            세부 능력치와 잠재력은 공개하지 않습니다. 이 화면에서는 현재 평가,
-            나이, 포지션, 시장 정보를 중심으로 확인할 수 있습니다.
-          </span>
-        </div>
-      </section>
-    </div>
+        <span className="panel-note">게임 내 금액 기준</span>
+      </div>
+      <div className="player-detail-extra-grid">
+        <article>
+          <span>현재 소속</span>
+          <strong>{getMarketTeamLabel(player)}</strong>
+        </article>
+        <article>
+          <span>리그</span>
+          <strong>{player.league}</strong>
+        </article>
+        <article>
+          <span>기대 연봉</span>
+          <strong>{formatSalaryAmount(player.salaryExpectation)}</strong>
+        </article>
+        <article>
+          <span>시장 가치</span>
+          <strong>{formatSalaryAmount(player.cost)}</strong>
+        </article>
+      </div>
+    </section>
   );
 }
 
@@ -1810,9 +1781,12 @@ function ClosedOffseasonInfo({
       {activeSubPage === "schedule" && <ClosedMarketSchedulePanel />}
       {activeSubPage === "log" && <ClosedMarketLogPanel career={career} />}
       {detailPlayer && (
-        <OffseasonPlayerDetailModal
+        <PlayerDetailModal
+          extraContent={<OffseasonPlayerMarketDetails player={detailPlayer} />}
           onClose={() => setDetailPlayerId(null)}
           player={detailPlayer}
+          rosterLabel={getRosterTierLabel(detailPlayer)}
+          titlePrefix="Stove League Profile"
         />
       )}
     </section>
@@ -1932,9 +1906,12 @@ export function OffseasonMarket({
         />
       )}
       {detailPlayer && (
-        <OffseasonPlayerDetailModal
+        <PlayerDetailModal
+          extraContent={<OffseasonPlayerMarketDetails player={detailPlayer} />}
           onClose={() => setDetailPlayerId(null)}
           player={detailPlayer}
+          rosterLabel={getRosterTierLabel(detailPlayer)}
+          titlePrefix="Stove League Profile"
         />
       )}
     </section>

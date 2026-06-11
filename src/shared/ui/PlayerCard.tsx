@@ -45,12 +45,24 @@ export function PlayerCard({
   variant = "standard",
 }: PlayerCardProps) {
   const interactive = Boolean(onClick);
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    onKeyDown?.(event);
+
+    if (event.defaultPrevented || !onClick) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  };
 
   return (
     <article
       className={`game-player-card game-player-card-${variant} ${className}`}
       onClick={onClick}
-      onKeyDown={onKeyDown}
+      onKeyDown={handleKeyDown}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       {...draggableProps}

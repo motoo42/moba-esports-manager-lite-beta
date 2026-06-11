@@ -66,6 +66,12 @@ describe("LCK team info", () => {
     expect(screen.getByRole("heading", { name: "1군 후보" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "2군 / 아카데미" })).toBeVisible();
     expect(screen.getAllByText("평가").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Faker/ }));
+    expect(
+      screen.getByRole("dialog", { name: "Faker 선수 상세" }),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "커리어" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(screen.queryByText(/OVR|POT|오버롤|포텐셜/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ability|potential/i)).not.toBeInTheDocument();
   });

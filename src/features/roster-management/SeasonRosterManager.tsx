@@ -11,7 +11,6 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import type { Player, Role, SeasonProgressStatus, Team } from "../../types/game";
-import { getLckTeamDisplayName } from "../../data/lckTeams";
 import { getMoraleLabel } from "../../domain/player-status";
 import {
   formatSeasonDateLabel,
@@ -20,6 +19,7 @@ import {
 import { formatSalaryAmount } from "../../shared/format/money";
 import { EvaluationStars } from "../../shared/ui/EvaluationStars";
 import { MoraleIndicator } from "../../shared/ui/MoraleIndicator";
+import { PlayerDetailModal } from "../../shared/ui/PlayerDetailModal";
 import { PlayerPortrait } from "../../shared/ui/PlayerPortrait";
 
 type RosterSubPage = "main" | "academy" | "contracts";
@@ -177,72 +177,6 @@ function getForcedEditableHint(progressStatus: SeasonProgressStatus) {
   }
 
   return "프리시즌 스토브리그 기간입니다. 계약이 확정된 선수는 언제든 1군/2군 이동과 선발 조정이 가능합니다.";
-}
-
-function PlayerDetailModal({
-  player,
-  onClose,
-}: {
-  player: Player;
-  onClose: () => void;
-}) {
-  return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="player-detail-modal" role="dialog" aria-modal="true">
-        <button
-          aria-label="상세 닫기"
-          className="modal-close-button"
-          onClick={onClose}
-          type="button"
-        >
-          X
-        </button>
-        <div className="player-detail-hero">
-          <PlayerPortrait
-            className="player-detail-portrait"
-            player={player}
-            size="lg"
-          />
-          <div>
-            <p className="eyebrow">{roleLabels[player.role]} 상세</p>
-            <h2>{player.name}</h2>
-            <p className="muted">
-              {getLckTeamDisplayName(player.currentTeam)} · {player.age}세
-            </p>
-            <EvaluationStars player={player} />
-          </div>
-        </div>
-        <div className="player-detail-grid">
-          <Stat label="피로도" value={player.status.fatigue} />
-          <Stat label="컨디션" value={player.status.condition} />
-          <Stat label="부상 위험" value={player.status.injuryRisk} />
-          <div className="player-detail-stat player-detail-morale-stat">
-            <span>사기</span>
-            <strong>
-              <MoraleIndicator level={player.status.morale} showLabel />
-            </strong>
-          </div>
-        </div>
-        <div>
-          <p className="eyebrow">Traits</p>
-          <div className="trait-row">
-            {player.traits.map((trait) => (
-              <span key={trait}>{trait}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="player-detail-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
 }
 
 function StarterSlot({
@@ -650,6 +584,15 @@ export function SeasonRosterManager({
   const activeDragPlayer = activeDragPlayerId
     ? playerById.get(activeDragPlayerId)
     : undefined;
+  const detailRosterLabel = detailPlayer
+    ? starterIds.has(detailPlayer.id)
+      ? "1군 선발"
+      : mainRosterPlayers.some((player) => player.id === detailPlayer.id)
+        ? "1군 후보"
+        : academyRosterPlayers.some((player) => player.id === detailPlayer.id)
+          ? "2군"
+          : undefined
+    : undefined;
 
   useEffect(() => {
     setMessage(
@@ -841,6 +784,8 @@ export function SeasonRosterManager({
         <PlayerDetailModal
           player={detailPlayer}
           onClose={() => setDetailPlayer(null)}
+          rosterLabel={detailRosterLabel}
+          titlePrefix="Roster Profile"
         />
       )}
     </section>

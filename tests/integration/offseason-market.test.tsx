@@ -144,6 +144,7 @@ describe("OffseasonMarket", () => {
       screen.getByRole("dialog", { name: "BeryL 선수 상세" }),
     ).toBeVisible();
     expect(screen.getByText("기대 연봉")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "커리어" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(screen.queryByText("Chovy")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "FA 협상" })).not.toBeInTheDocument();
@@ -320,6 +321,7 @@ describe("OffseasonMarket", () => {
       screen.getByRole("dialog", { name: "BeryL 선수 상세" }),
     ).toBeVisible();
     expect(screen.getByText("현재 소속")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "시장 정보" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(
       screen

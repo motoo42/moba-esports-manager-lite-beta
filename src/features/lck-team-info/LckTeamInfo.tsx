@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   getLckTeamDisplayName,
   lck2026Teams,
@@ -5,6 +6,7 @@ import {
 } from "../../data/lckTeams";
 import { formatSalaryAmount } from "../../shared/format/money";
 import { PlayerCard } from "../../shared/ui/PlayerCard";
+import { PlayerDetailModal } from "../../shared/ui/PlayerDetailModal";
 import { TeamLogo } from "../../shared/ui/TeamLogo";
 import type {
   CareerSave,
@@ -268,10 +270,12 @@ function EmptyPlayerSlot({ label }: { label: string }) {
 
 function PlayerGrid({
   emptyLabel,
+  onViewPlayer,
   players,
   rosterLabel,
 }: {
   emptyLabel: string;
+  onViewPlayer: (player: Player, rosterLabel: string) => void;
   players: Player[];
   rosterLabel: string;
 }) {
@@ -284,6 +288,7 @@ function PlayerGrid({
       {players.map((player) => (
         <PlayerCard
           key={player.id}
+          onClick={() => onViewPlayer(player, rosterLabel)}
           player={player}
           rosterLabel={rosterLabel}
           variant="standard"
@@ -333,6 +338,10 @@ function TeamDetailView({
   onViewTeamList: () => void;
   team: LckTeamSeed;
 }) {
+  const [detailTarget, setDetailTarget] = useState<{
+    player: Player;
+    rosterLabel: string;
+  } | null>(null);
   const snapshot = getLatestStandingSnapshot(career, team);
   const isManagedTeam = isUserTeam(career, team);
   const { academyPlayers, benchPlayers, starters } = getRosterSections(career, team);
@@ -459,12 +468,14 @@ function TeamDetailView({
         <div className="lck-team-starter-grid">
           {roleSlots.map(({ label }, index) => {
             const player = starters[index];
+            const rosterLabel = `${label} 선발`;
 
             return player ? (
               <PlayerCard
                 key={player.id}
+                onClick={() => setDetailTarget({ player, rosterLabel })}
                 player={player}
-                rosterLabel={`${label} 선발`}
+                rosterLabel={rosterLabel}
                 variant="starter"
               />
             ) : (
@@ -484,6 +495,9 @@ function TeamDetailView({
         </div>
         <PlayerGrid
           emptyLabel="현재 확인 가능한 1군 후보 정보가 없습니다."
+          onViewPlayer={(player, rosterLabel) =>
+            setDetailTarget({ player, rosterLabel })
+          }
           players={benchPlayers}
           rosterLabel="1군 후보"
         />
@@ -504,10 +518,21 @@ function TeamDetailView({
         </div>
         <PlayerGrid
           emptyLabel="현재 확인 가능한 아카데미 정보가 없습니다."
+          onViewPlayer={(player, rosterLabel) =>
+            setDetailTarget({ player, rosterLabel })
+          }
           players={displayedAcademyPlayers}
           rosterLabel="2군"
         />
       </section>
+      {detailTarget && (
+        <PlayerDetailModal
+          onClose={() => setDetailTarget(null)}
+          player={detailTarget.player}
+          rosterLabel={detailTarget.rosterLabel}
+          titlePrefix="Club Player Profile"
+        />
+      )}
     </section>
   );
 }
