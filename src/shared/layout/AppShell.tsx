@@ -14,8 +14,9 @@ import type {
   OffseasonSubPage,
   RosterSubPage,
   RouteSubPage,
+  TrainingSubPage,
 } from "../../app/routes";
-import type { CareerSave, CompetitionId, CompetitionState } from "../../types/game";
+import type { CareerSave, CompetitionId } from "../../types/game";
 
 export type ProgressOverlayState = {
   title: string;
@@ -35,6 +36,7 @@ type AppShellProps = PropsWithChildren<{
   rosterSubPage?: RosterSubPage | null;
   inboxSubPage?: InboxSubPage | null;
   offseasonSubPage?: OffseasonSubPage | null;
+  trainingSubPage?: TrainingSubPage | null;
   currentHash?: string;
   autoSaveStatus?: {
     kind: "idle" | "saving" | "saved" | "failed" | "conflict";
@@ -247,7 +249,7 @@ const shellMenuGroups: ShellMenuGroup[] = [
         label: "대회 현황",
         icon: "competition",
         route: "competition-dashboard",
-        subItems: ["대회 현황", "순위표", "일정/결과", "토너먼트"],
+        subItems: [],
       },
       {
         id: "calendar",
@@ -371,181 +373,6 @@ function getActiveCompetitionName(career: CareerSave | null) {
   return currentCompetition?.name ?? "No active competition";
 }
 
-function getSelectedCompetition(
-  career: CareerSave | null,
-  selectedCompetitionId: CompetitionId | null | undefined,
-) {
-  const competitionId =
-    selectedCompetitionId ?? career?.seasonState.currentCompetitionId ?? null;
-
-  if (!competitionId) {
-    return null;
-  }
-
-  return (
-    career?.seasonState.competitions.find(
-      (competition) => competition.competitionId === competitionId,
-    ) ?? null
-  );
-}
-
-function getCompetitionSubMenuItems(
-  competition: CompetitionState | null,
-): ShellSubMenuItem[] {
-  const competitionId = competition?.competitionId ?? null;
-
-  if (!competitionId) {
-    return [
-      {
-        id: "competition-default",
-        label: "대회 현황",
-        route: "competition-dashboard",
-        isDefault: true,
-      },
-    ];
-  }
-
-  if (
-    competitionId === "lck-rounds-1-2" ||
-    competitionId === "lck-rounds-3-4" ||
-    competitionId === "lck-rounds-3-5"
-  ) {
-    return [
-      {
-        id: "standings",
-        label: "순위표",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "standings",
-        isDefault: true,
-      },
-      {
-        id: "schedule",
-        label: "일정/결과",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "schedule",
-      },
-      {
-        id: "tournament",
-        label:
-          competitionId === "lck-rounds-3-4" ||
-          competitionId === "lck-rounds-3-5"
-            ? "진출 경로"
-            : "토너먼트",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "tournament",
-      },
-    ];
-  }
-
-  if (competitionId === "first-stand") {
-    return [
-      {
-        id: "overview",
-        label: "개요",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "overview",
-        isDefault: true,
-      },
-      {
-        id: "groups",
-        label: "조별 순위",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "groups",
-      },
-      {
-        id: "schedule",
-        label: "일정/결과",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "schedule",
-      },
-      {
-        id: "tournament",
-        label: "토너먼트",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "tournament",
-      },
-    ];
-  }
-
-  if (competitionId === "msi" || competitionId === "asian-games") {
-    return [
-      {
-        id: "overview",
-        label: "개요",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "overview",
-        isDefault: true,
-      },
-      {
-        id: "schedule",
-        label: "일정/결과",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "schedule",
-      },
-      {
-        id: "bracket",
-        label: "브래킷",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "bracket",
-      },
-    ];
-  }
-
-  if (competitionId === "worlds") {
-    return [
-      {
-        id: "overview",
-        label: "개요",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "overview",
-        isDefault: true,
-      },
-      {
-        id: "schedule",
-        label: "일정/결과",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "schedule",
-      },
-      {
-        id: "groups",
-        label: "조별 순위",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "groups",
-      },
-      {
-        id: "bracket",
-        label: "브래킷",
-        route: "competition-dashboard",
-        competitionId,
-        subPage: "bracket",
-      },
-    ];
-  }
-
-  return [
-    {
-      id: "competition-default",
-      label: "대회 현황",
-      route: "competition-dashboard",
-      competitionId,
-      isDefault: true,
-    },
-  ];
-}
-
 function getCalendarSubMenuItems(): ShellSubMenuItem[] {
   return [
     {
@@ -584,6 +411,30 @@ function getRosterSubMenuItems(): ShellSubMenuItem[] {
       label: "계약",
       route: "roster-builder",
       subPage: "contracts",
+    },
+  ];
+}
+
+function getTrainingSubMenuItems(): ShellSubMenuItem[] {
+  return [
+    {
+      id: "plan",
+      label: "주간 계획",
+      route: "match-week",
+      subPage: "plan",
+      isDefault: true,
+    },
+    {
+      id: "strategy",
+      label: "전략",
+      route: "match-week",
+      subPage: "strategy",
+    },
+    {
+      id: "intensity",
+      label: "훈련 강도",
+      route: "match-week",
+      subPage: "intensity",
     },
   ];
 }
@@ -665,6 +516,7 @@ function isSubMenuItemActive({
   item,
   offseasonSubPage,
   rosterSubPage,
+  trainingSubPage,
   route,
 }: {
   calendarSubPage: CalendarSubPage | null;
@@ -674,6 +526,7 @@ function isSubMenuItemActive({
   offseasonSubPage: OffseasonSubPage | null;
   item: ShellSubMenuItem;
   rosterSubPage: RosterSubPage | null;
+  trainingSubPage: TrainingSubPage | null;
   route: AppRoute;
 }) {
   if (item.route === "main-dashboard") {
@@ -733,6 +586,16 @@ function isSubMenuItemActive({
     );
   }
 
+  if (item.route === "match-week") {
+    return (
+      route === item.route &&
+      (item.subPage
+        ? trainingSubPage === item.subPage ||
+          (!trainingSubPage && item.isDefault)
+        : !trainingSubPage)
+    );
+  }
+
   if (item.route === "lck-team-info") {
     return route === item.route && Boolean(item.isDefault);
   }
@@ -749,6 +612,7 @@ export function AppShell({
   inboxSubPage = null,
   rosterSubPage = null,
   offseasonSubPage = null,
+  trainingSubPage = null,
   isProgressBlocked = false,
   isProgressing = false,
   progressOverlay,
@@ -783,6 +647,24 @@ export function AppShell({
       }
     }
 
+    if (route === "match-week" && trainingSubPage) {
+      const targetSelector =
+        trainingSubPage === "strategy"
+          ? "#strategy"
+          : trainingSubPage === "intensity"
+            ? "#training-intensity"
+            : "#weekly-plan";
+      const targetElement = mainElement.querySelector(targetSelector);
+
+      if (targetElement instanceof HTMLElement) {
+        if (typeof targetElement.scrollIntoView === "function") {
+          targetElement.scrollIntoView({ block: "start" });
+        }
+
+        return;
+      }
+    }
+
     if (typeof mainElement.scrollTo === "function") {
       mainElement.scrollTo({ top: 0, left: 0 });
       return;
@@ -797,6 +679,7 @@ export function AppShell({
     inboxSubPage,
     offseasonSubPage,
     rosterSubPage,
+    trainingSubPage,
     route,
     selectedCompetitionId,
   ]);
@@ -812,19 +695,20 @@ export function AppShell({
   }
 
   const activeMenuItem = getActiveMenuItem(route);
-  const selectedCompetition = getSelectedCompetition(career, selectedCompetitionId);
   const subMenuItems =
     activeMenuItem.route === "inbox"
       ? getInboxSubMenuItems()
       : activeMenuItem.route === "offseason"
         ? getOffseasonSubMenuItems()
         : activeMenuItem.route === "competition-dashboard"
-      ? getCompetitionSubMenuItems(selectedCompetition)
-      : activeMenuItem.route === "season-calendar"
+          ? getStaticSubMenuItems(activeMenuItem)
+          : activeMenuItem.route === "season-calendar"
         ? getCalendarSubMenuItems()
         : activeMenuItem.route === "roster-builder"
           ? getRosterSubMenuItems()
-          : getStaticSubMenuItems(activeMenuItem);
+          : activeMenuItem.route === "match-week"
+            ? getTrainingSubMenuItems()
+            : getStaticSubMenuItems(activeMenuItem);
   const activeCompetitionName = getActiveCompetitionName(career);
   const seasonLabel = career
     ? career.seasonState.currentDateLabel
@@ -913,6 +797,7 @@ export function AppShell({
                               item: subItem,
                               offseasonSubPage,
                               rosterSubPage,
+                              trainingSubPage,
                               route,
                             });
 

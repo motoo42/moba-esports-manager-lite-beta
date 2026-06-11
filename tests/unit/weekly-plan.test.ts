@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
 import {
+  getStrategyEffectSummary,
   getStrategyLabel,
+  getTrainingIntensityStatusSummary,
   getTrainingIntensityPowerBonus,
   strategyOptions,
   trainingIntensityOptions,
@@ -38,5 +40,16 @@ describe("weekly plan options", () => {
     expect(getStrategyLabel("vision")).toBe("시야 중심형");
     expect(getTrainingIntensityPowerBonus("high")).toBe(3);
     expect(getTrainingIntensityPowerBonus("rest")).toBe(0);
+  });
+
+  it("describes visible strategy and training effects", () => {
+    expect(getStrategyEffectSummary("macro")).toMatch(/운영/);
+    expect(getTrainingIntensityStatusSummary("high")).toMatch(/피로도/);
+    expect(
+      trainingIntensityOptions.every((option) => option.statusSummary.length > 0),
+    ).toBe(true);
+    expect(strategyOptions.every((option) => option.effectSummary.length > 0)).toBe(
+      true,
+    );
   });
 });

@@ -430,6 +430,27 @@ function createCareerWithMsiUpperRound1(): CareerSave {
 }
 
 describe("CompetitionDashboard", () => {
+  it("renders a competition list hub and opens a selected competition", () => {
+    const career = createInitialCareer("T1");
+    const onSelectCompetition = vi.fn();
+
+    render(
+      <CompetitionDashboard
+        career={career}
+        competitionId={null}
+        onSelectCompetition={onSelectCompetition}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "대회 목록" })).toBeVisible();
+    expect(screen.getAllByText("LCK 10개 팀").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Baron\/Elder 그룹 배틀/)).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: /LCK Cup/ }));
+
+    expect(onSelectCompetition).toHaveBeenCalledWith("lck-cup");
+  });
+
   it("renders live First Stand standings, schedule, and tournament data", () => {
     const career = createCareerWithFirstStandFinal();
 

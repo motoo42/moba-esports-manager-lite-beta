@@ -1,6 +1,6 @@
 import { MatchWeek } from "../features/match-week";
 import { useGameDispatch, useGameSelector } from "../app/GameProvider";
-import type { AppRoute, RouteSubPage } from "../app/routes";
+import type { AppRoute, RouteSubPage, TrainingSubPage } from "../app/routes";
 import { gameActions } from "../app/state";
 import { analyzeOpponent } from "../domain/opponent-analysis";
 import { createLckOpponentFromSchedule } from "../domain/opponents";
@@ -61,9 +61,10 @@ type MatchWeekPageProps = {
       subPage?: RouteSubPage | null;
     },
   ) => void;
+  subPage?: TrainingSubPage | null;
 };
 
-export function MatchWeekPage({ onGoTo }: MatchWeekPageProps) {
+export function MatchWeekPage({ onGoTo, subPage }: MatchWeekPageProps) {
   const career = useGameSelector((state) => state.career);
   const lastMatch = useGameSelector((state) => state.lastMatch);
   const dispatch = useGameDispatch();
@@ -117,6 +118,7 @@ export function MatchWeekPage({ onGoTo }: MatchWeekPageProps) {
       }}
       result={lastMatch}
       weeklyPlan={career.weeklyPlan}
+      subPage={subPage}
       onStrategyChange={(strategy) =>
         dispatch(gameActions.setStrategy(strategy))
       }

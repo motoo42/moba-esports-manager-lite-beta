@@ -6,6 +6,7 @@ import type {
   TrainingIntensity,
   WeeklyPlan,
 } from "../../types/game";
+import type { TrainingSubPage } from "../../app/routes";
 import { MatchResultPanel } from "./MatchResultPanel";
 import { StrategyPanel } from "./StrategyPanel";
 
@@ -24,6 +25,7 @@ export type MatchWeekOpponentReport = {
 type MatchWeekProps = {
   opponentReport: MatchWeekOpponentReport;
   result: MatchResult | null;
+  subPage?: TrainingSubPage | null;
   weeklyPlan: WeeklyPlan;
   onStrategyChange: (strategy: StrategyId) => void;
   onTrainingIntensityChange: (trainingIntensity: TrainingIntensity) => void;
@@ -33,6 +35,7 @@ type MatchWeekProps = {
 export function MatchWeek({
   opponentReport,
   result,
+  subPage,
   weeklyPlan,
   onStrategyChange,
   onTrainingIntensityChange,
@@ -92,6 +95,7 @@ export function MatchWeek({
             )}
           </div>
           <StrategyPanel
+            subPage={subPage}
             weeklyPlan={weeklyPlan}
             onStrategyChange={onStrategyChange}
             onTrainingIntensityChange={onTrainingIntensityChange}

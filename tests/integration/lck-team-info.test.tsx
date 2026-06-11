@@ -55,6 +55,10 @@ describe("LCK team info", () => {
     expect(
       screen.getByText(/LCK와 국제대회 역사를 대표하는 명문 구단/),
     ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "역사" })).toBeVisible();
+    expect(screen.getAllByText(/SK Telecom T1/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Worlds 2013/)).toBeVisible();
+    expect(screen.queryByText("최근 대회")).not.toBeInTheDocument();
     expect(
       screen.queryByText(/선발 5인과 후보, 아카데미 구성을 스카우팅 관점/),
     ).not.toBeInTheDocument();

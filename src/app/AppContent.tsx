@@ -40,10 +40,7 @@ export function AppContent() {
   const renderedRoute = routeMatch.route;
   const renderedCompetitionId =
     renderedRoute === "competition-dashboard"
-      ? routeMatch.competitionId ??
-        selectedCompetitionId ??
-        career?.seasonState.currentCompetitionId ??
-        null
+      ? routeMatch.competitionId ?? null
       : selectedCompetitionId;
   const {
     goToRoute,
@@ -78,6 +75,7 @@ export function AppContent() {
         rosterSubPage={routeMatch.rosterSubPage}
         inboxSubPage={routeMatch.inboxSubPage}
         offseasonSubPage={routeMatch.offseasonSubPage}
+        trainingSubPage={routeMatch.trainingSubPage}
         currentHash={location.hash}
         autoSaveStatus={career ? autoSaveStatus : undefined}
         onGoTo={goToRoute}
@@ -89,6 +87,7 @@ export function AppContent() {
           inboxSubPage={routeMatch.inboxSubPage}
           offseasonSubPage={routeMatch.offseasonSubPage}
           rosterSubPage={routeMatch.rosterSubPage}
+          trainingSubPage={routeMatch.trainingSubPage}
           teamId={routeMatch.teamId}
           onCalendarSubPageChange={handleCalendarSubPageChange}
           onCompetitionSubPageChange={handleCompetitionSubPageChange}

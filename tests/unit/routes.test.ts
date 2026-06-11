@@ -127,6 +127,31 @@ describe("app routes", () => {
     expect(getPathForRoute("settings")).toBe("/settings");
   });
 
+  it("parses and creates training subpage routes", () => {
+    expect(getRouteMatchFromPath("/match")).toEqual({
+      route: "match-week",
+      trainingSubPage: null,
+    });
+    expect(getRouteMatchFromPath("/match/strategy")).toEqual({
+      route: "match-week",
+      trainingSubPage: "strategy",
+    });
+    expect(getRouteMatchFromPath("/match/intensity")).toEqual({
+      route: "match-week",
+      trainingSubPage: "intensity",
+    });
+    expect(getRouteMatchFromPath("/match/unknown")).toEqual({
+      route: "match-week",
+      trainingSubPage: null,
+    });
+    expect(getPathForRoute("match-week", null, "strategy")).toBe(
+      "/match/strategy",
+    );
+    expect(getPathForRoute("match-week", null, "intensity")).toBe(
+      "/match/intensity",
+    );
+  });
+
   it("parses and creates roster subpage routes", () => {
     expect(getRouteMatchFromPath("/roster")).toEqual({
       route: "roster-builder",

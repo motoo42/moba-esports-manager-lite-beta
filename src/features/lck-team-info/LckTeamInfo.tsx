@@ -14,6 +14,7 @@ import type {
   Team,
 } from "../../types/game";
 import { getLckTeamIntroduction } from "./lckTeamIntroductions";
+import { getLckTeamHistory } from "./lckTeamHistories";
 
 type LckTeamInfoProps = {
   career: CareerSave;
@@ -338,6 +339,7 @@ function TeamDetailView({
   const displayedAcademyPlayers = academyPlayers.slice(0, 8);
   const salaryTotal = isManagedTeam ? getContractSalaryTotal(career.userTeam) : null;
   const introduction = getLckTeamIntroduction(team.id);
+  const history = getLckTeamHistory(team.id);
   const displayName = getLckTeamDisplayName(team);
 
   return (
@@ -380,10 +382,6 @@ function TeamDetailView({
             <dt>최근 순위</dt>
             <dd>{getTeamRecordLabel(snapshot)}</dd>
           </div>
-          <div>
-            <dt>최근 대회</dt>
-            <dd>{snapshot?.competitionName ?? "기록 없음"}</dd>
-          </div>
           {salaryTotal !== null && (
             <div>
               <dt>내 팀 연봉</dt>
@@ -391,6 +389,61 @@ function TeamDetailView({
             </div>
           )}
         </dl>
+      </section>
+
+      <section className="competition-panel lck-team-history-panel">
+        <div className="panel-title-row">
+          <div>
+            <p className="eyebrow">History</p>
+            <h2>역사</h2>
+          </div>
+          <span className="panel-note">실제 기록 기반 1차 정리</span>
+        </div>
+        <p className="lck-team-history-summary">{history.summary}</p>
+        <div className="lck-team-history-grid">
+          <article>
+            <h3>창단 / 합류</h3>
+            <p>{history.founded}</p>
+          </article>
+          <article>
+            <h3>이름과 계보</h3>
+            <ul>
+              {history.lineage.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+          <article>
+            <h3>국내 기록</h3>
+            <ul>
+              {history.domesticTitles.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+          <article>
+            <h3>국제 기록</h3>
+            <ul>
+              {history.internationalTitles.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        </div>
+        {history.sources.length > 0 && (
+          <details className="lck-team-history-sources">
+            <summary>자료 출처</summary>
+            <ul>
+              {history.sources.map((source) => (
+                <li key={source}>
+                  <a href={source} rel="noreferrer" target="_blank">
+                    {source}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
 
       <section className="competition-panel">

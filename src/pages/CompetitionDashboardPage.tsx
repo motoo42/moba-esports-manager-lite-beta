@@ -36,9 +36,16 @@ export function CompetitionDashboardPage({
   return (
     <CompetitionDashboard
       career={career}
-      competitionId={competitionId ?? selectedCompetitionId}
+      competitionId={
+        competitionId === null
+          ? null
+          : competitionId ?? selectedCompetitionId
+      }
       subPage={subPage}
       onSubPageChange={onSubPageChange}
+      onSelectCompetition={(nextCompetitionId) =>
+        onGoTo?.("competition-dashboard", { competitionId: nextCompetitionId })
+      }
       onViewTeam={(teamId) => onGoTo?.("lck-team-info", { teamId })}
     />
   );

@@ -19,6 +19,7 @@ import type {
   OffseasonSubPage,
   RosterSubPage,
   RouteSubPage,
+  TrainingSubPage,
 } from "./routes";
 import type { CompetitionId } from "../types/game";
 
@@ -29,6 +30,7 @@ type AppRouteRendererProps = {
   inboxSubPage?: InboxSubPage | null;
   offseasonSubPage?: OffseasonSubPage | null;
   rosterSubPage?: RosterSubPage | null;
+  trainingSubPage?: TrainingSubPage | null;
   teamId?: string | null;
   onCalendarSubPageChange: (subPage: CalendarSubPage) => void;
   onCompetitionSubPageChange: (subPage: CompetitionSubPage) => void;
@@ -54,6 +56,7 @@ export function AppRouteRenderer({
   inboxSubPage,
   offseasonSubPage,
   rosterSubPage,
+  trainingSubPage,
   teamId,
   onCalendarSubPageChange,
   onCompetitionSubPageChange,
@@ -85,7 +88,7 @@ export function AppRouteRenderer({
   }
 
   if (route === "match-week") {
-    return <MatchWeekPage onGoTo={onGoTo} />;
+    return <MatchWeekPage onGoTo={onGoTo} subPage={trainingSubPage} />;
   }
 
   if (route === "competition-dashboard") {

@@ -30,12 +30,15 @@ export type InboxSubPage = "all" | "important" | "schedule" | "transfer";
 
 export type OffseasonSubPage = "overview" | "free-agents" | "schedule" | "log";
 
+export type TrainingSubPage = "plan" | "strategy" | "intensity";
+
 export type RouteSubPage =
   | CompetitionSubPage
   | CalendarSubPage
   | RosterSubPage
   | InboxSubPage
-  | OffseasonSubPage;
+  | OffseasonSubPage
+  | TrainingSubPage;
 
 export const appRoutes: AppRoute[] = [
   "career-setup",
@@ -101,6 +104,11 @@ const offseasonSubPages = new Set<OffseasonSubPage>([
   "schedule",
   "log",
 ]);
+const trainingSubPages = new Set<TrainingSubPage>([
+  "plan",
+  "strategy",
+  "intensity",
+]);
 
 export type RouteMatch = {
   route: AppRoute;
@@ -111,6 +119,7 @@ export type RouteMatch = {
   rosterSubPage?: RosterSubPage | null;
   inboxSubPage?: InboxSubPage | null;
   offseasonSubPage?: OffseasonSubPage | null;
+  trainingSubPage?: TrainingSubPage | null;
 };
 
 export function isCompetitionId(value: string): value is CompetitionId {
@@ -137,6 +146,10 @@ export function isInboxSubPage(value: string): value is InboxSubPage {
 
 export function isOffseasonSubPage(value: string): value is OffseasonSubPage {
   return offseasonSubPages.has(value as OffseasonSubPage);
+}
+
+export function isTrainingSubPage(value: string): value is TrainingSubPage {
+  return trainingSubPages.has(value as TrainingSubPage);
 }
 
 export function getPathForRoute(
@@ -167,6 +180,14 @@ export function getPathForRoute(
   if (route === "roster-builder") {
     if (subPage && isRosterSubPage(subPage)) {
       return `/roster/${subPage}`;
+    }
+
+    return routePathByRoute[route];
+  }
+
+  if (route === "match-week") {
+    if (subPage && isTrainingSubPage(subPage)) {
+      return `/match/${subPage}`;
     }
 
     return routePathByRoute[route];
@@ -223,7 +244,18 @@ export function getRouteMatchFromPath(pathname: string): RouteMatch {
   }
 
   if (pathname === "/match") {
-    return { route: "match-week" };
+    return { route: "match-week", trainingSubPage: null };
+  }
+
+  const trainingMatch = pathname.match(/^\/match\/([^/]+)$/);
+
+  if (trainingMatch) {
+    return {
+      route: "match-week",
+      trainingSubPage: isTrainingSubPage(trainingMatch[1])
+        ? trainingMatch[1]
+        : null,
+    };
   }
 
   if (pathname === "/calendar") {

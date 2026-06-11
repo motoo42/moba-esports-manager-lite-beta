@@ -44,9 +44,7 @@ export function useAppNavigation({
 
       const competitionId =
         route === "competition-dashboard"
-          ? options.competitionId ??
-            selectedCompetitionId ??
-            career?.seasonState.currentCompetitionId
+          ? options.competitionId ?? null
           : null;
       const routeId =
         route === "lck-team-info" ? options.teamId ?? null : competitionId;

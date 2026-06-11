@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sampleOpponents } from "../../src/data/sampleOpponents";
 import { samplePlayers } from "../../src/data/samplePlayers";
-import { simulateMatch } from "../../src/domain/match-simulation";
+import { calculateTeamPower, simulateMatch } from "../../src/domain/match-simulation";
 import type { Team } from "../../src/types/game";
 
 const completeTeam: Team = {
@@ -106,5 +106,45 @@ describe("simulateMatch", () => {
     });
 
     expect(highIntensity.teamPower).toBe(rested.teamPower + 3);
+  });
+
+  it("uses the selected strategy to change roster power through player fit", () => {
+    const macroFocusedPlayers = samplePlayers.map((player) => {
+      const isStarter = Object.values(completeTeam.roster).includes(player.id);
+
+      if (!isStarter) {
+        return player;
+      }
+
+      return {
+        ...player,
+        mechanics: 55,
+        laning: 55,
+        teamfight: 60,
+        macro: 95,
+        mental: 92,
+        championPool: 91,
+        mindset: {
+          ...player.mindset,
+          communication: 92,
+          teamwork: 92,
+        },
+      };
+    });
+
+    const aggressivePower = calculateTeamPower(
+      completeTeam,
+      macroFocusedPlayers,
+      "aggressive",
+      "normal",
+    );
+    const macroPower = calculateTeamPower(
+      completeTeam,
+      macroFocusedPlayers,
+      "macro",
+      "normal",
+    );
+
+    expect(macroPower).toBeGreaterThan(aggressivePower);
   });
 });

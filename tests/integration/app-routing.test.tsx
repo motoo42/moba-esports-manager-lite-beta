@@ -81,6 +81,7 @@ describe("App routing", () => {
     "/teams",
     "/teams/gen-g",
     "/settings",
+    "/match/strategy",
     "/calendar/calendar",
     "/competitions/worlds/bracket",
   ])("guards %s when no career is loaded", async (pathname) => {
@@ -254,6 +255,17 @@ describe("App routing", () => {
     fireEvent.click(sidebar.getByRole("button", { name: "이적 로그" }));
     await waitFor(() => expect(window.location.pathname).toBe("/offseason/log"));
     expect(screen.getAllByText("이적 로그").length).toBeGreaterThan(0);
+
+    fireEvent.click(await screen.findByTestId("shell-menu-training"));
+    await waitFor(() => expect(window.location.pathname).toBe("/match"));
+
+    fireEvent.click(sidebar.getByRole("button", { name: "전략" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/match/strategy"));
+    expect(screen.getByRole("heading", { name: "전략" })).toBeVisible();
+
+    fireEvent.click(sidebar.getByRole("button", { name: "훈련 강도" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/match/intensity"));
+    expect(screen.getByRole("heading", { name: "훈련 강도" })).toBeVisible();
   });
 
   it("removes unnecessary submenus and opens the settings page", async () => {
@@ -351,9 +363,8 @@ describe("App routing", () => {
     await waitFor(() => expect(window.location.pathname).toBe("/hub"));
 
     fireEvent.click(getMainContent().getByRole("button", { name: "대회 현황" }));
-    await waitFor(() =>
-      expect(window.location.pathname).toMatch(/^\/competitions/),
-    );
+    await waitFor(() => expect(window.location.pathname).toBe("/competitions"));
+    expect(screen.getByRole("heading", { name: "대회 목록" })).toBeVisible();
     await waitFor(() => expect(window.location.pathname).not.toBe("/hub"));
 
     fireEvent.click(await screen.findByTestId("shell-menu-home"));
