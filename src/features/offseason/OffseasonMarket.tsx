@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import type { OffseasonSubPage } from "../../app/routes";
-import { getLckTeamDisplayName } from "../../data/lckTeams";
+import { getLckTeamDisplayName, lck2026Teams } from "../../data/lckTeams";
 import { offseasonFreeAgentSeeds } from "../../data/offseasonFreeAgents";
 import {
   getOffseasonMarketViewStatus,
@@ -20,6 +20,7 @@ import { PlayerPortrait } from "../../shared/ui/PlayerPortrait";
 import type {
   CareerSave,
   ContractType,
+  OffseasonLogEntry,
   OffseasonNegotiationContext,
   OffseasonOffer,
   OffseasonRequestedRosterRole,
@@ -125,6 +126,20 @@ const roleOptions: Array<{ value: Role; label: string }> = [
   { value: "support", label: "서폿" },
 ];
 
+const logTeamFilterOptions = [
+  { value: "all", label: "전체 팀" },
+  ...lck2026Teams.map((team) => ({
+    value: team.name,
+    label: getLckTeamDisplayName(team),
+  })),
+];
+
+type OffseasonLogTeamFilter = (typeof logTeamFilterOptions)[number]["value"];
+
+function getRoleLabel(role: Role) {
+  return roleOptions.find((option) => option.value === role)?.label ?? role;
+}
+
 function getRosterTierLabel(player: Player) {
   if (player.rosterTier === "main") {
     return "1군";
@@ -141,6 +156,64 @@ function getMarketTeamLabel(player: Player) {
   return player.currentTeam
     ? `${getLckTeamDisplayName(player.currentTeam)} 소속`
     : "무소속 FA";
+}
+
+function getLogTeamAliases(teamName: string) {
+  const team = lck2026Teams.find((candidate) => candidate.name === teamName);
+
+  if (!team) {
+    return [teamName];
+  }
+
+  return [team.name, team.displayNameKo, team.shortName].filter(Boolean);
+}
+
+function includesAnyTeamAlias(value: string, teamName: string) {
+  const normalizedValue = value.toLowerCase();
+
+  return getLogTeamAliases(teamName).some((alias) =>
+    normalizedValue.includes(alias.toLowerCase()),
+  );
+}
+
+function logMatchesTeamFilter({
+  career,
+  log,
+  teamFilter,
+}: {
+  career: CareerSave;
+  log: OffseasonLogEntry;
+  teamFilter: OffseasonLogTeamFilter;
+}) {
+  if (teamFilter === "all") {
+    return true;
+  }
+
+  if (log.isUserTeamRelated && career.userTeam.name === teamFilter) {
+    return true;
+  }
+
+  const relatedTeamText = log.relatedTeamNames?.join(" ") ?? "";
+  const searchableText = `${log.message} ${relatedTeamText}`;
+
+  return includesAnyTeamAlias(searchableText, teamFilter);
+}
+
+function offerMatchesTeamFilter({
+  offer,
+  teamFilter,
+}: {
+  offer: OffseasonOffer;
+  teamFilter: OffseasonLogTeamFilter;
+}) {
+  if (teamFilter === "all") {
+    return true;
+  }
+
+  return (
+    includesAnyTeamAlias(offer.fromTeamName, teamFilter) ||
+    includesAnyTeamAlias(offer.toTeamName, teamFilter)
+  );
 }
 
 function getPlayer(players: Player[], playerId: string) {
@@ -474,6 +547,84 @@ function WeekTimeline({ career }: { career: CareerSave }) {
   );
 }
 
+function handleRowActivation(
+  event: KeyboardEvent<HTMLElement>,
+  onActivate: () => void,
+) {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  event.preventDefault();
+  onActivate();
+}
+
+function OffseasonPlayerDetailModal({
+  onClose,
+  player,
+}: {
+  onClose: () => void;
+  player: Player;
+}) {
+  return (
+    <div className="modal-backdrop" onMouseDown={onClose} role="presentation">
+      <section
+        aria-label={`${player.name} 선수 상세`}
+        aria-modal="true"
+        className="offseason-player-detail-modal"
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <button
+          aria-label="닫기"
+          className="modal-close-button"
+          onClick={onClose}
+          type="button"
+        >
+          ×
+        </button>
+        <div className="offseason-player-detail-hero">
+          <PlayerPortrait player={player} size="lg" />
+          <div>
+            <p className="eyebrow">Player Profile</p>
+            <h2>{player.name}</h2>
+            <span>
+              {getRoleLabel(player.role)} · {player.age}세 ·{" "}
+              {getRosterTierLabel(player)}
+            </span>
+            <EvaluationStars player={player} />
+          </div>
+        </div>
+        <div className="offseason-player-detail-grid">
+          <article>
+            <span>현재 소속</span>
+            <strong>{getMarketTeamLabel(player)}</strong>
+          </article>
+          <article>
+            <span>리그</span>
+            <strong>{player.league}</strong>
+          </article>
+          <article>
+            <span>기대 연봉</span>
+            <strong>{formatSalaryAmount(player.salaryExpectation)}</strong>
+          </article>
+          <article>
+            <span>시장 가치</span>
+            <strong>{formatSalaryAmount(player.cost)}</strong>
+          </article>
+        </div>
+        <div className="offseason-player-detail-note">
+          <strong>스카우팅 메모</strong>
+          <span>
+            세부 능력치와 잠재력은 공개하지 않습니다. 이 화면에서는 현재 평가,
+            나이, 포지션, 시장 정보를 중심으로 확인할 수 있습니다.
+          </span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function ContractOfferModal({
   career,
   onClose,
@@ -699,10 +850,12 @@ function ContractTab({
   career,
   onOpenNegotiation,
   onReleaseExpiredPlayer,
+  onViewPlayer,
 }: {
   career: CareerSave;
   onOpenNegotiation: (target: NegotiationTarget) => void;
   onReleaseExpiredPlayer: (playerId: string) => void;
+  onViewPlayer: (player: Player) => void;
 }) {
   const offseason = career.seasonState.offseason;
   const unresolvedIds = new Set(getUnresolvedExpiredPlayerIds(career));
@@ -727,7 +880,16 @@ function ContractTab({
         const isPending = latestOffer?.status === "pending";
 
         return (
-          <article className="offseason-player-row" key={player.id}>
+          <article
+            className="offseason-player-row offseason-player-row-clickable"
+            key={player.id}
+            onClick={() => onViewPlayer(player)}
+            onKeyDown={(event) =>
+              handleRowActivation(event, () => onViewPlayer(player))
+            }
+            role="button"
+            tabIndex={0}
+          >
             <div className="offseason-player-portrait-cell">
               <PlayerPortrait player={player} size="lg" />
             </div>
@@ -759,7 +921,11 @@ function ContractTab({
             {resolved ? (
               <strong className="offseason-status-label">처리 완료</strong>
             ) : (
-              <div className="offseason-offer-controls">
+              <div
+                className="offseason-offer-controls"
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
                 <Button
                   disabled={isPending}
                   onClick={() =>
@@ -790,10 +956,12 @@ function ConfirmationPendingSection({
   career,
   onCancelFreeAgentSigning,
   onConfirmFreeAgentSigning,
+  onViewPlayer,
 }: {
   career: CareerSave;
   onCancelFreeAgentSigning: (offerId: string) => void;
   onConfirmFreeAgentSigning: (offerId: string) => void;
+  onViewPlayer: (player: Player) => void;
 }) {
   const [notice, setNotice] = useState("");
   const pendingOffers = getConfirmationPendingOffers(career);
@@ -830,7 +998,24 @@ function ConfirmationPendingSection({
 
           return (
             <article className="offseason-confirmation-card" key={offer.id}>
-              <div className="offseason-confirmation-player-card">
+              <div
+                className={
+                  player
+                    ? "offseason-confirmation-player-card offseason-confirmation-player-card-clickable"
+                    : "offseason-confirmation-player-card"
+                }
+                onClick={
+                  player ? () => onViewPlayer(player) : undefined
+                }
+                onKeyDown={
+                  player
+                    ? (event) =>
+                        handleRowActivation(event, () => onViewPlayer(player))
+                    : undefined
+                }
+                role={player ? "button" : undefined}
+                tabIndex={player ? 0 : undefined}
+              >
                 {player ? (
                   <>
                     <PlayerPortrait player={player} size="lg" />
@@ -862,7 +1047,11 @@ function ConfirmationPendingSection({
                   </small>
                 )}
               </div>
-              <div className="offseason-confirmation-actions">
+              <div
+                className="offseason-confirmation-actions"
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
                 {!canConfirm && blockReason && (
                   <small className="offseason-confirm-tooltip-copy">
                     {blockReason}
@@ -916,11 +1105,13 @@ function FreeAgentTab({
   onCancelFreeAgentSigning,
   onConfirmFreeAgentSigning,
   onOpenNegotiation,
+  onViewPlayer,
 }: {
   career: CareerSave;
   onCancelFreeAgentSigning: (offerId: string) => void;
   onConfirmFreeAgentSigning: (offerId: string) => void;
   onOpenNegotiation: (target: NegotiationTarget) => void;
+  onViewPlayer: (player: Player) => void;
 }) {
   const [query, setQuery] = useState("");
   const [teamFilter, setTeamFilter] = useState("all");
@@ -978,6 +1169,7 @@ function FreeAgentTab({
         career={career}
         onCancelFreeAgentSigning={onCancelFreeAgentSigning}
         onConfirmFreeAgentSigning={onConfirmFreeAgentSigning}
+        onViewPlayer={onViewPlayer}
       />
       {freeAgents.length === 0 && (
         <div className="offseason-empty">
@@ -1070,7 +1262,16 @@ function FreeAgentTab({
         const latestOffer = findLatestOffer(career, player.id, "free-agent");
 
         return (
-          <article className="offseason-player-row" key={player.id}>
+          <article
+            className="offseason-player-row offseason-player-row-clickable"
+            key={player.id}
+            onClick={() => onViewPlayer(player)}
+            onKeyDown={(event) =>
+              handleRowActivation(event, () => onViewPlayer(player))
+            }
+            role="button"
+            tabIndex={0}
+          >
             <div className="offseason-player-portrait-cell">
               <PlayerPortrait player={player} size="lg" />
             </div>
@@ -1096,7 +1297,11 @@ function FreeAgentTab({
                       )}`}
               </small>
             </div>
-            <div className="offseason-offer-controls">
+            <div
+              className="offseason-offer-controls"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
               <Button
                 disabled={!canOffer || isPending}
                 onClick={() =>
@@ -1197,11 +1402,55 @@ function RosterTab({
   );
 }
 
+function OffseasonLogTeamSelect({
+  filteredCount,
+  onChange,
+  totalCount,
+  value,
+}: {
+  filteredCount: number;
+  onChange: (value: OffseasonLogTeamFilter) => void;
+  totalCount: number;
+  value: OffseasonLogTeamFilter;
+}) {
+  return (
+    <div className="offseason-filter-row offseason-log-filter-row">
+      <label>
+        <span>팀</span>
+        <select
+          aria-label="이적 로그 팀 필터"
+          value={value}
+          onChange={(event) =>
+            onChange(event.target.value as OffseasonLogTeamFilter)
+          }
+        >
+          {logTeamFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <strong>
+        {filteredCount}/{totalCount}건
+      </strong>
+    </div>
+  );
+}
+
 function LogTab({ career }: { career: CareerSave }) {
+  const [teamFilter, setTeamFilter] =
+    useState<OffseasonLogTeamFilter>("all");
   const logs = [...(career.seasonState.offseason?.logEntries ?? [])].reverse();
-  const offers = [...(career.seasonState.offseason?.resolvedOffers ?? [])]
+  const filteredLogs = logs.filter((log) =>
+    logMatchesTeamFilter({ career, log, teamFilter }),
+  );
+  const allOffers = [...(career.seasonState.offseason?.resolvedOffers ?? [])]
     .reverse()
     .slice(0, 8);
+  const offers = allOffers.filter((offer) =>
+    offerMatchesTeamFilter({ offer, teamFilter }),
+  );
 
   if (logs.length === 0 && offers.length === 0) {
     return (
@@ -1214,20 +1463,35 @@ function LogTab({ career }: { career: CareerSave }) {
 
   return (
     <div className="offseason-log-grid">
-      <div className="offseason-log-list">
-        {logs.map((log) => (
-          <article
-            className={`offseason-log-entry offseason-log-${log.type} ${
-              log.isUserTeamRelated ? "offseason-log-user-team" : ""
-            }`}
-            key={log.id}
-          >
-            <span>
-              {log.week}주차 {log.day}일
-            </span>
-            <strong>{log.message}</strong>
-          </article>
-        ))}
+      <div className="offseason-log-panel">
+        <OffseasonLogTeamSelect
+          filteredCount={filteredLogs.length}
+          onChange={setTeamFilter}
+          totalCount={logs.length}
+          value={teamFilter}
+        />
+        {filteredLogs.length === 0 ? (
+          <div className="offseason-empty">
+            <strong>선택한 팀의 이적 로그가 없습니다.</strong>
+            <span>다른 팀을 선택하거나 전체 팀으로 돌아가세요.</span>
+          </div>
+        ) : (
+          <div className="offseason-log-list">
+            {filteredLogs.map((log) => (
+              <article
+                className={`offseason-log-entry offseason-log-${log.type} ${
+                  log.isUserTeamRelated ? "offseason-log-user-team" : ""
+                }`}
+                key={log.id}
+              >
+                <span>
+                  {log.week}주차 {log.day}일
+                </span>
+                <strong>{log.message}</strong>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
       <div className="offseason-offer-history">
         <div className="section-label-row">
@@ -1257,7 +1521,13 @@ function LogTab({ career }: { career: CareerSave }) {
   );
 }
 
-function ClosedMarketFreeAgentPanel({ career }: { career: CareerSave }) {
+function ClosedMarketFreeAgentPanel({
+  career,
+  onViewPlayer,
+}: {
+  career: CareerSave;
+  onViewPlayer: (player: Player) => void;
+}) {
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [tierFilter, setTierFilter] = useState<
@@ -1342,7 +1612,16 @@ function ClosedMarketFreeAgentPanel({ career }: { career: CareerSave }) {
       ) : (
         <div className="offseason-list offseason-closed-player-list">
           {filteredPlayers.slice(0, 16).map((player) => (
-            <article className="offseason-player-row" key={player.id}>
+            <article
+              className="offseason-player-row offseason-player-row-clickable"
+              key={player.id}
+              onClick={() => onViewPlayer(player)}
+              onKeyDown={(event) =>
+                handleRowActivation(event, () => onViewPlayer(player))
+              }
+              role="button"
+              tabIndex={0}
+            >
               <div className="offseason-player-portrait-cell">
                 <PlayerPortrait player={player} size="lg" />
               </div>
@@ -1367,13 +1646,18 @@ function ClosedMarketFreeAgentPanel({ career }: { career: CareerSave }) {
 }
 
 function ClosedMarketLogPanel({ career }: { career: CareerSave }) {
+  const [teamFilter, setTeamFilter] =
+    useState<OffseasonLogTeamFilter>("all");
   const logs = getRecentOffseasonLogs(career);
+  const filteredLogs = logs.filter((log) =>
+    logMatchesTeamFilter({ career, log, teamFilter }),
+  );
 
   return (
     <Card>
       <div className="section-label-row">
         <span>이적 로그</span>
-        <strong>{logs.length}</strong>
+        <strong>{filteredLogs.length}</strong>
       </div>
       {logs.length === 0 ? (
         <div className="offseason-empty">
@@ -1381,20 +1665,35 @@ function ClosedMarketLogPanel({ career }: { career: CareerSave }) {
           <span>스토브리그가 진행되면 주요 기록이 이곳에 남습니다.</span>
         </div>
       ) : (
-        <div className="offseason-log-list offseason-closed-log-list">
-          {logs.map((log) => (
-            <article
-              className={`offseason-log-entry offseason-log-${log.type} ${
-                log.isUserTeamRelated ? "offseason-log-user-team" : ""
-              }`}
-              key={log.id}
-            >
-              <span>
-                {log.week}주차 {log.day}일
-              </span>
-              <strong>{log.message}</strong>
-            </article>
-          ))}
+        <div className="offseason-log-panel">
+          <OffseasonLogTeamSelect
+            filteredCount={filteredLogs.length}
+            onChange={setTeamFilter}
+            totalCount={logs.length}
+            value={teamFilter}
+          />
+          {filteredLogs.length === 0 ? (
+            <div className="offseason-empty">
+              <strong>선택한 팀의 이적 로그가 없습니다.</strong>
+              <span>다른 팀을 선택하거나 전체 팀으로 돌아가세요.</span>
+            </div>
+          ) : (
+            <div className="offseason-log-list offseason-closed-log-list">
+              {filteredLogs.map((log) => (
+                <article
+                  className={`offseason-log-entry offseason-log-${log.type} ${
+                    log.isUserTeamRelated ? "offseason-log-user-team" : ""
+                  }`}
+                  key={log.id}
+                >
+                  <span>
+                    {log.week}주차 {log.day}일
+                  </span>
+                  <strong>{log.message}</strong>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </Card>
@@ -1494,15 +1793,28 @@ function ClosedOffseasonInfo({
   subPage?: OffseasonSubPage | null;
 }) {
   const activeSubPage = subPage ?? "overview";
+  const [detailPlayerId, setDetailPlayerId] = useState<string | null>(null);
+  const detailPlayer = detailPlayerId
+    ? getPlayer(career.lckPlayers, detailPlayerId)
+    : undefined;
 
   return (
     <section className="stack offseason-page">
       {activeSubPage === "overview" && <ClosedMarketOverviewPanel career={career} />}
       {activeSubPage === "free-agents" && (
-        <ClosedMarketFreeAgentPanel career={career} />
+        <ClosedMarketFreeAgentPanel
+          career={career}
+          onViewPlayer={(player) => setDetailPlayerId(player.id)}
+        />
       )}
       {activeSubPage === "schedule" && <ClosedMarketSchedulePanel />}
       {activeSubPage === "log" && <ClosedMarketLogPanel career={career} />}
+      {detailPlayer && (
+        <OffseasonPlayerDetailModal
+          onClose={() => setDetailPlayerId(null)}
+          player={detailPlayer}
+        />
+      )}
     </section>
   );
 }
@@ -1522,12 +1834,16 @@ export function OffseasonMarket({
     useState<OffseasonTab>("contracts");
   const [negotiationTarget, setNegotiationTarget] =
     useState<NegotiationTarget | null>(null);
+  const [detailPlayerId, setDetailPlayerId] = useState<string | null>(null);
   const offseason = career.seasonState.offseason;
   const validationErrors = offseason?.validationErrors ?? [];
   const marketViewStatus = getOffseasonMarketViewStatus(career);
   const activeTab = subPage
     ? getOffseasonTabFromSubPage(subPage)
     : fallbackActiveTab;
+  const detailPlayer = detailPlayerId
+    ? getPlayer(career.lckPlayers, detailPlayerId)
+    : undefined;
 
   const activePanel = useMemo(() => {
     if (activeTab === "contracts") {
@@ -1536,6 +1852,7 @@ export function OffseasonMarket({
           career={career}
           onOpenNegotiation={setNegotiationTarget}
           onReleaseExpiredPlayer={onReleaseExpiredPlayer}
+          onViewPlayer={(player) => setDetailPlayerId(player.id)}
         />
       );
     }
@@ -1547,6 +1864,7 @@ export function OffseasonMarket({
           onCancelFreeAgentSigning={onCancelFreeAgentSigning}
           onConfirmFreeAgentSigning={onConfirmFreeAgentSigning}
           onOpenNegotiation={setNegotiationTarget}
+          onViewPlayer={(player) => setDetailPlayerId(player.id)}
         />
       );
     }
@@ -1611,6 +1929,12 @@ export function OffseasonMarket({
               : onSubmitFreeAgentOffer
           }
           target={negotiationTarget}
+        />
+      )}
+      {detailPlayer && (
+        <OffseasonPlayerDetailModal
+          onClose={() => setDetailPlayerId(null)}
+          player={detailPlayer}
         />
       )}
     </section>

@@ -661,6 +661,7 @@ export type OffseasonLogEntry = {
   type: OffseasonLogType;
   message: string;
   isUserTeamRelated?: boolean;
+  relatedTeamNames?: string[];
 };
 
 export type OffseasonState = {

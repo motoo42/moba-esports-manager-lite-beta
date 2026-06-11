@@ -1308,11 +1308,16 @@ select {
 }
 
 .player-portrait img {
+  box-sizing: border-box;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 50% 22%;
+  object-fit: contain;
+  object-position: center top;
+  padding: 3px;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(248, 250, 252, 0.08), transparent 36%),
+    rgba(2, 6, 23, 0.28);
 }
 
 .evaluation-stars {
@@ -1410,7 +1415,7 @@ select {
 .game-player-card-starter .game-player-card-portrait,
 .game-player-card-detail .game-player-card-portrait {
   width: 100%;
-  height: 150px;
+  height: 136px;
 }
 
 .game-player-card-compact .game-player-card-portrait {
@@ -5647,6 +5652,23 @@ h1 {
   background: rgba(15, 23, 42, 0.45);
 }
 
+.offseason-player-row-clickable {
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.offseason-player-row-clickable:hover,
+.offseason-player-row-clickable:focus-visible {
+  border-color: rgba(56, 189, 248, 0.48);
+  background:
+    linear-gradient(90deg, rgba(14, 116, 144, 0.16), transparent 78%),
+    rgba(15, 23, 42, 0.58);
+  outline: none;
+}
+
 .offseason-player-portrait-cell {
   display: grid;
   place-items: center;
@@ -5772,6 +5794,19 @@ h1 {
   min-width: 0;
 }
 
+.offseason-confirmation-player-card-clickable {
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.offseason-confirmation-player-card-clickable:hover,
+.offseason-confirmation-player-card-clickable:focus-visible {
+  border-color: rgba(56, 189, 248, 0.62);
+  outline: none;
+}
+
 .offseason-confirmation-player-card .player-portrait {
   width: 68px;
   height: 86px;
@@ -5879,6 +5914,17 @@ h1 {
   gap: 14px;
 }
 
+.offseason-log-panel {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 10px;
+}
+
+.offseason-log-filter-row {
+  grid-template-columns: minmax(180px, 280px) auto;
+}
+
 .offseason-log-list,
 .offseason-offer-history {
   display: grid;
@@ -5927,6 +5973,77 @@ h1 {
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
   color: var(--text);
   padding: 18px;
+}
+
+.offseason-player-detail-modal {
+  position: relative;
+  display: grid;
+  width: min(820px, calc(100vw - 32px));
+  max-height: min(88vh, 760px);
+  overflow: auto;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  background: #0d1424;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+  color: var(--text);
+  padding: 22px;
+}
+
+.offseason-player-detail-hero {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  min-width: 0;
+}
+
+.offseason-player-detail-hero .player-portrait {
+  width: 148px;
+  height: 188px;
+}
+
+.offseason-player-detail-hero h2 {
+  margin: 2px 0 8px;
+  color: #ffffff;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+}
+
+.offseason-player-detail-hero > div > span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+
+.offseason-player-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.offseason-player-detail-grid article,
+.offseason-player-detail-note {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.52);
+  padding: 12px;
+}
+
+.offseason-player-detail-grid span,
+.offseason-player-detail-note span {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.offseason-player-detail-grid strong,
+.offseason-player-detail-note strong {
+  overflow: hidden;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contract-offer-header {
@@ -6646,6 +6763,8 @@ h1 {
     .bench-player-grid,
     .player-detail-hero,
     .player-detail-grid,
+    .offseason-player-detail-hero,
+    .offseason-player-detail-grid,
   .competition-summary-grid,
   .competition-overview-grid,
   .competition-schedule-columns,
@@ -6708,7 +6827,8 @@ h1 {
   .offseason-confirmation-card,
   .offseason-closed-hero,
   .offseason-window-grid,
-  .offseason-log-grid {
+  .offseason-log-grid,
+  .offseason-log-filter-row {
     grid-template-columns: 1fr;
   }
 
@@ -6745,6 +6865,11 @@ h1 {
 
   .offseason-filter-row > strong {
     text-align: left;
+  }
+
+  .offseason-player-detail-hero .player-portrait {
+    width: 120px;
+    height: 154px;
   }
 
   .offseason-confirmation-actions {

@@ -139,6 +139,12 @@ describe("OffseasonMarket", () => {
       target: { value: "BeryL" },
     });
     expect(screen.getByText("BeryL")).toBeVisible();
+    fireEvent.click(screen.getByText("BeryL").closest("article")!);
+    expect(
+      screen.getByRole("dialog", { name: "BeryL 선수 상세" }),
+    ).toBeVisible();
+    expect(screen.getByText("기대 연봉")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(screen.queryByText("Chovy")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "FA 협상" })).not.toBeInTheDocument();
 
@@ -309,6 +315,12 @@ describe("OffseasonMarket", () => {
     });
 
     expect(screen.getByText("BeryL")).toBeVisible();
+    fireEvent.click(screen.getByText("BeryL").closest("article")!);
+    expect(
+      screen.getByRole("dialog", { name: "BeryL 선수 상세" }),
+    ).toBeVisible();
+    expect(screen.getByText("현재 소속")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(
       screen
         .getAllByLabelText(/평가/)
@@ -376,6 +388,15 @@ describe("OffseasonMarket", () => {
               type: "signing",
               message: "BeryL 영입 경쟁에서 승리했습니다.",
               isUserTeamRelated: true,
+              relatedTeamNames: ["T1"],
+            },
+            {
+              id: "gen-g-log",
+              day: 9,
+              week: 2,
+              type: "ai-signing",
+              message: "젠지가 FA 영입 경쟁에서 승리했습니다.",
+              relatedTeamNames: ["Gen.G"],
             },
           ],
         },
@@ -402,8 +423,25 @@ describe("OffseasonMarket", () => {
     expect(onConfirmFreeAgentSigning).toHaveBeenCalledWith("pending-beryl");
 
     fireEvent.click(screen.getByRole("button", { name: "이적 로그" }));
+    expect(screen.getByLabelText("이적 로그 팀 필터")).toBeVisible();
     expect(
       screen.getByText("BeryL 영입 경쟁에서 승리했습니다.").closest("article"),
     ).toHaveClass("offseason-log-user-team");
+
+    fireEvent.change(screen.getByLabelText("이적 로그 팀 필터"), {
+      target: { value: "Gen.G" },
+    });
+    expect(screen.getByText("젠지가 FA 영입 경쟁에서 승리했습니다.")).toBeVisible();
+    expect(
+      screen.queryByText("BeryL 영입 경쟁에서 승리했습니다."),
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("이적 로그 팀 필터"), {
+      target: { value: "T1" },
+    });
+    expect(screen.getByText("BeryL 영입 경쟁에서 승리했습니다.")).toBeVisible();
+    expect(
+      screen.queryByText("젠지가 FA 영입 경쟁에서 승리했습니다."),
+    ).not.toBeInTheDocument();
   });
 });
