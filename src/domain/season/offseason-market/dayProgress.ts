@@ -7,6 +7,7 @@ import {
 } from "../seasonScheduleDates";
 import { startNextSeasonFromOffseason } from "../seasonEnd";
 import { resolveAiDepthSignings } from "./aiMarket";
+import { processAiRenewalsForCurrentDay } from "./aiRenewals";
 import {
   getPendingFreeAgentOffersToResolve,
   resolveFreeAgentOffers,
@@ -103,7 +104,9 @@ export function progressOffseasonDay(career: CareerSave): CareerSave {
   const currentDay = offseason.currentDay ?? 1;
   const negotiatedPlayerIds = getPendingOfferPlayerIdsToResolve(career);
   const careerWithResolvedOffers = resolveAiDepthSignings(
-    resolveFreeAgentOffers(resolveRenewalOffers(career)),
+    resolveFreeAgentOffers(
+      processAiRenewalsForCurrentDay(resolveRenewalOffers(career)),
+    ),
     negotiatedPlayerIds,
   );
   const unresolvedExpiredPlayerIds = getUnresolvedExpiredPlayerIds(

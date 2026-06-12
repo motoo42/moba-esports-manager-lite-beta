@@ -3,6 +3,7 @@ import {
   getStrategyLabel,
   getTrainingIntensityLabel,
 } from "../../domain/weekly-plan";
+import { isImportantCareerMessage } from "../../domain/messages";
 import { findLckTeamSeed, getLckTeamDisplayName } from "../../data/lckTeams";
 import { getSeasonProgressActionLabel } from "../../domain/season";
 import { TeamLogo } from "../ui/TeamLogo";
@@ -438,9 +439,7 @@ export function AppShell({
   const userTeamDisplayName = getLckTeamDisplayName(userTeamSeed ?? career?.userTeam.name);
   const unreadImportantMessageCount =
     career?.messages?.filter(
-      (message) =>
-        !message.read &&
-        (message.priority !== "normal" || message.category === "important"),
+      (message) => !message.read && isImportantCareerMessage(message),
     ).length ?? 0;
   const unreadImportantMessageBadge =
     unreadImportantMessageCount > 0

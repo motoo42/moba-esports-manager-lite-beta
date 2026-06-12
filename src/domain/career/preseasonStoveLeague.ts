@@ -2,6 +2,7 @@ import { findLckTeamSeed, getLckTeamProfile } from "../../data/lckTeams";
 import { offseasonFreeAgentSeeds } from "../../data/offseasonFreeAgents";
 import type {
   CareerSave,
+  OffseasonAiRenewalPlan,
   Player,
   PlayerContract,
   Role,
@@ -9,7 +10,7 @@ import type {
   Team,
 } from "../../types/game";
 import { createInitialSeasonState } from "../season/createInitialSeasonState";
-import { releaseAiMainRosterToMarket } from "../season/offseasonFreeAgentPool";
+import { createAiRenewalPlans } from "../season/offseason-market/aiRenewals";
 import { formatSeasonDateLabel } from "../season/seasonScheduleDates";
 
 const preseasonStartDateKey = "2025-12-17";
@@ -91,10 +92,12 @@ function createPreseasonOffseasonState({
   seasonState,
   selectedTeamPlayerIds,
   marketPlayerIds,
+  aiRenewalPlans,
 }: {
   seasonState: SeasonState;
   selectedTeamPlayerIds: string[];
   marketPlayerIds: string[];
+  aiRenewalPlans: OffseasonAiRenewalPlan[];
 }): SeasonState {
   return {
     ...seasonState,
@@ -130,6 +133,7 @@ function createPreseasonOffseasonState({
       resolvedExpiredPlayerIds: [],
       retiredPlayerIds: [],
       militaryServicePlayerIds: [],
+      aiRenewalPlans,
       validationErrors: [],
       logEntries: [
         {
@@ -148,11 +152,7 @@ function createPreseasonOffseasonState({
 export function createPreseasonStoveLeagueCareer(
   career: CareerSave,
 ): CareerSave {
-  const marketPool = releaseAiMainRosterToMarket(
-    mergePreseasonFreeAgents(career.lckPlayers),
-    career.userTeam.name,
-  );
-  const lckPlayers = marketPool.players;
+  const lckPlayers = mergePreseasonFreeAgents(career.lckPlayers);
   const userTeamProfile = getLckTeamProfile(career.userTeam.name);
   const sourceTeamName = getRosterSourceTeamName(career.userTeam.name);
   const selectedTeamPlayers = lckPlayers
@@ -207,6 +207,7 @@ export function createPreseasonStoveLeagueCareer(
     lckPlayers,
     userTeam,
     seasonState: createPreseasonOffseasonState({
+      aiRenewalPlans: createAiRenewalPlans(lckPlayers, career.userTeam.name),
       seasonState,
       selectedTeamPlayerIds,
       marketPlayerIds,

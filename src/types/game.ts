@@ -664,6 +664,16 @@ export type OffseasonLogEntry = {
   relatedTeamNames?: string[];
 };
 
+export type OffseasonAiRenewalPlan = {
+  teamName: string;
+  decisionDays: number[];
+  candidatePlayerIds: string[];
+  targetRenewalCount: number;
+  processedDays: number[];
+  renewedPlayerIds: string[];
+  releasedPlayerIds: string[];
+};
+
 export type OffseasonState = {
   context?: OffseasonContext;
   status: OffseasonStatus;
@@ -687,6 +697,7 @@ export type OffseasonState = {
   resolvedExpiredPlayerIds?: string[];
   retiredPlayerIds?: string[];
   militaryServicePlayerIds?: string[];
+  aiRenewalPlans?: OffseasonAiRenewalPlan[];
   logEntries?: OffseasonLogEntry[];
   validationErrors?: string[];
 };

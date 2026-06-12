@@ -16,6 +16,7 @@ import { getOffseasonNegotiationSnapshot } from "./negotiation";
 import {
   evaluateOffer,
   getOfferScore,
+  getTeamBudgetSnapshot,
   getTeamNeedScore,
 } from "./offerEvaluation";
 import { createOffer } from "./offerFactory";
@@ -35,6 +36,45 @@ function hashString(value: string) {
     (total, char) => (total * 31 + char.charCodeAt(0)) % 100000,
     17,
   );
+}
+
+function getAiOfferMultiplier({
+  career,
+  demand,
+  player,
+  teamName,
+}: {
+  career: CareerSave;
+  demand: number;
+  player: Player;
+  teamName: string;
+}) {
+  const currentDay = getCurrentOffseasonDay(career);
+  const hash = hashString(`${player.id}:${teamName}:${currentDay}:offer-range`);
+  const profile = lck2026Teams.find((team) => team.name === teamName);
+  const needScore = getTeamNeedScore({ career, player, teamName });
+  const { budget, remainingBudget } = getTeamBudgetSnapshot(career, teamName);
+  const budgetRoomRatio = demand > 0 ? remainingBudget / demand : 1;
+  const budgetModifier = Math.max(-0.24, Math.min(0.22, (budgetRoomRatio - 2) * 0.08));
+  const needModifier = needScore / 150;
+  const starModifier = player.overall >= 85 ? 0.08 : player.overall >= 78 ? 0.03 : -0.03;
+  const appealModifier = ((profile?.appealModifier ?? 0) + (budget / 900 - 0.5)) * 0.04;
+  const volatility = ((hash % 71) - 35) / 100;
+  const maxMultiplier =
+    budgetRoomRatio < 0.75 ? 0.92 : budgetRoomRatio < 1 ? 0.98 : 1.48;
+  const rawMultiplier =
+    0.96 +
+    budgetModifier +
+    needModifier +
+    starModifier +
+    appealModifier +
+    volatility;
+  const cappedMultiplier =
+    rawMultiplier > maxMultiplier
+      ? maxMultiplier - ((hashString(`${teamName}:${player.id}:cap`) % 9) / 100)
+      : rawMultiplier;
+
+  return Math.max(0.68, Math.min(maxMultiplier, cappedMultiplier));
 }
 
 export function getAiCandidateTeams(career: CareerSave, player: Player) {
@@ -82,7 +122,15 @@ export function createAiOffer({
   const hash = hashString(`${player.id}:${teamName}:${currentDay}`);
   const contractType: ContractType = hash % 3 === 0 ? "two-year" : "one-year";
   const demand = getOffseasonContractDemand(player, contractType);
-  const salaryOffer = Math.round(demand * (0.92 + (hash % 24) / 100));
+  const salaryOffer = Math.round(
+    demand *
+      getAiOfferMultiplier({
+        career,
+        demand,
+        player,
+        teamName,
+      }),
+  );
   const requestedRosterRole =
     getAiRoleCount(career.lckPlayers, teamName, player.role) === 0
       ? "starter"

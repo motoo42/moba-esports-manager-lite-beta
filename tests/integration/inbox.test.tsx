@@ -185,4 +185,39 @@ describe("Inbox", () => {
     expect(screen.queryByText("생성 턴")).not.toBeInTheDocument();
     expect(screen.queryByText("42")).not.toBeInTheDocument();
   });
+
+  it("shows important-priority offseason transfer messages in the important tab", () => {
+    const career = createInitialCareer("T1");
+    const transferMessage: CareerMessage = {
+      id: "important-transfer-message",
+      dateKey: "2025-12-20",
+      dateLabel: "2025년 12월 20일",
+      category: "transfer",
+      priority: "important",
+      title: "FA 협상 결과",
+      body: "Gen.G가 AI 재계약을 마쳤습니다.",
+      read: false,
+      createdTurn: 3,
+      source: "offseason",
+    };
+
+    render(
+      <Inbox
+        career={{ ...career, messages: [transferMessage] }}
+        onMarkAllRead={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSubPageChange={vi.fn()}
+        subPage="important"
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: /중요 1/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      within(screen.getByLabelText("메시지 목록")).getByText("FA 협상 결과"),
+    ).toBeVisible();
+    expect(screen.getByText("이적 · 스토브리그")).toBeVisible();
+  });
 });

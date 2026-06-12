@@ -8,6 +8,7 @@ import type {
 } from "../../../types/game";
 import { getContractTypeScoreBonus } from "../../players";
 import { getAiMainRoleCount } from "../offseasonRosterAutomation";
+import { clampNumber } from "./shared";
 import { getOffseasonContractDemand } from "./demand";
 import { getOffseasonNegotiationSnapshot } from "./negotiation";
 import {
@@ -64,6 +65,56 @@ export function getTeamAppeal(career: CareerSave, teamName: string) {
   );
 }
 
+export function getTeamBudgetSnapshot(career: CareerSave, teamName: string) {
+  if (teamName === career.userTeam.name) {
+    const committedSalary = career.userTeam.contracts
+      .filter((contract) => contract.remainingYears > 0)
+      .reduce((total, contract) => total + contract.salary, 0);
+
+    return {
+      budget: career.userTeam.budget,
+      committedSalary,
+      remainingBudget: career.userTeam.budget - committedSalary,
+    };
+  }
+
+  const profile = getLckTeamProfile(
+    teamName,
+    career.seasonState.teamBalanceAdjustments,
+  );
+  const budget = profile?.budget ?? 450;
+  const committedSalary = career.lckPlayers
+    .filter(
+      (player) =>
+        player.currentTeam === teamName &&
+        player.availableForRoster &&
+        player.rosterTier !== "academy",
+    )
+    .reduce((total, player) => total + player.salaryExpectation * 0.65, 0);
+
+  return {
+    budget,
+    committedSalary,
+    remainingBudget: budget - committedSalary,
+  };
+}
+
+export function getBudgetFitScore({
+  career,
+  salaryOffer,
+  teamName,
+}: {
+  career: CareerSave;
+  salaryOffer: number;
+  teamName: string;
+}) {
+  const { budget, remainingBudget } = getTeamBudgetSnapshot(career, teamName);
+  const roomAfterOffer = remainingBudget - salaryOffer;
+  const roomRatio = budget > 0 ? roomAfterOffer / budget : 0;
+
+  return clampNumber(roomRatio * 55, -28, 16);
+}
+
 export function getOfferScore({
   career,
   contractType,
@@ -85,6 +136,7 @@ export function getOfferScore({
     getContractTypeScoreBonus(contractType) +
     getTeamAppeal(career, teamName) * 0.16 +
     getTeamNeedScore({ career, player, teamName }) +
+    getBudgetFitScore({ career, salaryOffer, teamName }) +
     player.overall * 0.08 +
     player.potential * 0.04
   );

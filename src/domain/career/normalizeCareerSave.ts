@@ -5,6 +5,7 @@ import { ensurePlayerEvaluationStatus } from "../players";
 import type {
   CareerSave,
   CareerMessage,
+  OffseasonAiRenewalPlan,
   OffseasonLogEntry,
   OffseasonOffer,
   Player,
@@ -34,6 +35,10 @@ function asLogEntries(value: unknown): OffseasonLogEntry[] {
 
 function asOffers(value: unknown): OffseasonOffer[] {
   return Array.isArray(value) ? (value as OffseasonOffer[]) : [];
+}
+
+function asAiRenewalPlans(value: unknown): OffseasonAiRenewalPlan[] {
+  return Array.isArray(value) ? (value as OffseasonAiRenewalPlan[]) : [];
 }
 
 function normalizeMessages(value: unknown): CareerMessage[] {
@@ -330,6 +335,7 @@ function normalizeSeasonState(
           militaryServicePlayerIds: asStringArray(
             offseason.militaryServicePlayerIds,
           ),
+          aiRenewalPlans: asAiRenewalPlans(offseason.aiRenewalPlans),
           logEntries: asLogEntries(offseason.logEntries),
           validationErrors: asStringArray(offseason.validationErrors),
         }

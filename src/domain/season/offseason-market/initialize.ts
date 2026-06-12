@@ -1,9 +1,9 @@
 import type { CareerSave } from "../../../types/game";
-import { releaseAiMainRosterToMarket } from "../offseasonFreeAgentPool";
 import {
   addDaysToDateKey,
   formatSeasonDateLabel,
 } from "../seasonScheduleDates";
+import { createAiRenewalPlans } from "./aiRenewals";
 import {
   applyOffseasonDepartures,
   appendDepartureLogs,
@@ -33,11 +33,7 @@ export function initializeOffseasonMarket(career: CareerSave): CareerSave {
     career,
     mergeOffseasonFreeAgents(career.lckPlayers),
   );
-  const marketPool = releaseAiMainRosterToMarket(
-    normalizedPlayers,
-    career.userTeam.name,
-  );
-  const departures = applyOffseasonDepartures(career, marketPool.players);
+  const departures = applyOffseasonDepartures(career, normalizedPlayers);
   const departedIdSet = new Set([
     ...departures.retiredPlayerIds,
     ...departures.militaryServicePlayerIds,
@@ -47,7 +43,7 @@ export function initializeOffseasonMarket(career: CareerSave): CareerSave {
   );
   const freeAgentPlayerIds = getInitialFreeAgentIds(
     departures.lckPlayers,
-    [...(offseason.freeAgentPlayerIds ?? []), ...marketPool.releasedPlayerIds],
+    offseason.freeAgentPlayerIds ?? [],
   ).filter((playerId) => {
     const player = departures.lckPlayers.find(
       (candidate) => candidate.id === playerId,
@@ -93,6 +89,10 @@ export function initializeOffseasonMarket(career: CareerSave): CareerSave {
           ...(offseason.militaryServicePlayerIds ?? []),
           ...departures.militaryServicePlayerIds,
         ],
+        aiRenewalPlans: createAiRenewalPlans(
+          departures.lckPlayers,
+          career.userTeam.name,
+        ),
         resolvedExpiredPlayerIds,
         logEntries: [],
         validationErrors: [],

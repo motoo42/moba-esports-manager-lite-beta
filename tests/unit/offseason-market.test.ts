@@ -184,6 +184,32 @@ function renewExpiringTop(career = startMarket()) {
   );
 }
 
+function resolveAllExpiredPlayers(career: CareerSave): CareerSave {
+  const expiredIds = career.seasonState.offseason?.expiredContractPlayerIds ?? [];
+
+  return {
+    ...career,
+    seasonState: {
+      ...career.seasonState,
+      offseason: {
+        ...career.seasonState.offseason!,
+        renewedPlayerIds: expiredIds,
+        resolvedExpiredPlayerIds: expiredIds,
+      },
+    },
+  };
+}
+
+function progressOffseasonUntilDay(career: CareerSave, targetDay: number) {
+  let nextCareer = career;
+
+  while ((nextCareer.seasonState.offseason?.currentDay ?? 1) < targetDay) {
+    nextCareer = progressOffseasonDay(nextCareer);
+  }
+
+  return nextCareer;
+}
+
 describe("offseason market", () => {
   it("classifies active and closed offseason market views", () => {
     const preseasonCareer = createInitialCareer("T1");
@@ -247,20 +273,48 @@ describe("offseason market", () => {
     expect(getPlayer(career, "fa-2026-beryl").currentTeam).toBeUndefined();
   });
 
-  it("opens the preseason FA pool by keeping only two AI main players per team while exempting the user team", () => {
+  it("spreads AI team renewals through week one before opening the wider FA pool", () => {
     const career = createInitialCareer("T1");
-    const marketIds = new Set(career.seasonState.offseason?.freeAgentPlayerIds ?? []);
+    const initialMarketIds = new Set(
+      career.seasonState.offseason?.freeAgentPlayerIds ?? [],
+    );
+    const initialAiPlans = career.seasonState.offseason?.aiRenewalPlans ?? [];
+    const decisionDays = new Set(
+      initialAiPlans.flatMap((plan) => plan.decisionDays),
+    );
     const t1MainPlayers = career.lckPlayers.filter(
       (player) => player.currentTeam === "T1" && player.rosterTier === "main",
     );
 
+    expect(initialAiPlans.length).toBeGreaterThan(0);
+    expect(decisionDays.size).toBeGreaterThan(1);
     expect(t1MainPlayers.length).toBeGreaterThan(2);
-    expect(t1MainPlayers.every((player) => !marketIds.has(player.id))).toBe(true);
+    expect(t1MainPlayers.every((player) => !initialMarketIds.has(player.id))).toBe(
+      true,
+    );
+
+    const weekTwoCareer = progressOffseasonUntilDay(
+      resolveAllExpiredPlayers(career),
+      8,
+    );
+    const marketIds = new Set(
+      weekTwoCareer.seasonState.offseason?.freeAgentPlayerIds ?? [],
+    );
+    const aiLogs = weekTwoCareer.seasonState.offseason?.logEntries?.filter(
+      (log) =>
+        log.message.includes("AI 재계약") ||
+        log.message.includes("AI 방출"),
+    ) ?? [];
+    const aiLogDays = new Set(aiLogs.map((log) => log.day));
+
+    expect(weekTwoCareer.seasonState.offseason?.currentDay).toBe(8);
+    expect(aiLogs.length).toBeGreaterThan(0);
+    expect(aiLogDays.size).toBeGreaterThan(1);
 
     lck2026Teams
       .filter((team) => team.name !== "T1")
       .forEach((team) => {
-        const protectedMainPlayers = career.lckPlayers.filter(
+        const protectedMainPlayers = weekTwoCareer.lckPlayers.filter(
           (player) =>
             player.currentTeam === team.name &&
             player.rosterTier === "main" &&
@@ -270,7 +324,7 @@ describe("offseason market", () => {
         expect(protectedMainPlayers.length).toBeLessThanOrEqual(2);
       });
 
-    const releasedAiMainPlayers = career.lckPlayers.filter(
+    const releasedAiMainPlayers = weekTwoCareer.lckPlayers.filter(
       (player) =>
         player.currentTeam === undefined &&
         player.rosterTier === "main" &&
@@ -822,6 +876,70 @@ describe("offseason market", () => {
     ).toBe(true);
   });
 
+  it("can reject the user and every AI team when all bids miss the hidden minimum", () => {
+    const renewed = renewExpiringTop();
+    const expensiveTop: Player = {
+      ...getPlayer(renewed, "fa-2026-beryl"),
+      id: "test-expensive-top",
+      name: "Expensive Top",
+      role: "top",
+      currentTeam: undefined,
+      rosterTier: "main",
+      overall: 88,
+      potential: 91,
+      salaryExpectation: 2200,
+      cost: 2200,
+    };
+    const weekTwoCareer: CareerSave = {
+      ...renewed,
+      lckPlayers: [
+        ...renewed.lckPlayers.map((player) =>
+          player.currentTeam !== "T1" &&
+          player.role === "top" &&
+          player.rosterTier === "main"
+            ? {
+                ...player,
+                currentTeam: undefined,
+              }
+            : player,
+        ),
+        expensiveTop,
+      ],
+      seasonState: {
+        ...renewed.seasonState,
+        offseason: {
+          ...renewed.seasonState.offseason!,
+          currentDay: 8,
+          currentWeek: 2,
+          marketStatus: "free-agency",
+          freeAgentPlayerIds: [
+            ...(renewed.seasonState.offseason?.freeAgentPlayerIds ?? []),
+            expensiveTop.id,
+          ],
+        },
+      },
+    };
+    const offered = submitFreeAgentOffer(weekTwoCareer, {
+      playerId: expensiveTop.id,
+      contractType: "one-year",
+      salaryOffer: 1,
+    });
+    const resolved = progressOffseasonDay(offered);
+    const offersForPlayer =
+      resolved.seasonState.offseason?.resolvedOffers?.filter((offer) =>
+        offer.playerIds.includes(expensiveTop.id),
+      ) ?? [];
+
+    expect(offersForPlayer.length).toBeGreaterThan(1);
+    expect(offersForPlayer.every((offer) => offer.status === "rejected")).toBe(
+      true,
+    );
+    expect(getPlayer(resolved, expensiveTop.id).currentTeam).toBeUndefined();
+    expect(resolved.seasonState.offseason?.freeAgentPlayerIds).toContain(
+      expensiveTop.id,
+    );
+  });
+
   it("moves FA players to AI teams when the user loses the bid", () => {
     const renewed = renewExpiringTop();
     const weekFourCareer: CareerSave = {
@@ -857,9 +975,21 @@ describe("offseason market", () => {
     });
     const resolved = progressOffseasonDay(progressOffseasonDay(offered));
     const beryl = resolved.lckPlayers.find((player) => player.id === "fa-2026-beryl");
+    const offersForPlayer =
+      resolved.seasonState.offseason?.resolvedOffers?.filter((offer) =>
+        offer.playerIds.includes("fa-2026-beryl"),
+      ) ?? [];
 
     expect(beryl?.currentTeam).toBeTruthy();
     expect(beryl?.currentTeam).not.toBe("T1");
+    expect(
+      offersForPlayer.some(
+        (offer) =>
+          offer.fromTeamName !== "T1" &&
+          offer.salaryOffer > 1 &&
+          offer.status === "accepted",
+      ),
+    ).toBe(true);
     expect(resolved.seasonState.offseason?.resolvedOffers?.some(
       (offer) => offer.status === "rejected" && offer.playerIds.includes("fa-2026-beryl"),
     )).toBe(true);
@@ -1289,9 +1419,13 @@ describe("offseason market", () => {
     const offersForPlayer = progressed.seasonState.offseason?.resolvedOffers?.filter(
       (offer) => offer.playerIds.includes("lck-top-02"),
     ) ?? [];
+    const aiOfferSalaries = offersForPlayer
+      .filter((offer) => offer.fromTeamName !== "T1")
+      .map((offer) => offer.salaryOffer);
 
     expect(offersForPlayer.some((offer) => offer.status === "accepted")).toBe(true);
     expect(offersForPlayer.some((offer) => offer.status === "rejected")).toBe(true);
+    expect(new Set(aiOfferSalaries).size).toBeGreaterThan(1);
     expect(
       progressed.seasonState.offseason?.logEntries?.some((log) =>
         log.message.includes("AI 영입 경쟁"),

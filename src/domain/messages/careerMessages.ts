@@ -121,6 +121,10 @@ export function markAllCareerMessagesRead(career: CareerSave): CareerSave {
   };
 }
 
+export function isImportantCareerMessage(message: CareerMessage) {
+  return message.category === "important" || message.priority !== "normal";
+}
+
 function getUserTeamId(career: CareerSave) {
   return (
     career.seasonState.competitions

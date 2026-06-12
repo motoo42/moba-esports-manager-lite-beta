@@ -9,6 +9,7 @@ export {
   createOffseasonLogMessages,
   createProgressMessages,
   getCareerMessageDedupeKey,
+  isImportantCareerMessage,
   markAllCareerMessagesRead,
   markCareerMessageRead,
   maxCareerMessages,

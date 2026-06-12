@@ -40,11 +40,13 @@ export function createLogEntry({
   career,
   isUserTeamRelated,
   message,
+  relatedTeamNames,
   type,
 }: {
   career: CareerSave;
   isUserTeamRelated?: boolean;
   message: string;
+  relatedTeamNames?: string[];
   type: OffseasonLogEntry["type"];
 }): OffseasonLogEntry {
   const day = getCurrentOffseasonDay(career);
@@ -58,6 +60,7 @@ export function createLogEntry({
     type,
     message,
     isUserTeamRelated,
+    relatedTeamNames,
   };
 }
 
@@ -65,7 +68,7 @@ export function appendLog(
   career: CareerSave,
   type: OffseasonLogEntry["type"],
   message: string,
-  options: { isUserTeamRelated?: boolean } = {},
+  options: { isUserTeamRelated?: boolean; relatedTeamNames?: string[] } = {},
 ): CareerSave {
   const offseason = career.seasonState.offseason;
 
@@ -84,6 +87,7 @@ export function appendLog(
           createLogEntry({
             career,
             isUserTeamRelated: options.isUserTeamRelated,
+            relatedTeamNames: options.relatedTeamNames,
             type,
             message,
           }),

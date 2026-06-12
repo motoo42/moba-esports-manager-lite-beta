@@ -4,6 +4,7 @@ import {
   careerMessageCategoryLabels,
   careerMessagePriorityLabels,
   careerMessageSourceLabels,
+  isImportantCareerMessage,
 } from "../../domain/messages";
 import { Button } from "../../shared/ui/Button";
 import type { CareerMessage, CareerSave } from "../../types/game";
@@ -44,6 +45,10 @@ function getFilteredMessages(messages: CareerMessage[], filter: InboxFilter) {
     return sortedMessages;
   }
 
+  if (filter === "important") {
+    return sortedMessages.filter(isImportantCareerMessage);
+  }
+
   return sortedMessages.filter((message) => message.category === filter);
 }
 
@@ -66,6 +71,10 @@ function getUnreadCount(messages: CareerMessage[]) {
 function getFilterCount(messages: CareerMessage[], filter: InboxFilter) {
   if (filter === "all") {
     return messages.length;
+  }
+
+  if (filter === "important") {
+    return messages.filter(isImportantCareerMessage).length;
   }
 
   return messages.filter((message) => message.category === filter).length;
