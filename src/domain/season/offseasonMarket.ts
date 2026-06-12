@@ -291,7 +291,41 @@ function getMoodMinimumMultiplier(moodScore: number) {
   return 1 + ((50 - moodScore) / 50) * 0.06;
 }
 
-function getRoleMoodModifier({
+function getCurrentRosterRoleForNegotiation({
+  career,
+  player,
+  teamName,
+}: {
+  career: CareerSave;
+  player: Player;
+  teamName: string;
+}): OffseasonRequestedRosterRole {
+  if (teamName === career.userTeam.name) {
+    if (career.userTeam.roster[player.role] === player.id) {
+      return "starter";
+    }
+
+    if (career.userTeam.mainRosterPlayerIds.includes(player.id)) {
+      return "sixth-man";
+    }
+
+    if (career.userTeam.academyRosterPlayerIds.includes(player.id)) {
+      return "academy";
+    }
+  }
+
+  if (player.rosterTier === "main") {
+    return "starter";
+  }
+
+  if (player.rosterTier === "academy") {
+    return "academy";
+  }
+
+  return player.overall >= 70 ? "sixth-man" : "academy";
+}
+
+function getRoleNegotiationEffect({
   career,
   player,
   requestedRosterRole,
@@ -303,44 +337,71 @@ function getRoleMoodModifier({
   teamName: string;
 }) {
   if (!requestedRosterRole) {
-    return 0;
+    return {
+      minimumMultiplier: 1,
+      moodModifier: 0,
+    };
   }
 
-  const currentRole =
-    teamName === career.userTeam.name
-      ? getRosterRoleForPlacement({
-          player,
-          team: career.userTeam,
-        })
-      : player.rosterTier === "main"
-        ? "starter"
-        : "academy";
+  const currentRole = getCurrentRosterRoleForNegotiation({
+    career,
+    player,
+    teamName,
+  });
+
+  if (currentRole === requestedRosterRole) {
+    return {
+      minimumMultiplier: 1,
+      moodModifier: 0,
+    };
+  }
 
   if (currentRole === "starter" && requestedRosterRole === "academy") {
-    return -22;
+    return {
+      minimumMultiplier: 1.35,
+      moodModifier: -20,
+    };
   }
 
   if (currentRole === "starter" && requestedRosterRole === "sixth-man") {
-    return -12;
+    return {
+      minimumMultiplier: 1.12,
+      moodModifier: -8,
+    };
   }
 
   if (currentRole === "sixth-man" && requestedRosterRole === "academy") {
-    return -8;
+    return {
+      minimumMultiplier: 1.12,
+      moodModifier: -8,
+    };
   }
 
   if (currentRole === "academy" && requestedRosterRole === "starter") {
-    return 14;
+    return {
+      minimumMultiplier: 0.84,
+      moodModifier: 14,
+    };
   }
 
   if (currentRole === "academy" && requestedRosterRole === "sixth-man") {
-    return 8;
+    return {
+      minimumMultiplier: 0.92,
+      moodModifier: 8,
+    };
   }
 
   if (currentRole === "sixth-man" && requestedRosterRole === "starter") {
-    return 6;
+    return {
+      minimumMultiplier: 0.95,
+      moodModifier: 6,
+    };
   }
 
-  return 0;
+  return {
+    minimumMultiplier: 1,
+    moodModifier: 0,
+  };
 }
 
 export function getOffseasonNegotiationSnapshot({
@@ -361,18 +422,31 @@ export function getOffseasonNegotiationSnapshot({
   teamName?: string;
 }) {
   const day = getCurrentOffseasonDay(career);
-  const baseMinimumSalary = getOffseasonMinimumAcceptableSalary({
+  const marketMinimumSalary = getOffseasonMinimumAcceptableSalary({
     context,
     contractType,
     day,
     player,
   });
-  const visibleDemand = getOffseasonVisibleDemandSalary({
+  const marketVisibleDemand = getOffseasonVisibleDemandSalary({
     context,
     contractType,
     day,
     player,
   });
+  const roleEffect = getRoleNegotiationEffect({
+    career,
+    player,
+    requestedRosterRole,
+    teamName,
+  });
+  const baseMinimumSalary = Math.ceil(
+    marketMinimumSalary * roleEffect.minimumMultiplier,
+  );
+  const visibleDemand = Math.max(
+    baseMinimumSalary + 5,
+    Math.ceil(marketVisibleDemand * roleEffect.minimumMultiplier),
+  );
   const moodScore = Math.round(
     clampNumber(
       getBaseMoodScore({
@@ -386,12 +460,7 @@ export function getOffseasonNegotiationSnapshot({
           playerId: player.id,
           teamName,
         }) +
-        getRoleMoodModifier({
-          career,
-          player,
-          requestedRosterRole,
-          teamName,
-        }),
+        roleEffect.moodModifier,
       0,
       100,
     ),

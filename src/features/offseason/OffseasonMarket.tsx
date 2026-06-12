@@ -300,7 +300,9 @@ function getDefaultRequestedRosterRole({
   player: Player;
 }): OffseasonRequestedRosterRole {
   if (mode === "free-agent") {
-    return "academy";
+    return player.rosterTier === "academy" || player.overall < 70
+      ? "academy"
+      : "sixth-man";
   }
 
   if (career.userTeam.roster[player.role] === player.id) {

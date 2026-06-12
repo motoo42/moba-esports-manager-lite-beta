@@ -265,6 +265,19 @@ describe("OffseasonMarket", () => {
     expect(screen.queryByText("거절 위험")).not.toBeInTheDocument();
 
     const initialMood = screen.getByTestId("negotiation-mood-score").textContent;
+    fireEvent.change(screen.getByLabelText("제안 역할"), {
+      target: { value: "academy" },
+    });
+    const downgradedMood = screen
+      .getByTestId("negotiation-mood-score")
+      .textContent?.replace("%", "");
+
+    expect(Number(downgradedMood)).toBeLessThan(
+      Number(initialMood?.replace("%", "")),
+    );
+    fireEvent.change(screen.getByLabelText("제안 역할"), {
+      target: { value: "starter" },
+    });
     fireEvent.change(screen.getByLabelText("제안 연봉"), {
       target: { value: "1" },
     });
@@ -334,6 +347,7 @@ describe("OffseasonMarket", () => {
     fireEvent.click(screen.getByRole("button", { name: "FA 협상" }));
     expect(screen.getByRole("dialog", { name: "FA 계약 협상" })).toBeVisible();
     expect(screen.getByLabelText("제안 역할")).toBeVisible();
+    expect(screen.getByLabelText("제안 역할")).toHaveValue("sixth-man");
     expect(screen.getByText("선수 측 요구액")).toBeVisible();
     expect(screen.getByText("협상 분위기")).toBeVisible();
     expect(screen.queryByText("현재 최소 수락선")).not.toBeInTheDocument();
@@ -342,7 +356,7 @@ describe("OffseasonMarket", () => {
     expect(onSubmitFreeAgentOffer).toHaveBeenCalledWith(
       expect.objectContaining({
         playerId: "fa-2026-beryl",
-        requestedRosterRole: "academy",
+        requestedRosterRole: "sixth-man",
       }),
     );
   });

@@ -376,7 +376,7 @@ describe("offseason market", () => {
     const pendingAccepted = submitOffseasonRenewalOffer(rejected, {
       playerId: "lck-top-01",
       contractType: "two-year",
-      requestedRosterRole: "academy",
+      requestedRosterRole: "starter",
       salaryOffer: getRenewalAcceptSalary(rejected, "lck-top-01", "two-year"),
     });
     const accepted = progressOffseasonDay(progressOffseasonDay(pendingAccepted));
@@ -389,8 +389,8 @@ describe("offseason market", () => {
         (contract) => contract.playerId === "lck-top-01",
       )?.remainingYears,
     ).toBe(2);
-    expect(accepted.userTeam.academyRosterPlayerIds).toContain("lck-top-01");
-    expect(accepted.userTeam.roster.top).toBeUndefined();
+    expect(accepted.userTeam.academyRosterPlayerIds).not.toContain("lck-top-01");
+    expect(accepted.userTeam.roster.top).toBe("lck-top-01");
   });
 
   it("resolves day-seven renewal offers before blocking week two", () => {
@@ -445,8 +445,68 @@ describe("offseason market", () => {
     });
 
     expect(academySnapshot.moodScore).toBeLessThan(starterSnapshot.moodScore);
-    expect(academySnapshot.minAcceptableSalary).toBeGreaterThanOrEqual(
-      starterSnapshot.minAcceptableSalary,
+    expect(academySnapshot.minAcceptableSalary).toBeGreaterThan(
+      Math.ceil(starterSnapshot.minAcceptableSalary * 1.2),
+    );
+    expect(academySnapshot.visibleDemand).toBeGreaterThan(
+      starterSnapshot.visibleDemand,
+    );
+  });
+
+  it("discounts academy players when they are offered a promoted roster role", () => {
+    const career = startMarket();
+    const academyPlayer = career.lckPlayers.find(
+      (candidate) =>
+        career.userTeam.academyRosterPlayerIds.includes(candidate.id) &&
+        candidate.rosterTier === "academy",
+    );
+
+    if (!academyPlayer) {
+      throw new Error("Missing academy player fixture.");
+    }
+
+    const salaryOffer = getOffseasonMinimumAcceptableSalary({
+      context: "renewal",
+      contractType: "one-year",
+      day: career.seasonState.offseason?.currentDay ?? 1,
+      player: academyPlayer,
+    });
+    const academySnapshot = getOffseasonNegotiationSnapshot({
+      career,
+      context: "renewal",
+      contractType: "one-year",
+      player: academyPlayer,
+      requestedRosterRole: "academy",
+      salaryOffer,
+    });
+    const sixthManSnapshot = getOffseasonNegotiationSnapshot({
+      career,
+      context: "renewal",
+      contractType: "one-year",
+      player: academyPlayer,
+      requestedRosterRole: "sixth-man",
+      salaryOffer,
+    });
+    const starterSnapshot = getOffseasonNegotiationSnapshot({
+      career,
+      context: "renewal",
+      contractType: "one-year",
+      player: academyPlayer,
+      requestedRosterRole: "starter",
+      salaryOffer,
+    });
+
+    expect(starterSnapshot.moodScore).toBeGreaterThan(
+      academySnapshot.moodScore,
+    );
+    expect(sixthManSnapshot.moodScore).toBeGreaterThan(
+      academySnapshot.moodScore,
+    );
+    expect(starterSnapshot.minAcceptableSalary).toBeLessThan(
+      academySnapshot.minAcceptableSalary,
+    );
+    expect(sixthManSnapshot.minAcceptableSalary).toBeLessThan(
+      academySnapshot.minAcceptableSalary,
     );
   });
 
@@ -904,6 +964,68 @@ describe("offseason market", () => {
 
     expect(farMood.moodScore).toBeLessThan(freshMood.moodScore);
     expect(nearMood.moodScore).toBeGreaterThan(farMood.moodScore);
+  });
+
+  it("keeps user role history separate from AI negotiation context", () => {
+    const career = startMarket();
+    const beryl = career.lckPlayers.find(
+      (player) => player.id === "fa-2026-beryl",
+    )!;
+    const salaryOffer = getOffseasonMinimumAcceptableSalary({
+      context: "ai-depth",
+      contractType: "one-year",
+      day: career.seasonState.offseason?.currentDay ?? 1,
+      player: beryl,
+    });
+    const freshAiSnapshot = getOffseasonNegotiationSnapshot({
+      career,
+      context: "ai-depth",
+      contractType: "one-year",
+      player: beryl,
+      salaryOffer,
+      teamName: "Gen.G",
+    });
+    const userHistoryCareer: CareerSave = {
+      ...career,
+      seasonState: {
+        ...career.seasonState,
+        offseason: {
+          ...career.seasonState.offseason!,
+          resolvedOffers: [
+            {
+              id: "user-role-rejected-offer",
+              kind: "contract",
+              fromTeamName: career.userTeam.name,
+              toTeamName: "Free Agent",
+              playerIds: [beryl.id],
+              salaryOffer: 1,
+              contractType: "one-year",
+              status: "rejected",
+              createdDay: 8,
+              resolvedDay: 9,
+              negotiationContext: "free-agent",
+              minAcceptableSalary: freshAiSnapshot.minAcceptableSalary,
+              requestedRosterRole: "academy",
+            },
+          ],
+        },
+      },
+    };
+    const aiSnapshotAfterUserHistory = getOffseasonNegotiationSnapshot({
+      career: userHistoryCareer,
+      context: "ai-depth",
+      contractType: "one-year",
+      player: beryl,
+      salaryOffer,
+      teamName: "Gen.G",
+    });
+
+    expect(aiSnapshotAfterUserHistory.moodScore).toBe(
+      freshAiSnapshot.moodScore,
+    );
+    expect(aiSnapshotAfterUserHistory.minAcceptableSalary).toBe(
+      freshAiSnapshot.minAcceptableSalary,
+    );
   });
 
   it("maps negotiation mood colors from red through white to green", () => {
