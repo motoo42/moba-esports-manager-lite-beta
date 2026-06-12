@@ -46,6 +46,9 @@ export function CompetitionDashboardPage({
       onSelectCompetition={(nextCompetitionId) =>
         onGoTo?.("competition-dashboard", { competitionId: nextCompetitionId })
       }
+      onViewCalendar={() =>
+        onGoTo?.("season-calendar", { subPage: "roadmap" })
+      }
       onViewTeam={(teamId) => onGoTo?.("lck-team-info", { teamId })}
     />
   );

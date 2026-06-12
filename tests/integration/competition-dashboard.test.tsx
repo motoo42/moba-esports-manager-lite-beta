@@ -12,6 +12,7 @@ import {
   activateLckRounds35,
   completeLckRounds34IfFinished,
   completeLckRounds35IfFinished,
+  completeStoveLeague,
   createInitialLckStandings,
   createInitialSeasonState,
   createLckWorldsSeeds,
@@ -54,6 +55,18 @@ function createSeasonAfterLckCupFinal(base: CareerSave): SeasonState {
           }
         : competition,
     ),
+  };
+}
+
+function createCareerWithActiveLckCup(): CareerSave {
+  const base = createInitialCareer("T1");
+
+  return {
+    ...base,
+    seasonState: {
+      ...completeStoveLeague(base.seasonState),
+      offseason: undefined,
+    },
   };
 }
 
@@ -451,6 +464,44 @@ describe("CompetitionDashboard", () => {
     expect(onSelectCompetition).toHaveBeenCalledWith("lck-cup");
   });
 
+  it("renders LCK Cup as a grouped tabbed dashboard", () => {
+    const career = createCareerWithActiveLckCup();
+    const onViewCalendar = vi.fn();
+
+    render(
+      <CompetitionDashboard
+        career={career}
+        competitionId="lck-cup"
+        onViewCalendar={onViewCalendar}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "LCK Cup" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "시즌 캘린더" }));
+    expect(onViewCalendar).toHaveBeenCalledOnce();
+
+    expect(screen.getByRole("button", { name: "순위표" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "일정" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "토너먼트" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "바론 그룹" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "장로 그룹" })).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "전체 순위표" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/pts \/ diff/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/points/).length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId("team-logo").length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "일정" }));
+    expect(screen.getByRole("heading", { name: "일정 / 결과" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "바론 그룹" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "토너먼트" }));
+    expect(
+      screen.getByRole("heading", { name: "LCK Cup 토너먼트 브래킷" }),
+    ).toBeVisible();
+  });
+
   it("renders live First Stand standings, schedule, and tournament data", () => {
     const career = createCareerWithFirstStandFinal();
 
@@ -713,6 +764,17 @@ describe("CompetitionDashboard", () => {
 
     expect(screen.getByRole("heading", { name: "일정 / 결과" })).toBeVisible();
     lckView.unmount();
+
+    const lckCupView = render(
+      <CompetitionDashboard
+        career={createCareerWithActiveLckCup()}
+        competitionId="lck-cup"
+        subPage="schedule"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "일정 / 결과" })).toBeVisible();
+    lckCupView.unmount();
 
     const asianGamesView = render(
       <CompetitionDashboard

@@ -362,9 +362,21 @@ describe("App routing", () => {
     fireEvent.click(await screen.findByTestId("shell-menu-home"));
     await waitFor(() => expect(window.location.pathname).toBe("/hub"));
 
+    fireEvent.click(await screen.findByTestId("shell-menu-competition"));
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/competitions/lck-cup"),
+    );
+    expect(screen.getByRole("heading", { name: "LCK Cup" })).toBeVisible();
+    await waitFor(() => expect(window.location.pathname).not.toBe("/hub"));
+
+    fireEvent.click(await screen.findByTestId("shell-menu-home"));
+    await waitFor(() => expect(window.location.pathname).toBe("/hub"));
+
     fireEvent.click(getMainContent().getByRole("button", { name: "대회 현황" }));
-    await waitFor(() => expect(window.location.pathname).toBe("/competitions"));
-    expect(screen.getByRole("heading", { name: "대회 목록" })).toBeVisible();
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/competitions/lck-cup"),
+    );
+    expect(screen.getByRole("heading", { name: "LCK Cup" })).toBeVisible();
     await waitFor(() => expect(window.location.pathname).not.toBe("/hub"));
 
     fireEvent.click(await screen.findByTestId("shell-menu-home"));

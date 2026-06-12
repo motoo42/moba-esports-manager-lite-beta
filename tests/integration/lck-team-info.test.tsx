@@ -110,8 +110,22 @@ describe("LCK team info", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "Gen.G logo" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /Gen\.G/ }));
+    const standingsGrid = document.querySelector(".lck-cup-standings-grid");
+
+    expect(standingsGrid).not.toBeNull();
+    expect(
+      screen.getAllByRole("img", { name: "Gen.G logo" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(standingsGrid as HTMLElement).getByRole("img", {
+        name: "Gen.G logo",
+      }),
+    ).toBeVisible();
+    fireEvent.click(
+      within(standingsGrid as HTMLElement).getByRole("button", {
+        name: /Gen\.G/,
+      }),
+    );
 
     expect(onViewTeam).toHaveBeenCalledWith("gen-g");
   });
