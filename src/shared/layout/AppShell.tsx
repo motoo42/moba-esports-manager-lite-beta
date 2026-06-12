@@ -205,6 +205,10 @@ function ShellMenuIcon({ icon }: { icon: ShellMenuIconId }) {
   return <svg {...commonProps}>{paths[icon]}</svg>;
 }
 
+function formatShellBadgeCount(count: number) {
+  return count > 99 ? "99+" : String(count);
+}
+
 const shellMenuGroups: ShellMenuGroup[] = [
   {
     id: "management",
@@ -732,6 +736,10 @@ export function AppShell({
         !message.read &&
         (message.priority !== "normal" || message.category === "important"),
     ).length ?? 0;
+  const unreadImportantMessageBadge =
+    unreadImportantMessageCount > 0
+      ? formatShellBadgeCount(unreadImportantMessageCount)
+      : null;
 
   return (
     <div className={`app-shell ${isProgressing ? "app-shell-busy" : ""}`}>
@@ -776,12 +784,12 @@ export function AppShell({
                           <ShellMenuIcon icon={item.icon} />
                         </span>
                         <span className="shell-menu-label">{item.label}</span>
-                        {item.id === "inbox" && unreadImportantMessageCount > 0 && (
+                        {item.id === "inbox" && unreadImportantMessageBadge && (
                           <span
                             aria-label={`읽지 않은 중요 메시지 ${unreadImportantMessageCount}개`}
                             className="shell-menu-badge"
                           >
-                            {unreadImportantMessageCount}
+                            {unreadImportantMessageBadge}
                           </span>
                         )}
                       </button>

@@ -685,7 +685,7 @@ select {
 
 .shell-menu-button {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   width: 100%;
@@ -4845,22 +4845,21 @@ h1 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
+  justify-content: start;
   max-height: 560px;
   overflow: auto;
   padding-right: 2px;
   scrollbar-gutter: stable;
 }
 
-.roster-management-wide-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
+.roster-management-wide-grid,
 .roster-management-main-bench-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 304px));
 }
 
-.roster-management-wide-grid .roster-management-card {
-  min-height: 222px;
+.roster-management-wide-grid .roster-management-card,
+.roster-management-main-bench-grid .roster-management-card {
+  min-height: 0;
   align-content: start;
 }
 
@@ -4938,7 +4937,8 @@ h1 {
 }
 
 .roster-management-card-compact {
-  min-height: 278px;
+  min-height: 0;
+  align-content: start;
 }
 
 .roster-management-card-dragging {
@@ -4971,7 +4971,8 @@ h1 {
 }
 
 .roster-management-card-compact .roster-management-card-identity {
-  grid-template-columns: 1fr;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: center;
 }
 
 .roster-management-card-portrait {
@@ -4980,8 +4981,8 @@ h1 {
 }
 
 .roster-management-card-compact .roster-management-card-portrait {
-  width: 100%;
-  height: 168px;
+  width: 68px;
+  height: 86px;
 }
 
 .roster-management-card-main {
@@ -5038,6 +5039,16 @@ h1 {
   white-space: nowrap;
 }
 
+.roster-management-card-compact .roster-management-card-status-strip {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roster-management-card-compact .roster-management-card-status-strip > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .card-morale-cell {
   gap: 5px;
 }
@@ -5070,10 +5081,22 @@ h1 {
 }
 
 .roster-contract-row {
+  width: 100%;
   border: 1px solid #253048;
   border-radius: 8px;
   padding: 10px 12px;
   background: #0d1424;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.roster-contract-row:hover,
+.roster-contract-row:focus-visible {
+  border-color: rgba(96, 165, 250, 0.62);
+  outline: none;
+  background: #111827;
 }
 
 .roster-contract-row span {
@@ -7171,8 +7194,14 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-.contract-offer-header {
+  .contract-offer-header {
     gap: 10px;
+  }
+
+  .bench-player-grid.roster-management-wide-grid,
+  .bench-player-grid.roster-management-main-bench-grid {
+    grid-template-columns: minmax(0, min(100%, 304px));
+    justify-content: start;
   }
 }
 
@@ -7214,6 +7243,7 @@ h1 {
 
 .shell-menu-badge {
   align-items: center;
+  align-self: center;
   background: #f8fafc;
   border: 1px solid rgba(15, 23, 42, 0.16);
   border-radius: 999px;
@@ -7223,6 +7253,7 @@ h1 {
   font-weight: 800;
   height: 1.25rem;
   justify-content: center;
+  justify-self: end;
   min-width: 1.25rem;
   padding: 0 0.35rem;
 }

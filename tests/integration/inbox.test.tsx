@@ -10,6 +10,7 @@ import { App } from "../../src/app/App";
 import { Inbox } from "../../src/features/inbox";
 import type { CareerMessage } from "../../src/types/game";
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
+import { AppShell } from "../../src/shared/layout/AppShell";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -95,6 +96,39 @@ describe("Inbox", () => {
       "aria-selected",
       "true",
     );
+  });
+
+  it("caps the sidebar unread important message badge at 99+", () => {
+    const career = createInitialCareer("T1");
+    const messages: CareerMessage[] = Array.from({ length: 120 }, (_, index) => ({
+      id: `important-${index}`,
+      dateKey: "2026-01-01",
+      dateLabel: "2026년 1월 1일",
+      category: "important",
+      priority: "important",
+      title: `중요 메시지 ${index + 1}`,
+      body: "배지 표시 회귀 테스트용 메시지입니다.",
+      read: false,
+      createdTurn: index,
+      source: "club",
+    }));
+
+    render(
+      <AppShell
+        career={{ ...career, messages }}
+        onGoTo={vi.fn()}
+        onProgress={vi.fn()}
+        route="main-dashboard"
+      >
+        <div>Dashboard</div>
+      </AppShell>,
+    );
+
+    const inboxButton = screen.getByTestId("shell-menu-inbox");
+
+    expect(
+      within(inboxButton).getByLabelText("읽지 않은 중요 메시지 120개"),
+    ).toHaveTextContent("99+");
   });
 
   it("shows recent messages on the main dashboard", async () => {

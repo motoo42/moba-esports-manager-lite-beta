@@ -116,12 +116,16 @@ describe("SeasonRosterManager", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "1군 콜업" })[0]);
 
     expect(onCallUpPlayer).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("renders contract status with roster assignments", () => {
+  it("renders contract status with roster assignments and opens player detail rows", () => {
     const players = lck2026Players.filter(
       (player) => player.currentTeam === "T1",
     );
+    const topContractPlayer = players.find((player) => player.role === "top");
+
+    expect(topContractPlayer).toBeDefined();
 
     render(
       <SeasonRosterManager
@@ -141,5 +145,17 @@ describe("SeasonRosterManager", () => {
     ).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("1군 선발").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2군").length).toBeGreaterThan(0);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: `${topContractPlayer?.name ?? ""} 계약 상세 보기`,
+      }),
+    );
+
+    expect(
+      screen.getByRole("dialog", {
+        name: `${topContractPlayer?.name ?? ""} 선수 상세`,
+      }),
+    ).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type SyntheticEvent } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -179,6 +179,16 @@ function getForcedEditableHint(progressStatus: SeasonProgressStatus) {
   return "프리시즌 스토브리그 기간입니다. 계약이 확정된 선수는 언제든 1군/2군 이동과 선발 조정이 가능합니다.";
 }
 
+function isRosterCardActionTarget(event: SyntheticEvent<HTMLElement>) {
+  const target = event.target;
+
+  return (
+    target instanceof HTMLElement &&
+    event.currentTarget.contains(target) &&
+    Boolean(target.closest("[data-roster-card-action]"))
+  );
+}
+
 function StarterSlot({
   player,
   role,
@@ -264,8 +274,9 @@ function RosterPlayerCard({
       } ${
         isDragging ? "roster-management-card-dragging" : ""
       }`}
-      onClick={() => {
-        if (!overlay) {
+      aria-label={`${player.name} 선수 상세 보기`}
+      onClick={(event) => {
+        if (!overlay && !isRosterCardActionTarget(event)) {
           onViewDetail(player);
         }
       }}
@@ -276,6 +287,10 @@ function RosterPlayerCard({
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
+        if (isRosterCardActionTarget(event)) {
+          return;
+        }
+
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           onViewDetail(player);
@@ -307,6 +322,7 @@ function RosterPlayerCard({
       {action && !overlay && (
         <button
           className="button button-ghost roster-card-action-button"
+          data-roster-card-action
           disabled={action.disabled}
           onClick={(event) => {
             event.stopPropagation();
@@ -314,6 +330,7 @@ function RosterPlayerCard({
           }}
           onKeyDown={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
+          onPointerDownCapture={(event) => event.stopPropagation()}
           title={action.title}
           type="button"
         >
@@ -439,6 +456,7 @@ function AcademyRosterView({
               label: "1군 콜업",
               onClick: () => onCallUpPlayer(player),
             }}
+            compact
             key={player.id}
             onViewDetail={onViewDetail}
             player={player}
@@ -456,12 +474,14 @@ function AcademyRosterView({
 function ContractsView({
   academyCount,
   mainCount,
+  onViewDetail,
   players,
   starterCount,
   team,
 }: {
   academyCount: number;
   mainCount: number;
+  onViewDetail: (player: Player) => void;
   players: Player[];
   starterCount: number;
   team: Team;
@@ -525,7 +545,13 @@ function ContractsView({
                 : "미배정";
 
           return (
-            <article className="roster-contract-row" key={contract.playerId}>
+            <button
+              aria-label={`${player.name} 계약 상세 보기`}
+              className="roster-contract-row"
+              key={contract.playerId}
+              onClick={() => onViewDetail(player)}
+              type="button"
+            >
               <span>
                 <strong>{player.name}</strong>
                 <small>{roleLabels[player.role]} · 평가 기반 공개 정보</small>
@@ -535,7 +561,7 @@ function ContractsView({
                 {contract.remainingYears}년 잔여 · {contract.type}
               </span>
               <span>{formatSalaryAmount(contract.salary)}</span>
-            </article>
+            </button>
           );
         })}
       </div>
@@ -702,6 +728,7 @@ export function SeasonRosterManager({
           <ContractsView
             academyCount={academyRosterPlayers.length}
             mainCount={mainRosterPlayers.length}
+            onViewDetail={setDetailPlayer}
             players={players}
             starterCount={starterIds.size}
             team={team}
@@ -753,6 +780,7 @@ export function SeasonRosterManager({
                       label: "2군으로",
                       onClick: () => handleSendDown(player),
                     }}
+                    compact
                     draggable={canEditLineup}
                     key={player.id}
                     onViewDetail={setDetailPlayer}
@@ -768,6 +796,7 @@ export function SeasonRosterManager({
             <DragOverlay className="roster-drag-overlay" dropAnimation={null}>
               {activeDragPlayer ? (
                 <RosterPlayerCard
+                  compact
                   draggable={false}
                   onViewDetail={setDetailPlayer}
                   overlay
