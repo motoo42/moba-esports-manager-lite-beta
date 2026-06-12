@@ -25,6 +25,11 @@ import {
 } from "./seasonScheduleDates";
 import { completeStoveLeague } from "./createInitialSeasonState";
 import { releaseAiMainRosterToMarket } from "./offseasonFreeAgentPool";
+import {
+  autoAssignOffseasonRosters,
+  getAiMainRoleCount,
+  isAiMainRosterCandidate,
+} from "./offseasonRosterAutomation";
 import { startNextSeasonFromOffseason } from "./seasonEnd";
 
 export type OffseasonContractOfferInput = {
@@ -42,6 +47,10 @@ export type OffseasonRosterValidation = {
   mainRosterPlayerIds: string[];
   starterPlayerIds: string[];
   yearlySalary: number;
+};
+
+export type OffseasonRosterValidationOptions = {
+  academyPolicy?: "required" | "auto-fill";
 };
 
 export type OffseasonMarketViewStatus = "active-market" | "closed-info";
@@ -1245,12 +1254,7 @@ function getContractedRoleCount(career: CareerSave, role: Role) {
 }
 
 function getAiRoleCount(players: Player[], teamName: string, role: Role) {
-  return players.filter(
-    (player) =>
-      player.currentTeam === teamName &&
-      player.role === role &&
-      player.availableForRoster,
-  ).length;
+  return getAiMainRoleCount(players, teamName, role);
 }
 
 function hashString(value: string) {
@@ -1336,6 +1340,10 @@ function getOfferScore({
 }
 
 function getAiCandidateTeams(career: CareerSave, player: Player) {
+  if (!isAiMainRosterCandidate(player)) {
+    return [];
+  }
+
   const userTeamName = career.userTeam.name.trim().toLowerCase();
 
   return lck2026Teams
@@ -1377,11 +1385,16 @@ function createAiOffer({
   const contractType: ContractType = hash % 3 === 0 ? "two-year" : "one-year";
   const demand = getOffseasonContractDemand(player, contractType);
   const salaryOffer = Math.round(demand * (0.92 + (hash % 24) / 100));
+  const requestedRosterRole =
+    getAiRoleCount(career.lckPlayers, teamName, player.role) === 0
+      ? "starter"
+      : "sixth-man";
   const snapshot = getOffseasonNegotiationSnapshot({
     career,
     context,
     contractType,
     player,
+    requestedRosterRole,
     salaryOffer,
     teamName,
   });
@@ -1393,6 +1406,7 @@ function createAiOffer({
     moodScore: snapshot.moodScore,
     negotiationContext: context,
     playerId: player.id,
+    requestedRosterRole,
     salaryOffer,
     status: "pending",
     visibleDemand: snapshot.visibleDemand,
@@ -1669,6 +1683,52 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
       offer: userOffer,
       player,
     });
+    const remainingPendingOffers = (currentOffseason.pendingOffers ?? []).filter(
+      (offer) => offer.id !== userOffer.id,
+    );
+
+    if (userOffer.requestedRosterRole === "academy") {
+      const resolvedUserOffer: OffseasonOffer = {
+        ...userOffer,
+        status: evaluatedUserOffer.isAcceptable
+          ? "confirmation-pending"
+          : "rejected",
+        resolvedDay: getCurrentOffseasonDay(currentCareer),
+        score: evaluatedUserOffer.score,
+        minAcceptableSalary: evaluatedUserOffer.minAcceptableSalary,
+        moodScore: evaluatedUserOffer.moodScore,
+        rejectionReason: evaluatedUserOffer.isAcceptable
+          ? undefined
+          : "minimum-salary-not-met",
+        visibleDemand: evaluatedUserOffer.visibleDemand,
+      };
+      const nextCareer = setOffseasonState(currentCareer, {
+        ...currentOffseason,
+        pendingOffers: remainingPendingOffers,
+        resolvedOffers: [
+          ...(currentOffseason.resolvedOffers ?? []),
+          resolvedUserOffer,
+        ],
+        validationErrors: [],
+      });
+
+      if (!evaluatedUserOffer.isAcceptable) {
+        return appendLog(
+          nextCareer,
+          "rejection",
+          `${player.name}이 2군 FA 제안을 거절했습니다. 협상 분위기 ${evaluatedUserOffer.moodScore}%입니다.`,
+          { isUserTeamRelated: true },
+        );
+      }
+
+      return appendLog(
+        nextCareer,
+        "signing",
+        `${player.name}이 2군 역할 FA 제안을 수락했습니다. 최종 영입 확정을 기다립니다.`,
+        { isUserTeamRelated: true },
+      );
+    }
+
     const aiOffers = getAiCandidateTeams(currentCareer, player).map(({ team }) =>
       createAiOffer({
         career: currentCareer,
@@ -1719,9 +1779,6 @@ function resolveFreeAgentOffers(career: CareerSave): CareerSave {
         resolvedDay: getCurrentOffseasonDay(currentCareer),
         rejectionReason: "minimum-salary-not-met",
       }));
-    const remainingPendingOffers = (currentOffseason.pendingOffers ?? []).filter(
-      (offer) => offer.id !== userOffer.id,
-    );
 
     if (!winningOffer) {
       const nextCareer = setOffseasonState(currentCareer, {
@@ -1843,7 +1900,9 @@ function pickAiDepthCandidate({
   role: Role;
 }) {
   return getAvailableFreeAgentPlayers(career, excludedPlayerIds)
-    .filter((player) => player.role === role)
+    .filter(
+      (player) => player.role === role && isAiMainRosterCandidate(player),
+    )
     .sort((left, right) => {
       const rightScore = right.overall * 1.5 + right.potential * 0.35;
       const leftScore = left.overall * 1.5 + left.potential * 0.35;
@@ -2233,13 +2292,17 @@ export function submitFreeAgentOffer(
       },
     },
   };
+  const resolutionMessage =
+    offerInput.requestedRosterRole === "academy"
+      ? "다음날 선수 측 수락 여부만 확인합니다."
+      : "다음날 AI 경쟁 제안과 함께 결과가 확정됩니다.";
 
   return appendLog(
     nextCareer,
     "signing",
     `${player.name}에게 ${Math.round(offerInput.salaryOffer)} 규모의 FA 계약을 제안했습니다. 제안 역할: ${getRequestedRosterRoleLabel(
       offerInput.requestedRosterRole,
-    )}. 다음날 AI 경쟁 제안과 함께 결과가 확정됩니다.`,
+    )}. ${resolutionMessage}`,
     { isUserTeamRelated: true },
   );
 }
@@ -2252,11 +2315,13 @@ function getContractSalaryTotal(team: Team) {
 
 export function validateOffseasonRoster(
   career: CareerSave,
+  options: OffseasonRosterValidationOptions = {},
 ): OffseasonRosterValidation {
   const errors: string[] = [];
   const rosterSettings = career.userTeam.rosterSettings;
   const minMainRosterPlayers = rosterSettings.minMainRosterPlayers ?? 5;
   const minAcademyRosterPlayers = rosterSettings.minAcademyRosterPlayers ?? 5;
+  const requiresAcademyMinimum = options.academyPolicy !== "auto-fill";
   const contractedPlayerIds = career.userTeam.contracts
     .filter((contract) => {
       const player = getPlayer(career, contract.playerId);
@@ -2300,7 +2365,10 @@ export function validateOffseasonRoster(
     },
   );
 
-  if (contractedPlayerIds.length < rosterSettings.minPlayers) {
+  if (
+    requiresAcademyMinimum &&
+    contractedPlayerIds.length < rosterSettings.minPlayers
+  ) {
     errors.push(
       `계약 선수는 최소 ${rosterSettings.minPlayers}명이 필요합니다.`,
     );
@@ -2316,7 +2384,7 @@ export function validateOffseasonRoster(
     errors.push(`1군 등록 계약 선수는 최소 ${minMainRosterPlayers}명이 필요합니다.`);
   }
 
-  if (academyPlayerIds.length < minAcademyRosterPlayers) {
+  if (requiresAcademyMinimum && academyPlayerIds.length < minAcademyRosterPlayers) {
     errors.push(
       `2군 등록 계약 선수는 최소 ${minAcademyRosterPlayers}명이 필요합니다.`,
     );
@@ -2455,18 +2523,31 @@ export function progressOffseasonDay(career: CareerSave): CareerSave {
   }
 
   if (currentDay >= 28) {
-    const validation = validateOffseasonRoster(careerWithResolvedOffers);
+    const confirmationPendingErrors = validateOffseasonRoster(
+      careerWithResolvedOffers,
+      { academyPolicy: "auto-fill" },
+    ).errors.filter((error) => error.includes("영입 확정 대기"));
+
+    if (confirmationPendingErrors.length > 0) {
+      return setBlocked(careerWithResolvedOffers, confirmationPendingErrors);
+    }
+
+    const careerWithAutoAssignedRosters =
+      autoAssignOffseasonRosters(careerWithResolvedOffers);
+    const validation = validateOffseasonRoster(careerWithAutoAssignedRosters, {
+      academyPolicy: "auto-fill",
+    });
 
     if (!validation.isValid) {
-      return setBlocked(careerWithResolvedOffers, validation.errors);
+      return setBlocked(careerWithAutoAssignedRosters, validation.errors);
     }
 
     const readyCareer: CareerSave = {
-      ...careerWithResolvedOffers,
+      ...careerWithAutoAssignedRosters,
       seasonState: {
-        ...careerWithResolvedOffers.seasonState,
+        ...careerWithAutoAssignedRosters.seasonState,
         offseason: {
-          ...careerWithResolvedOffers.seasonState.offseason!,
+          ...careerWithAutoAssignedRosters.seasonState.offseason!,
           status: "ready-for-next-season",
           marketStatus: "completed",
           validationErrors: [],

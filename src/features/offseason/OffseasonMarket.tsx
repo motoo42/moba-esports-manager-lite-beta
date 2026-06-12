@@ -74,7 +74,7 @@ const requestedRosterRoleOptions: Array<{
   {
     value: "academy",
     label: "2군",
-    description: "아카데미 로스터에 등록",
+    description: "아카데미 로스터에 등록, AI 경쟁 없음",
   },
 ];
 
@@ -1301,7 +1301,9 @@ function RosterTab({
   career: CareerSave;
   onViewRoster: () => void;
 }) {
-  const validation = validateOffseasonRoster(career);
+  const validation = validateOffseasonRoster(career, {
+    academyPolicy: "auto-fill",
+  });
   const rosteredPlayers = career.userTeam.contracts
     .filter((contract) => contract.remainingYears > 0)
     .map((contract) => getPlayer(career.lckPlayers, contract.playerId))
@@ -1321,7 +1323,7 @@ function RosterTab({
           <span>계약 선수</span>
           <strong>{validation.contractedPlayerIds.length}명</strong>
           <small>
-            최소 {career.userTeam.rosterSettings.minPlayers}명 / 최대{" "}
+            자동 보정 후 최대{" "}
             {career.userTeam.rosterSettings.maxPlayers}명
           </small>
         </article>
@@ -1337,7 +1339,7 @@ function RosterTab({
           <strong>
             {validation.academyPlayerIds.length}/{minAcademyRosterPlayers}
           </strong>
-          <small>2군 계약 선수</small>
+          <small>부족분은 최종 등록 시 자동 배치</small>
         </article>
         <article className="season-summary-metric">
           <span>연봉 총액</span>
@@ -1674,7 +1676,9 @@ function ClosedMarketLogPanel({ career }: { career: CareerSave }) {
 }
 
 function ClosedMarketOverviewPanel({ career }: { career: CareerSave }) {
-  const validation = validateOffseasonRoster(career);
+  const validation = validateOffseasonRoster(career, {
+    academyPolicy: "auto-fill",
+  });
   const activeSalaryTotal = getActiveSalaryTotal(career);
   const remainingBudget = career.userTeam.budget - activeSalaryTotal;
 

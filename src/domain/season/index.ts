@@ -128,6 +128,7 @@ export {
 } from "./offseasonMarket";
 export type {
   OffseasonContractOfferInput,
+  OffseasonRosterValidationOptions,
   OffseasonRosterValidation,
 } from "./offseasonMarket";
 export {

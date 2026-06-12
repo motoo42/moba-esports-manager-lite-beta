@@ -24,6 +24,7 @@ import type {
   CareerSave,
   CompetitionState,
   ContractType,
+  Player,
   PlayerContract,
   SeasonState,
 } from "../../src/types/game";
@@ -613,6 +614,62 @@ describe("offseason market", () => {
     ).toBe(true);
   });
 
+  it("resolves academy-role FA offers without AI competition", () => {
+    const renewed = renewExpiringTop();
+    const weekTwoCareer: CareerSave = {
+      ...renewed,
+      lckPlayers: renewed.lckPlayers.map((player) => {
+        if (
+          player.currentTeam !== "T1" &&
+          player.role === "support" &&
+          player.rosterTier === "main"
+        ) {
+          return {
+            ...player,
+            currentTeam: undefined,
+          };
+        }
+
+        return player;
+      }),
+      userTeam: {
+        ...renewed.userTeam,
+        budget: 3000,
+      },
+      seasonState: {
+        ...renewed.seasonState,
+        offseason: {
+          ...renewed.seasonState.offseason!,
+          currentDay: 8,
+          currentWeek: 2,
+          marketStatus: "free-agency",
+        },
+      },
+    };
+    const offered = submitFreeAgentOffer(weekTwoCareer, {
+      playerId: "fa-2026-beryl",
+      contractType: "two-year",
+      requestedRosterRole: "academy",
+      salaryOffer:
+        getFreeAgentAcceptSalary(weekTwoCareer, "fa-2026-beryl", "two-year") *
+        3,
+    });
+    const resolved = progressOffseasonDay(offered);
+    const offersForPlayer =
+      resolved.seasonState.offseason?.resolvedOffers?.filter((offer) =>
+        offer.playerIds.includes("fa-2026-beryl"),
+      ) ?? [];
+
+    expect(offersForPlayer).toHaveLength(1);
+    expect(offersForPlayer[0]).toEqual(
+      expect.objectContaining({
+        fromTeamName: "T1",
+        requestedRosterRole: "academy",
+        status: "confirmation-pending",
+      }),
+    );
+  });
+
   it("can cancel a user-won FA offer before final registration", () => {
     const renewed = renewExpiringTop();
     const weekTwoCareer: CareerSave = {
@@ -769,6 +826,20 @@ describe("offseason market", () => {
     const renewed = renewExpiringTop();
     const weekFourCareer: CareerSave = {
       ...renewed,
+      lckPlayers: renewed.lckPlayers.map((player) => {
+        if (
+          player.currentTeam !== "T1" &&
+          player.role === "support" &&
+          player.rosterTier === "main"
+        ) {
+          return {
+            ...player,
+            currentTeam: undefined,
+          };
+        }
+
+        return player;
+      }),
       seasonState: {
         ...renewed.seasonState,
         offseason: {
@@ -1119,6 +1190,62 @@ describe("offseason market", () => {
     expect(progressed.lckPlayers.length).toBe(weekFourCareer.lckPlayers.length);
   });
 
+  it("keeps low academy FA players out of AI role-depth signings", () => {
+    const renewed = renewExpiringTop();
+    const targetTeam = lck2026Teams.find((team) => team.name !== "T1")!;
+    const lowAcademyTop: Player = {
+      ...getPlayer(renewed, "fa-2026-beryl"),
+      id: "test-low-academy-top",
+      name: "Academy Top Prospect",
+      role: "top",
+      rosterTier: "academy",
+      currentTeam: undefined,
+      overall: 62,
+      potential: 74,
+      salaryExpectation: 28,
+      cost: 28,
+    };
+    const weekFourCareer: CareerSave = {
+      ...renewed,
+      lckPlayers: [
+        ...renewed.lckPlayers.map((player) => {
+          if (player.currentTeam === targetTeam.name && player.role === "top") {
+            return {
+              ...player,
+              currentTeam: undefined,
+            };
+          }
+
+          return player;
+        }),
+        lowAcademyTop,
+      ],
+      seasonState: {
+        ...renewed.seasonState,
+        offseason: {
+          ...renewed.seasonState.offseason!,
+          currentDay: 22,
+          currentWeek: 4,
+          marketStatus: "free-agency",
+          freeAgentPlayerIds: ["test-low-academy-top"],
+        },
+      },
+    };
+    const progressed = progressOffseasonDay(weekFourCareer);
+    const candidate = progressed.lckPlayers.find(
+      (player) => player.id === "test-low-academy-top",
+    );
+
+    expect(candidate?.currentTeam).toBeUndefined();
+    expect(
+      progressed.seasonState.offseason?.resolvedOffers?.some(
+        (offer) =>
+          offer.status === "accepted" &&
+          offer.playerIds.includes("test-low-academy-top"),
+      ),
+    ).toBe(false);
+  });
+
   it("records AI-AI competition offers when AI teams fight over a FA", () => {
     const renewed = renewExpiringTop();
     const weekFourCareer: CareerSave = {
@@ -1168,6 +1295,150 @@ describe("offseason market", () => {
     expect(
       progressed.seasonState.offseason?.logEntries?.some((log) =>
         log.message.includes("AI 영입 경쟁"),
+      ),
+    ).toBe(true);
+  });
+
+  it("auto-fills the user academy roster on final day without spending budget", () => {
+    const career = startMarket(createWorldsCompletedCareer());
+    const starterPlayerIds = [
+      "lck-top-01",
+      "lck-jungle-01",
+      "lck-mid-01",
+      "lck-bot-01",
+      "lck-support-01",
+    ];
+    const roles: Player["role"][] = ["top", "jungle", "mid", "bot", "support"];
+    const template = getPlayer(career, "fa-2026-beryl");
+    const academyFallbacks: Player[] = roles.map((role, index) => ({
+      ...template,
+      id: `test-auto-academy-${role}`,
+      name: `Auto Academy ${role}`,
+      role,
+      rosterTier: "academy",
+      currentTeam: undefined,
+      overall: 61 + index,
+      potential: 74 + index,
+      salaryExpectation: 25,
+      cost: 25,
+    }));
+    const finalDayCareer: CareerSave = {
+      ...career,
+      lckPlayers: [...career.lckPlayers, ...academyFallbacks],
+      userTeam: {
+        ...career.userTeam,
+        budget: 3000,
+        roster: {
+          top: "lck-top-01",
+          jungle: "lck-jungle-01",
+          mid: "lck-mid-01",
+          bot: "lck-bot-01",
+          support: "lck-support-01",
+        },
+        mainRosterPlayerIds: starterPlayerIds,
+        academyRosterPlayerIds: [],
+        contracts: starterPlayerIds.map((playerId) => createContract(playerId)),
+      },
+      seasonState: {
+        ...career.seasonState,
+        offseason: {
+          ...career.seasonState.offseason!,
+          currentDay: 28,
+          currentWeek: 4,
+          marketStatus: "final-day",
+          freeAgentPlayerIds: [
+            ...(career.seasonState.offseason?.freeAgentPlayerIds ?? []),
+            ...academyFallbacks.map((player) => player.id),
+          ],
+        },
+      },
+    };
+    const salaryBefore = finalDayCareer.userTeam.contracts.reduce(
+      (total, contract) => total + contract.salary,
+      0,
+    );
+    const nextCareer = progressCareer(finalDayCareer).career;
+    const salaryAfter = nextCareer.userTeam.contracts.reduce(
+      (total, contract) => total + contract.salary,
+      0,
+    );
+    const offseasonSummary = nextCareer.seasonHistory.find(
+      (summary) => summary.seasonNumber === 1,
+    )?.offseasonSummary;
+
+    expect(nextCareer.seasonState.phase).toBe("competition");
+    expect(nextCareer.userTeam.academyRosterPlayerIds.length).toBeGreaterThanOrEqual(
+      5,
+    );
+    expect(salaryAfter).toBe(salaryBefore);
+    expect(
+      offseasonSummary?.notableLogEntries?.some((log) =>
+        log.message.includes("자동 배치"),
+      ),
+    ).toBe(true);
+  });
+
+  it("emergency-registers an academy FA when final day has fewer than five starters", () => {
+    const career = startMarket(createWorldsCompletedCareer());
+    const starterPlayerIds = [
+      "lck-top-01",
+      "lck-jungle-01",
+      "lck-mid-01",
+      "lck-bot-01",
+    ];
+    const emergencySupport: Player = {
+      ...getPlayer(career, "fa-2026-beryl"),
+      id: "test-emergency-support",
+      name: "Emergency Support",
+      role: "support",
+      rosterTier: "academy",
+      currentTeam: undefined,
+      overall: 62,
+      potential: 75,
+      salaryExpectation: 25,
+      cost: 25,
+    };
+    const finalDayCareer: CareerSave = {
+      ...career,
+      lckPlayers: [...career.lckPlayers, emergencySupport],
+      userTeam: {
+        ...career.userTeam,
+        budget: 3000,
+        roster: {
+          top: "lck-top-01",
+          jungle: "lck-jungle-01",
+          mid: "lck-mid-01",
+          bot: "lck-bot-01",
+        },
+        mainRosterPlayerIds: starterPlayerIds,
+        academyRosterPlayerIds: [],
+        contracts: starterPlayerIds.map((playerId) => createContract(playerId)),
+      },
+      seasonState: {
+        ...career.seasonState,
+        offseason: {
+          ...career.seasonState.offseason!,
+          currentDay: 28,
+          currentWeek: 4,
+          marketStatus: "final-day",
+          freeAgentPlayerIds: ["test-emergency-support"],
+        },
+      },
+    };
+    const nextCareer = progressCareer(finalDayCareer).career;
+    const emergencyContract = nextCareer.userTeam.contracts.find(
+      (contract) => contract.playerId === "test-emergency-support",
+    );
+    const offseasonSummary = nextCareer.seasonHistory.find(
+      (summary) => summary.seasonNumber === 1,
+    )?.offseasonSummary;
+
+    expect(nextCareer.seasonState.phase).toBe("competition");
+    expect(nextCareer.userTeam.roster.support).toBe("test-emergency-support");
+    expect(emergencyContract?.salary).toBe(0);
+    expect(
+      offseasonSummary?.notableLogEntries?.some((log) =>
+        log.message.includes("긴급 등록"),
       ),
     ).toBe(true);
   });
