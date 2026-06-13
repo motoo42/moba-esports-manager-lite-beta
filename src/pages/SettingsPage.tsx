@@ -55,16 +55,16 @@ export function SettingsPage() {
               type="checkbox"
             />
             <span>
-              <strong>스토브리그 최초 진입 안내 표시</strong>
+              <strong>최초 진입 가이드 자동 표시</strong>
               <small>
-                새 커리어나 아직 안내를 보지 않은 커리어에서 스토브리그 룰
-                모달을 자동으로 엽니다.
+                새 커리어나 아직 보지 않은 주요 화면에서 짧은 가이드를
+                자동으로 엽니다.
               </small>
             </span>
           </label>
           <p className="settings-save-note">
-            표시 여부는 브라우저 전역 설정으로 저장됩니다. 안내를 이미 봤는지
-            여부는 현재 커리어 저장 데이터에 기록됩니다.
+            표시 여부는 브라우저 전역 설정으로 저장됩니다. 각 가이드를 이미
+            봤는지 여부는 현재 커리어 저장 데이터에 기록됩니다.
           </p>
         </div>
       </Card>

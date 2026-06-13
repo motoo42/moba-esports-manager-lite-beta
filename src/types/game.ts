@@ -726,7 +726,11 @@ export type SeasonState = {
   teamBalanceAdjustments?: TeamBalanceAdjustment[];
 };
 
-export type CareerGuideId = "offseason-rules";
+export type CareerGuideId =
+  | "offseason-rules"
+  | "roster-management"
+  | "competition-dashboard"
+  | "inbox";
 
 export type CareerGuideState = {
   seenGuideIds: CareerGuideId[];

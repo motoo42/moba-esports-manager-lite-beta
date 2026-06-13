@@ -32,7 +32,7 @@ export const appSettingDefinitions: AppSettingDefinition[] = [
     id: "guides",
     title: "튜토리얼/가이드 다시 보기",
     description:
-      "스토브리그 최초 진입 안내를 전역 설정으로 제어하고, 읽음 상태는 커리어별로 저장합니다.",
+      "주요 화면 최초 진입 가이드를 전역 설정으로 제어하고, 읽음 상태는 커리어별로 저장합니다.",
     scope: "global",
     applyTiming: "즉시 적용",
     status: "active",

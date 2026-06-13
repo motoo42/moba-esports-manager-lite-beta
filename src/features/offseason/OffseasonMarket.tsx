@@ -1,9 +1,11 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import type { OffseasonSubPage } from "../../app/routes";
+import { OFFSEASON_RULES_GUIDE_ID } from "../../domain/career/careerGuides";
 import {
   getOffseasonMarketViewStatus,
   type OffseasonContractOfferInput,
 } from "../../domain/season";
+import { CareerGuideEntry } from "../career-guides";
 import { Card } from "../../shared/ui/Card";
 import { PlayerDetailModal } from "../../shared/ui/PlayerDetailModal";
 import type { CareerSave } from "../../types/game";
@@ -12,10 +14,6 @@ import { ContractOfferModal } from "./ContractOfferModal";
 import { ContractTab } from "./ContractTab";
 import { FreeAgentTab } from "./FreeAgentTab";
 import { LogTab } from "./LogTab";
-import {
-  OffseasonGuideBanner,
-  OffseasonGuideModal,
-} from "./OffseasonGuideModal";
 import { RosterTab } from "./RosterTab";
 import {
   getOffseasonSubPageFromTab,
@@ -45,13 +43,6 @@ type OffseasonMarketProps = {
   onMarkRulesGuideSeen?: () => void;
 };
 
-function isGuideEligible(career: CareerSave) {
-  return (
-    career.seasonState.phase === "offseason" &&
-    career.seasonState.offseason?.status === "active"
-  );
-}
-
 export function OffseasonMarket({
   career,
   subPage,
@@ -71,32 +62,15 @@ export function OffseasonMarket({
   const [negotiationTarget, setNegotiationTarget] =
     useState<NegotiationTarget | null>(null);
   const [detailPlayerId, setDetailPlayerId] = useState<string | null>(null);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const offseason = career.seasonState.offseason;
   const validationErrors = offseason?.validationErrors ?? [];
   const marketViewStatus = getOffseasonMarketViewStatus(career);
-  const shouldOpenFirstEntryGuide =
-    showFirstEntryGuide && !hasSeenRulesGuide && isGuideEligible(career);
   const activeTab = subPage
     ? getOffseasonTabFromSubPage(subPage)
     : fallbackActiveTab;
   const detailPlayer = detailPlayerId
     ? getPlayer(career.lckPlayers, detailPlayerId)
     : undefined;
-
-  useEffect(() => {
-    if (shouldOpenFirstEntryGuide) {
-      setIsGuideOpen(true);
-    }
-  }, [shouldOpenFirstEntryGuide]);
-
-  function handleCloseGuide() {
-    if (!hasSeenRulesGuide) {
-      onMarkRulesGuideSeen?.();
-    }
-
-    setIsGuideOpen(false);
-  }
 
   const activePanel = useMemo(() => {
     if (activeTab === "contracts") {
@@ -144,7 +118,12 @@ export function OffseasonMarket({
     <section className="stack offseason-page">
       <WeekTimeline career={career} />
       <OffseasonBudgetSummary career={career} />
-      <OffseasonGuideBanner onOpenGuide={() => setIsGuideOpen(true)} />
+      <CareerGuideEntry
+        guideId={OFFSEASON_RULES_GUIDE_ID}
+        hasSeenGuide={hasSeenRulesGuide}
+        onMarkGuideSeen={() => onMarkRulesGuideSeen?.()}
+        showFirstEntryGuide={showFirstEntryGuide}
+      />
       {validationErrors.length > 0 && (
         <div className="offseason-validation-box">
           {validationErrors.map((error) => (
@@ -194,7 +173,6 @@ export function OffseasonMarket({
           titlePrefix="Stove League Profile"
         />
       )}
-      {isGuideOpen && <OffseasonGuideModal onClose={handleCloseGuide} />}
     </section>
   );
 }

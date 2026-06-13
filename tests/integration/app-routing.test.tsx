@@ -312,7 +312,7 @@ describe("App routing", () => {
     ).toBeVisible();
     expect(screen.getByText("가이드 안내")).toBeVisible();
     const guideToggle = screen.getByRole("checkbox", {
-      name: /스토브리그 최초 진입 안내 표시/,
+      name: /최초 진입 가이드 자동 표시/,
     });
 
     expect(guideToggle).toBeChecked();
@@ -324,6 +324,40 @@ describe("App routing", () => {
     for (const abbreviation of ["HB", "MS", "RS", "TR", "CP", "CA", "FA", "TM", "SV", "LG"]) {
       expect(sidebar.queryByText(abbreviation)).not.toBeInTheDocument();
     }
+  });
+
+  it("shows contextual guide entries on approved pages only", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Start career" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/offseason"));
+    expect(
+      screen.getByRole("button", { name: "스토브리그 룰 보기" }),
+    ).toBeVisible();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-roster"));
+    await waitFor(() => expect(window.location.pathname).toBe("/roster"));
+    expect(
+      screen.getByRole("button", { name: "로스터 가이드 보기" }),
+    ).toBeVisible();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-inbox"));
+    await waitFor(() => expect(window.location.pathname).toBe("/inbox"));
+    expect(
+      screen.getByRole("button", { name: "메시지함 가이드 보기" }),
+    ).toBeVisible();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-competition"));
+    await waitFor(() => expect(window.location.pathname).toBe("/competitions"));
+    expect(
+      screen.getByRole("button", { name: "대회 가이드 보기" }),
+    ).toBeVisible();
+
+    fireEvent.click(await screen.findByTestId("shell-menu-save"));
+    await waitFor(() => expect(window.location.pathname).toBe("/saves"));
+    expect(
+      screen.queryByRole("button", { name: "데이터 저장 가이드 보기" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps dashboard internal navigation on the target URL without route bounce", async () => {

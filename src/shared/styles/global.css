@@ -6007,34 +6007,34 @@ h1 {
   margin-top: 10px;
 }
 
-.offseason-guide-banner {
+.career-guide-banner {
   display: flex;
   gap: 16px;
   align-items: center;
   justify-content: space-between;
 }
 
-.offseason-guide-banner > div {
+.career-guide-banner > div {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
-.offseason-guide-banner span,
-.offseason-guide-note strong {
+.career-guide-banner span,
+.career-guide-note strong {
   color: var(--accent);
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.offseason-guide-banner strong {
+.career-guide-banner strong {
   color: var(--text);
   font-size: 1rem;
 }
 
-.offseason-guide-banner p,
-.offseason-guide-note p {
+.career-guide-banner p,
+.career-guide-note p {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
@@ -6447,7 +6447,7 @@ h1 {
   padding: 18px;
 }
 
-.offseason-guide-modal {
+.career-guide-modal {
   position: relative;
   display: grid;
   gap: 18px;
@@ -6462,25 +6462,25 @@ h1 {
   padding: 22px;
 }
 
-.offseason-guide-modal h2 {
+.career-guide-modal h2 {
   margin: 4px 0 8px;
   font-size: 1.8rem;
 }
 
-.offseason-guide-modal p {
+.career-guide-modal p {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
 }
 
-.offseason-guide-points {
+.career-guide-points {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.offseason-guide-points article,
-.offseason-guide-note {
+.career-guide-points article,
+.career-guide-note {
   display: grid;
   gap: 8px;
   min-width: 0;
@@ -6490,13 +6490,13 @@ h1 {
   padding: 12px;
 }
 
-.offseason-guide-points span {
+.career-guide-points span {
   color: var(--accent);
   font-size: 0.82rem;
   font-weight: 900;
 }
 
-.offseason-guide-points strong {
+.career-guide-points strong {
   color: #ffffff;
 }
 
@@ -7912,12 +7912,12 @@ h1 {
   }
 
   .settings-section-header,
-  .offseason-guide-banner {
+  .career-guide-banner {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .offseason-guide-points {
+  .career-guide-points {
     grid-template-columns: 1fr;
   }
 }
