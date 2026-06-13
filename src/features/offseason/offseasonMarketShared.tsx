@@ -55,7 +55,7 @@ export const requestedRosterRoleOptions: Array<{
   {
     value: "academy",
     label: "2군",
-    description: "아카데미 로스터에 등록, AI 경쟁 없음",
+    description: "아카데미 로스터에 등록, 구단 경쟁 없음",
   },
 ];
 

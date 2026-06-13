@@ -195,7 +195,7 @@ describe("Inbox", () => {
       category: "transfer",
       priority: "important",
       title: "FA 협상 결과",
-      body: "Gen.G가 AI 재계약을 마쳤습니다.",
+      body: "Gen.G가 재계약을 마쳤습니다.",
       read: false,
       createdTurn: 3,
       source: "offseason",
@@ -218,6 +218,7 @@ describe("Inbox", () => {
     expect(
       within(screen.getByLabelText("메시지 목록")).getByText("FA 협상 결과"),
     ).toBeVisible();
+    expect(screen.queryByText(/AI 재계약/)).not.toBeInTheDocument();
     expect(screen.getByText("이적 · 스토브리그")).toBeVisible();
   });
 });

@@ -77,8 +77,20 @@ describe("LCK team info", () => {
       screen.queryByText(/선발 5인과 후보, 아카데미 구성을 스카우팅 관점/),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "선발 5인" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "1군 후보" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "2군 / 아카데미" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "후보 선수" })).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "1군 후보" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "2군 / 아카데미" }),
+    ).not.toBeInTheDocument();
+    const reservePanel = screen.getByRole("region", { name: "후보 선수" });
+    const reserveGroup = within(reservePanel).getByRole("group", {
+      name: "후보 선수 분류",
+    });
+
+    expect(within(reserveGroup).getByRole("button", { name: /1군 후보/ })).toBeVisible();
+    expect(within(reserveGroup).getByRole("button", { name: /아카데미/ })).toBeVisible();
     expect(screen.getAllByText("평가").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /Faker/ }));
     expect(
@@ -88,6 +100,57 @@ describe("LCK team info", () => {
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(screen.queryByText(/OVR|POT|오버롤|포텐셜/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ability|potential/i)).not.toBeInTheDocument();
+  });
+
+  it("switches first-team bench and academy players in one reserve panel", () => {
+    const career = createInitialCareer("KT Rolster", {
+      startMode: "real-roster-lck-cup",
+    });
+
+    render(
+      <LckTeamInfo
+        career={career}
+        teamId="kt-rolster"
+        onViewTeam={vi.fn()}
+        onViewTeamList={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "후보 선수" })).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "1군 후보" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "2군 / 아카데미" }),
+    ).not.toBeInTheDocument();
+
+    const reservePanel = screen.getByRole("region", { name: "후보 선수" });
+    const reserveGroup = within(reservePanel).getByRole("group", {
+      name: "후보 선수 분류",
+    });
+    const benchToggle = within(reserveGroup).getByRole("button", {
+      name: /1군 후보/,
+    });
+    const academyToggle = within(reserveGroup).getByRole("button", {
+      name: /아카데미/,
+    });
+
+    expect(benchToggle).toHaveAttribute("aria-pressed", "true");
+    expect(academyToggle).toHaveAttribute("aria-pressed", "false");
+    expect(
+      within(reservePanel).getByRole("button", { name: /FenRir/ }),
+    ).toBeVisible();
+
+    fireEvent.click(academyToggle);
+
+    expect(academyToggle).toHaveAttribute("aria-pressed", "true");
+    expect(benchToggle).toHaveAttribute("aria-pressed", "false");
+    expect(
+      within(reservePanel).getByRole("button", { name: /Sero/ }),
+    ).toBeVisible();
+    expect(
+      within(reservePanel).queryByRole("button", { name: /FenRir/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows only championship records in team history", () => {

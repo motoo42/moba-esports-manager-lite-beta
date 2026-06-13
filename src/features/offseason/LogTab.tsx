@@ -65,7 +65,7 @@ export function LogTab({ career }: { career: CareerSave }) {
     return (
       <div className="offseason-empty">
         <strong>아직 이적 로그가 없습니다.</strong>
-        <span>제안과 AI 계약 경쟁 결과가 이곳에 쌓입니다.</span>
+        <span>제안과 구단 경쟁 결과가 이곳에 쌓입니다.</span>
       </div>
     );
   }

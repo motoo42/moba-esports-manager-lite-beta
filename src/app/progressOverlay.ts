@@ -5,8 +5,8 @@ export function getProgressOverlayState(career: CareerSave): ProgressOverlayStat
   if (career.seasonState.phase === "offseason") {
     return {
       title: "스토브리그 진행중",
-      message: "계약 제안, AI 경쟁, 이적 로그를 정리하며 다음날로 이동하는 중",
-      steps: ["제안 확인", "AI 경쟁 처리", "로스터 상태 갱신", "다음날 준비"],
+      message: "계약 제안, 구단 경쟁, 이적 로그를 정리하며 다음날로 이동하는 중",
+      steps: ["제안 확인", "구단 경쟁 처리", "로스터 상태 갱신", "다음날 준비"],
     };
   }
 

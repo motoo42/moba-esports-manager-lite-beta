@@ -250,7 +250,7 @@ function applyAiRenewalDecision({
         },
       },
       "renewal",
-      `${plan.teamName}이 ${player.name}과 AI 재계약에 합의했습니다.`,
+      `${plan.teamName}이 ${player.name}과 재계약에 합의했습니다.`,
       { relatedTeamNames: [plan.teamName] },
     );
 
@@ -282,7 +282,7 @@ function applyAiRenewalDecision({
       },
     },
     "release",
-    `${plan.teamName}이 ${player.name}을 AI 방출했습니다. 해당 선수는 FA 시장에 등록됐습니다.`,
+    `${plan.teamName}이 ${player.name}을 방출했습니다. 해당 선수는 FA 시장에 등록됐습니다.`,
     { relatedTeamNames: [plan.teamName] },
   );
 

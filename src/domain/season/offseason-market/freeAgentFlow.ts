@@ -226,7 +226,7 @@ export function submitFreeAgentOffer(
   const resolutionMessage =
     offerInput.requestedRosterRole === "academy"
       ? "다음날 선수 측 수락 여부만 확인합니다."
-      : "다음날 AI 경쟁 제안과 함께 결과가 확정됩니다.";
+      : "다음날 다른 구단 제안과 함께 결과가 확정됩니다.";
 
   return appendLog(
     nextCareer,

@@ -302,14 +302,15 @@ describe("offseason market", () => {
     );
     const aiLogs = weekTwoCareer.seasonState.offseason?.logEntries?.filter(
       (log) =>
-        log.message.includes("AI 재계약") ||
-        log.message.includes("AI 방출"),
+        !log.isUserTeamRelated &&
+        (log.type === "renewal" || log.type === "release"),
     ) ?? [];
     const aiLogDays = new Set(aiLogs.map((log) => log.day));
 
     expect(weekTwoCareer.seasonState.offseason?.currentDay).toBe(8);
     expect(aiLogs.length).toBeGreaterThan(0);
     expect(aiLogDays.size).toBeGreaterThan(1);
+    expect(aiLogs.some((log) => log.message.includes("AI"))).toBe(false);
 
     lck2026Teams
       .filter((team) => team.name !== "T1")
@@ -1428,9 +1429,14 @@ describe("offseason market", () => {
     expect(new Set(aiOfferSalaries).size).toBeGreaterThan(1);
     expect(
       progressed.seasonState.offseason?.logEntries?.some((log) =>
-        log.message.includes("AI 영입 경쟁"),
+        log.message.includes("FA 영입 경쟁"),
       ),
     ).toBe(true);
+    expect(
+      progressed.seasonState.offseason?.logEntries?.some((log) =>
+        log.message.includes("AI 영입 경쟁"),
+      ),
+    ).toBe(false);
   });
 
   it("auto-fills the user academy roster on final day without spending budget", () => {

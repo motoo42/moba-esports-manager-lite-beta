@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getLckTeamDisplayName,
   lck2026Teams,
@@ -30,6 +30,8 @@ type StandingSnapshot = {
   rank: number;
   entry: StandingEntry;
 };
+
+type ReserveRosterGroup = "bench" | "academy";
 
 const roleSlots: Array<{ role: Role; label: string }> = [
   { role: "top", label: "TOP" },
@@ -342,14 +344,35 @@ function TeamDetailView({
     player: Player;
     rosterLabel: string;
   } | null>(null);
+  const [reserveGroup, setReserveGroup] = useState<ReserveRosterGroup | null>(
+    null,
+  );
   const snapshot = getLatestStandingSnapshot(career, team);
   const isManagedTeam = isUserTeam(career, team);
   const { academyPlayers, benchPlayers, starters } = getRosterSections(career, team);
   const displayedAcademyPlayers = academyPlayers.slice(0, 8);
+  const activeReserveGroup =
+    reserveGroup ?? (benchPlayers.length > 0 ? "bench" : "academy");
+  const reservePlayers =
+    activeReserveGroup === "bench" ? benchPlayers : displayedAcademyPlayers;
+  const reserveRosterLabel = activeReserveGroup === "bench" ? "1군 후보" : "2군";
+  const reserveCountLabel =
+    activeReserveGroup === "academy" &&
+    academyPlayers.length > displayedAcademyPlayers.length
+      ? `${displayedAcademyPlayers.length}/${academyPlayers.length}명 표시`
+      : `${reservePlayers.length}명`;
+  const reserveEmptyLabel =
+    activeReserveGroup === "bench"
+      ? "현재 확인 가능한 1군 후보 정보가 없습니다."
+      : "현재 확인 가능한 아카데미 정보가 없습니다.";
   const salaryTotal = isManagedTeam ? getContractSalaryTotal(career.userTeam) : null;
   const introduction = getLckTeamIntroduction(team.id);
   const history = getLckTeamHistory(team.id);
   const displayName = getLckTeamDisplayName(team);
+
+  useEffect(() => {
+    setReserveGroup(null);
+  }, [team.id]);
 
   return (
     <section className="stack lck-team-info-page">
@@ -467,44 +490,52 @@ function TeamDetailView({
         </div>
       </section>
 
-      <section className="competition-panel">
-        <div className="panel-title-row">
+      <section
+        aria-labelledby="lck-team-reserve-heading"
+        className="competition-panel lck-team-reserve-panel"
+      >
+        <div className="panel-title-row lck-team-reserve-title-row">
           <div>
-            <p className="eyebrow">Main Roster</p>
-            <h2>1군 후보</h2>
+            <p className="eyebrow">Reserve Players</p>
+            <h2 id="lck-team-reserve-heading">후보 선수</h2>
           </div>
-          <span className="panel-note">{benchPlayers.length}명</span>
+          <span className="panel-note">{reserveCountLabel}</span>
+        </div>
+        <div className="lck-team-reserve-tabs" role="group" aria-label="후보 선수 분류">
+          <button
+            aria-pressed={activeReserveGroup === "bench"}
+            className={`lck-team-reserve-tab ${
+              activeReserveGroup === "bench"
+                ? "lck-team-reserve-tab-active"
+                : ""
+            }`}
+            onClick={() => setReserveGroup("bench")}
+            type="button"
+          >
+            <span>1군 후보</span>
+            <strong>{benchPlayers.length}명</strong>
+          </button>
+          <button
+            aria-pressed={activeReserveGroup === "academy"}
+            className={`lck-team-reserve-tab ${
+              activeReserveGroup === "academy"
+                ? "lck-team-reserve-tab-active"
+                : ""
+            }`}
+            onClick={() => setReserveGroup("academy")}
+            type="button"
+          >
+            <span>아카데미</span>
+            <strong>{academyPlayers.length}명</strong>
+          </button>
         </div>
         <PlayerGrid
-          emptyLabel="현재 확인 가능한 1군 후보 정보가 없습니다."
+          emptyLabel={reserveEmptyLabel}
           onViewPlayer={(player, rosterLabel) =>
             setDetailTarget({ player, rosterLabel })
           }
-          players={benchPlayers}
-          rosterLabel="1군 후보"
-        />
-      </section>
-
-      <section className="competition-panel">
-        <div className="panel-title-row">
-          <div>
-            <p className="eyebrow">Academy</p>
-            <h2>2군 / 아카데미</h2>
-          </div>
-          <span className="panel-note">
-            {displayedAcademyPlayers.length}
-            {academyPlayers.length > displayedAcademyPlayers.length
-              ? ` / ${academyPlayers.length}명 표시`
-              : "명"}
-          </span>
-        </div>
-        <PlayerGrid
-          emptyLabel="현재 확인 가능한 아카데미 정보가 없습니다."
-          onViewPlayer={(player, rosterLabel) =>
-            setDetailTarget({ player, rosterLabel })
-          }
-          players={displayedAcademyPlayers}
-          rosterLabel="2군"
+          players={reservePlayers}
+          rosterLabel={reserveRosterLabel}
         />
       </section>
       {detailTarget && (

@@ -585,8 +585,56 @@ select {
 
 .lck-team-player-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 260px));
+  justify-content: start;
   gap: 10px;
+}
+
+.lck-team-reserve-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.lck-team-reserve-title-row {
+  align-items: start;
+}
+
+.lck-team-reserve-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lck-team-reserve-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border: 1px solid #2c374f;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #0d1424;
+  color: #b8c4d8;
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.lck-team-reserve-tab:hover {
+  border-color: #4b5b7c;
+  color: #ffffff;
+}
+
+.lck-team-reserve-tab-active,
+.lck-team-reserve-tab-active:hover {
+  border-color: #5d8cff;
+  background: #13254a;
+  color: #ffffff;
+}
+
+.lck-team-reserve-tab strong {
+  color: inherit;
+  font-size: 0.78rem;
 }
 
 .lck-team-empty-slot {

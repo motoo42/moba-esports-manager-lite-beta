@@ -341,7 +341,7 @@ export function resolveAiDepthSignings(
     nextCareer = appendLog(
       nextCareer,
       "ai-signing",
-      `${player.name} AI 영입 경쟁에서 ${winningTeamName}이 승리했습니다. 경쟁 ${evaluatedOffers.length}팀.`,
+      `${player.name} FA 영입 경쟁에서 ${winningTeamName}이 승리했습니다. 경쟁 ${evaluatedOffers.length}팀.`,
     );
     claimedPlayerIds.add(player.id);
     signingCount += 1;
