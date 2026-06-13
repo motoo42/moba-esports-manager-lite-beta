@@ -8,14 +8,14 @@ describe("PlayerPortrait", () => {
       <PlayerPortrait
         player={{
           name: "Faker",
-          portraitUrl: "/assets/players/lck/2026/main/t1-faker.webp",
+          portraitUrl: "/assets/players/lck/2026/main/t1-faker.png",
         }}
       />,
     );
 
     expect(screen.getByRole("img", { name: "Faker portrait" })).toHaveAttribute(
       "src",
-      "/assets/players/lck/2026/main/t1-faker.webp",
+      "/assets/players/lck/2026/main/t1-faker.png",
     );
   });
 
@@ -24,7 +24,7 @@ describe("PlayerPortrait", () => {
       <PlayerPortrait
         player={{
           name: "Faker",
-          portraitUrl: "/assets/players/lck/2026/main/missing.webp",
+          portraitUrl: "/assets/players/lck/2026/main/missing.png",
         }}
       />,
     );

@@ -220,6 +220,10 @@ describe("lck2026Players", () => {
     expect(faker?.currentTeam).toBe("T1");
     expect(beryl).toBeDefined();
     expect(beryl?.currentTeam).toBeUndefined();
+    expect(beryl?.portraitUrl).toBe("/assets/players/lck/2026/fa/beryl.png");
+    expect(beryl?.portraitSourceUrl).toBe(
+      "https://lol.fandom.com/wiki/File:DK_BeryL_2025_Split_1.png",
+    );
     expect(career.seasonState.offseason?.freeAgentPlayerIds).toContain(
       "fa-2026-beryl",
     );

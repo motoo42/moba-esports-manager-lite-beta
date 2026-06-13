@@ -541,16 +541,9 @@ select {
   gap: 14px;
 }
 
-.lck-team-history-summary {
-  margin: 0;
-  color: #dbe6f5;
-  font-size: 0.98rem;
-  line-height: 1.55;
-}
-
 .lck-team-history-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -582,21 +575,6 @@ select {
   display: grid;
   gap: 4px;
   padding-left: 17px;
-}
-
-.lck-team-history-sources {
-  color: #9aa7bd;
-  font-size: 0.78rem;
-}
-
-.lck-team-history-sources summary {
-  width: fit-content;
-  cursor: pointer;
-}
-
-.lck-team-history-sources a {
-  color: #93c5fd;
-  overflow-wrap: anywhere;
 }
 
 .lck-team-starter-grid {

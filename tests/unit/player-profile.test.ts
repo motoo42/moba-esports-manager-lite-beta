@@ -10,22 +10,42 @@ describe("player profile helpers", () => {
     const faker = lck2026Players.find((player) => player.name === "Faker");
 
     expect(faker).toBeDefined();
-    expect(getPlayerProfileSummary(faker!)).toMatch(/국제대회/);
+    expect(getPlayerProfileSummary(faker!)).toMatch(/T1의 상징/);
     expect(getPlayerCareerEntries(faker!)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          teamName: "SK Telecom T1 / T1",
+          teamName: "SK Telecom T1",
+        }),
+        expect.objectContaining({
+          teamName: "T1",
         }),
       ]),
     );
+    expect(
+      getPlayerCareerEntries(faker!).every((entry) => !("note" in entry)),
+    ).toBe(true);
+  });
+
+  it("keeps transferred teams as separate career entries", () => {
+    const doran = lck2026Players.find((player) => player.name === "Doran");
+
+    expect(doran).toBeDefined();
+    expect(getPlayerCareerEntries(doran!).map((entry) => entry.teamName)).toEqual([
+      "Griffin",
+      "DRX",
+      "KT Rolster",
+      "Gen.G",
+      "Hanwha Life Esports",
+      "T1",
+    ]);
   });
 
   it("falls back to the current team when curated data is missing", () => {
-    const bdd = lck2026Players.find((player) => player.name === "Bdd");
+    const ghost = lck2026Players.find((player) => player.name === "Ghost");
 
-    expect(bdd).toBeDefined();
-    expect(getPlayerProfileSummary(bdd!)).toMatch(/세부 능력치/);
-    expect(getPlayerCareerEntries(bdd!)[0]).toEqual(
+    expect(ghost).toBeDefined();
+    expect(getPlayerProfileSummary(ghost!)).toMatch(/세부 능력치/);
+    expect(getPlayerCareerEntries(ghost!)[0]).toEqual(
       expect.objectContaining({
         teamName: "KT Rolster",
       }),

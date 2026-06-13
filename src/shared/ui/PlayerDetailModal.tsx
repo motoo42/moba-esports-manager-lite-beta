@@ -122,7 +122,6 @@ export function PlayerDetailModal({
               >
                 <strong>{entry.teamName}</strong>
                 <span>{entry.period}</span>
-                {entry.note && <small>{entry.note}</small>}
               </article>
             ))}
           </div>

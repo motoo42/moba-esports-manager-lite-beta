@@ -406,19 +406,15 @@ function TeamDetailView({
             <p className="eyebrow">History</p>
             <h2>역사</h2>
           </div>
-          <span className="panel-note">실제 기록 기반 1차 정리</span>
         </div>
-        <p className="lck-team-history-summary">{history.summary}</p>
         <div className="lck-team-history-grid">
           <article>
-            <h3>창단 / 합류</h3>
-            <p>{history.founded}</p>
-          </article>
-          <article>
-            <h3>이름과 계보</h3>
+            <h3>팀명 변화</h3>
             <ul>
-              {history.lineage.map((item) => (
-                <li key={item}>{item}</li>
+              {history.nameHistory.map((item) => (
+                <li key={`${item.name}-${item.period}`}>
+                  {item.name} ({item.period})
+                </li>
               ))}
             </ul>
           </article>
@@ -439,20 +435,6 @@ function TeamDetailView({
             </ul>
           </article>
         </div>
-        {history.sources.length > 0 && (
-          <details className="lck-team-history-sources">
-            <summary>자료 출처</summary>
-            <ul>
-              {history.sources.map((source) => (
-                <li key={source}>
-                  <a href={source} rel="noreferrer" target="_blank">
-                    {source}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
       </section>
 
       <section className="competition-panel">

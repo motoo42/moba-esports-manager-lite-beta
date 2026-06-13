@@ -93,7 +93,9 @@ describe("career save normalization", () => {
     const normalized = normalizeCareerSave(legacyCareer);
     const faker = normalized.lckPlayers.find((player) => player.name === "Faker");
 
-    expect(faker?.portraitUrl).toBe("/assets/players/lck/2026/main/t1-faker.webp");
-    expect(faker?.portraitSourceUrl).toBe("https://lol.fandom.com/wiki/Faker");
+    expect(faker?.portraitUrl).toBe("/assets/players/lck/2026/main/t1-faker.png");
+    expect(faker?.portraitSourceUrl).toBe(
+      "https://lol.fandom.com/wiki/File:T1_Faker_2026_LCK_Cup.png",
+    );
   });
 });

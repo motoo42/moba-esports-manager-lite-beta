@@ -18,6 +18,8 @@ type FreeAgentInput = {
   championPool: number;
   traits: string[];
   championProfile?: Partial<PlayerChampionProfile>;
+  portraitUrl?: string;
+  portraitSourceUrl?: string;
 };
 
 function createChampionProfile(
@@ -38,6 +40,8 @@ function createFreeAgent(input: FreeAgentInput): Player {
     secondaryRoles: input.secondaryRoles ?? [],
     region: "lck",
     league: "LCK",
+    portraitUrl: input.portraitUrl,
+    portraitSourceUrl: input.portraitSourceUrl,
     availableForRoster: true,
     cost: input.salaryExpectation,
     status: {
@@ -260,5 +264,7 @@ export const offseasonFreeAgentSeeds: Player[] = [
     mental: 79,
     championPool: 76,
     traits: ["macro support", "veteran"],
+    portraitUrl: "/assets/players/lck/2026/fa/beryl.png",
+    portraitSourceUrl: "https://lol.fandom.com/wiki/File:DK_BeryL_2025_Split_1.png",
   }),
 ];

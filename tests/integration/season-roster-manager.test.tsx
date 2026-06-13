@@ -75,7 +75,7 @@ describe("SeasonRosterManager", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "커리어" })).toBeVisible();
-    expect(screen.getByText("KT Rolster")).toBeVisible();
+    expect(screen.getAllByText("KT Rolster").length).toBeGreaterThanOrEqual(2);
     expect(
       screen.getAllByRole("img", { name: "Bdd portrait" }).length,
     ).toBeGreaterThanOrEqual(2);
