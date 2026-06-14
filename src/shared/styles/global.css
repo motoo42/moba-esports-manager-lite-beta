@@ -8973,6 +8973,7 @@ button.opponent-analysis-panel:focus-visible {
 .match-week-page > header h1,
 .lck-team-info-page > header h1,
 .save-manager-page > header h1,
+.competition-hub-page > header h1,
 .settings-page-header h1 {
   font-size: clamp(1.65rem, 2.35vw, 2.15rem);
 }
