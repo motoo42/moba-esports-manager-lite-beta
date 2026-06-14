@@ -7,6 +7,7 @@ import {
   type ScrimRequestInput,
 } from "../../domain/scrim";
 import { Button } from "../../shared/ui/Button";
+import { TeamLogo } from "../../shared/ui/TeamLogo";
 import type { CareerSave, ScrimSchedule } from "../../types/game";
 
 type ScrimViewProps = {
@@ -207,8 +208,17 @@ export function ScrimView({
               onClick={() => setSelectedOpponentTeamId(option.teamId)}
               type="button"
             >
-              <strong>{option.shortName}</strong>
-              <span>{option.teamName}</span>
+              <span className="scrim-opponent-card-header">
+                <TeamLogo
+                  size="sm"
+                  teamId={option.teamId}
+                  teamName={option.teamName}
+                />
+                <span className="scrim-opponent-card-copy">
+                  <strong>{option.shortName}</strong>
+                  <span>{option.teamName}</span>
+                </span>
+              </span>
               <small>
                 수락 가능성 {getChanceLabel(option.acceptanceChance)}
                 {option.disabledReason ? ` · ${option.disabledReason}` : ""}

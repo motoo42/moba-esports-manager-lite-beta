@@ -1320,7 +1320,7 @@ select {
   border-radius: inherit;
   background: linear-gradient(90deg, #9f5cff, #f43f9d);
   transform-origin: left;
-  animation: game-progress-fill 5s linear forwards;
+  animation: game-progress-fill 3.6s linear forwards;
 }
 
 @keyframes game-progress-fill {
@@ -5744,6 +5744,55 @@ h1 {
 
 .scrim-opponent-grid .option-card:disabled {
   background: #0e1421;
+}
+
+.scrim-opponent-grid .option-card {
+  justify-items: center;
+  min-height: 104px;
+  text-align: center;
+}
+
+.scrim-opponent-card-header {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.scrim-opponent-card-header .team-logo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  justify-self: center;
+  align-self: center;
+  --team-logo-image-width: 86%;
+  --team-logo-image-max-width: 86%;
+  --team-logo-image-max-height: 82%;
+}
+
+.scrim-opponent-card-header .team-logo img {
+  margin: auto;
+}
+
+.scrim-opponent-card-copy {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.scrim-opponent-card-copy strong {
+  color: #f8fafc;
+  line-height: 1.15;
+}
+
+.scrim-opponent-card-copy span {
+  color: #9aa7bd;
+  line-height: 1.25;
 }
 
 .scrim-match-counts {

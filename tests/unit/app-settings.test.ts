@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   defaultAppSettings,
+  loadDeveloperModeFlag,
   loadAppSettings,
   normalizeAppSettings,
   saveAppSettings,
+  saveDeveloperModeFlag,
   setAiNewsEnabled,
   setFirstEntryGuidesEnabled,
   setMessageNewsFrequency,
@@ -12,6 +14,7 @@ import {
 describe("app settings", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.history.pushState(null, "", "/");
   });
 
   it("normalizes unknown values to supported defaults", () => {
@@ -60,5 +63,21 @@ describe("app settings", () => {
       aiNewsEnabled: false,
       frequency: "debug",
     });
+  });
+
+  it("keeps developer mode behind a hidden URL or storage flag", () => {
+    expect(loadDeveloperModeFlag()).toBe(false);
+
+    window.history.pushState(null, "", "/?dev=1");
+
+    expect(loadDeveloperModeFlag()).toBe(true);
+
+    window.history.pushState(null, "", "/");
+
+    expect(loadDeveloperModeFlag()).toBe(true);
+
+    saveDeveloperModeFlag(false);
+
+    expect(loadDeveloperModeFlag()).toBe(false);
   });
 });

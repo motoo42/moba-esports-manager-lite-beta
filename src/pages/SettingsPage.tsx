@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGameDispatch, useGameSelector } from "../app/GameProvider";
 import { gameActions } from "../app/state";
 import {
   appSettingDefinitions,
+  loadDeveloperModeFlag,
+  saveDeveloperModeFlag,
   type AppSettingDefinition,
   type MessageNewsFrequency,
 } from "../domain/settings/appSettings";
@@ -50,9 +52,40 @@ export function SettingsPage() {
   const career = useGameSelector((state) => state.career);
   const dispatch = useGameDispatch();
   const [isGameGuideOpen, setIsGameGuideOpen] = useState(false);
+  const [isDeveloperModeEnabled, setIsDeveloperModeEnabled] = useState(
+    loadDeveloperModeFlag,
+  );
   const plannedSettings = appSettingDefinitions.filter(
     (option) => option.status === "planned",
   );
+  const visibleMessageNewsFrequencyOptions = isDeveloperModeEnabled
+    ? messageNewsFrequencyOptions
+    : messageNewsFrequencyOptions.filter((option) => option.id !== "debug");
+  const selectedMessageNewsFrequency =
+    visibleMessageNewsFrequencyOptions.some(
+      (option) => option.id === appSettings.messageNews.frequency,
+    )
+      ? appSettings.messageNews.frequency
+      : "normal";
+  const selectedMessageNewsFrequencyDescription =
+    visibleMessageNewsFrequencyOptions.find(
+      (option) => option.id === selectedMessageNewsFrequency,
+    )?.description;
+
+  useEffect(() => {
+    if (!isDeveloperModeEnabled && appSettings.messageNews.frequency === "debug") {
+      dispatch(gameActions.setMessageNewsFrequency("normal"));
+    }
+  }, [appSettings.messageNews.frequency, dispatch, isDeveloperModeEnabled]);
+
+  const handleDisableDeveloperMode = () => {
+    saveDeveloperModeFlag(false);
+    setIsDeveloperModeEnabled(false);
+
+    if (appSettings.messageNews.frequency === "debug") {
+      dispatch(gameActions.setMessageNewsFrequency("normal"));
+    }
+  };
 
   return (
     <section className="stack settings-page">
@@ -116,8 +149,8 @@ export function SettingsPage() {
           <div className="settings-section">
             <div className="settings-section-header">
               <div>
-                <span>Developer</span>
-                <strong>개발자/실험 옵션</strong>
+                <span>Message / AI</span>
+                <strong>메시지 / AI</strong>
               </div>
               <span className="settings-option-badge">전역 / 다음 턴</span>
             </div>
@@ -141,7 +174,7 @@ export function SettingsPage() {
               <label htmlFor="message-news-frequency">
                 <strong>메시지/뉴스 빈도</strong>
                 <small>
-                  디버그 모드는 테스트 편의를 위해 뉴스 생성 조건을 완화합니다.
+                  메시지함과 뉴스 후보 생성 빈도를 플레이 템포에 맞춰 조절합니다.
                 </small>
               </label>
               <select
@@ -153,9 +186,9 @@ export function SettingsPage() {
                     ),
                   )
                 }
-                value={appSettings.messageNews.frequency}
+                value={selectedMessageNewsFrequency}
               >
-                {messageNewsFrequencyOptions.map((option) => (
+                {visibleMessageNewsFrequencyOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
                   </option>
@@ -163,12 +196,57 @@ export function SettingsPage() {
               </select>
             </div>
             <p className="settings-save-note">
-              {
-                messageNewsFrequencyOptions.find(
-                  (option) => option.id === appSettings.messageNews.frequency,
-                )?.description
-              }
+              {selectedMessageNewsFrequencyDescription}
             </p>
+          </div>
+
+          <div className="settings-section settings-advanced-panel">
+            <div className="settings-section-header">
+              <div>
+                <span>Advanced</span>
+                <strong>고급 설정</strong>
+              </div>
+              <span className="settings-option-badge">
+                {isDeveloperModeEnabled ? "개발자 모드" : "일반 모드"}
+              </span>
+            </div>
+            {isDeveloperModeEnabled ? (
+              <>
+                <div className="settings-field-row">
+                  <label htmlFor="developer-message-news-frequency">
+                    <strong>개발자 뉴스 빈도</strong>
+                    <small>
+                      디버그 빈도는 테스트용으로 뉴스 생성 조건을 크게 완화합니다.
+                    </small>
+                  </label>
+                  <select
+                    id="developer-message-news-frequency"
+                    onChange={(event) =>
+                      dispatch(
+                        gameActions.setMessageNewsFrequency(
+                          event.target.value as MessageNewsFrequency,
+                        ),
+                      )
+                    }
+                    value={appSettings.messageNews.frequency}
+                  >
+                    {messageNewsFrequencyOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button variant="ghost" onClick={handleDisableDeveloperMode}>
+                  개발자 모드 끄기
+                </Button>
+              </>
+            ) : (
+              <p className="settings-save-note">
+                일반 플레이에서는 내부 테스트 옵션을 숨겨 설정 화면을 간결하게
+                유지합니다.
+              </p>
+            )}
           </div>
         </div>
       </Card>

@@ -22,7 +22,7 @@ import { getRouteForCareer, gameActions, type GameAction } from "../state";
 import { getPathForRoute, getRouteMatchFromPath } from "../routes";
 import { recordRouteDebugTrace } from "../routeDebugTrace";
 
-const minimumProgressDelayMs = 5000;
+const minimumProgressDelayMs = 3600;
 const progressNoticeDelayMs = 3200;
 
 export function useCareerProgressController({

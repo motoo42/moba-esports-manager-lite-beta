@@ -25,6 +25,7 @@ export type AppSettingDefinition = {
 };
 
 const appSettingsStorageKey = "moba-esports-manager-lite:app-settings:v1";
+const developerModeStorageKey = "moba-esports-manager-lite:developer-mode";
 
 export const defaultAppSettings: AppSettings = {
   schemaVersion: 1,
@@ -102,6 +103,49 @@ function getBrowserStorage(): Storage | null {
   return typeof window === "undefined" ? null : window.localStorage;
 }
 
+function hasDeveloperModeUrlFlag() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+
+  return (
+    searchParams.get("dev") === "1" ||
+    searchParams.get("developer") === "1"
+  );
+}
+
+export function loadDeveloperModeFlag(): boolean {
+  const storage = getBrowserStorage();
+
+  if (!storage) {
+    return false;
+  }
+
+  if (hasDeveloperModeUrlFlag()) {
+    storage.setItem(developerModeStorageKey, "1");
+    return true;
+  }
+
+  return storage.getItem(developerModeStorageKey) === "1";
+}
+
+export function saveDeveloperModeFlag(enabled: boolean): void {
+  const storage = getBrowserStorage();
+
+  if (!storage) {
+    return;
+  }
+
+  if (enabled) {
+    storage.setItem(developerModeStorageKey, "1");
+    return;
+  }
+
+  storage.removeItem(developerModeStorageKey);
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   const source = isRecord(value) ? value : {};
   const guides = isRecord(source.guides) ? source.guides : {};
@@ -138,6 +182,8 @@ export function loadAppSettings(): AppSettings {
   if (!storage) {
     return defaultAppSettings;
   }
+
+  loadDeveloperModeFlag();
 
   try {
     return normalizeAppSettings(
