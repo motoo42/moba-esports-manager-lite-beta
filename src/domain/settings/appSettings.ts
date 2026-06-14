@@ -1,5 +1,11 @@
 export type AppSettings = {
   schemaVersion: 1;
+  audio: {
+    backgroundMusicEnabled: boolean;
+    backgroundMusicVolume: number;
+    soundEffectsEnabled: boolean;
+    soundEffectsVolume: number;
+  };
   guides: {
     showFirstEntryGuides: boolean;
   };
@@ -29,6 +35,12 @@ const developerModeStorageKey = "moba-esports-manager-lite:developer-mode";
 
 export const defaultAppSettings: AppSettings = {
   schemaVersion: 1,
+  audio: {
+    backgroundMusicEnabled: true,
+    backgroundMusicVolume: 0.14,
+    soundEffectsEnabled: true,
+    soundEffectsVolume: 1,
+  },
   guides: {
     showFirstEntryGuides: true,
   },
@@ -103,6 +115,22 @@ function getBrowserStorage(): Storage | null {
   return typeof window === "undefined" ? null : window.localStorage;
 }
 
+function clampBackgroundMusicVolume(value: unknown) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return defaultAppSettings.audio.backgroundMusicVolume;
+  }
+
+  return Math.min(0.4, Math.max(0, value));
+}
+
+function clampSoundEffectsVolume(value: unknown) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return defaultAppSettings.audio.soundEffectsVolume;
+  }
+
+  return Math.min(1, Math.max(0, value));
+}
+
 function hasDeveloperModeUrlFlag() {
   if (typeof window === "undefined") {
     return false;
@@ -148,6 +176,7 @@ export function saveDeveloperModeFlag(enabled: boolean): void {
 
 export function normalizeAppSettings(value: unknown): AppSettings {
   const source = isRecord(value) ? value : {};
+  const audio = isRecord(source.audio) ? source.audio : {};
   const guides = isRecord(source.guides) ? source.guides : {};
   const messageNews = isRecord(source.messageNews) ? source.messageNews : {};
   const frequency =
@@ -160,6 +189,20 @@ export function normalizeAppSettings(value: unknown): AppSettings {
 
   return {
     schemaVersion: 1,
+    audio: {
+      backgroundMusicEnabled:
+        typeof audio.backgroundMusicEnabled === "boolean"
+          ? audio.backgroundMusicEnabled
+          : defaultAppSettings.audio.backgroundMusicEnabled,
+      backgroundMusicVolume: clampBackgroundMusicVolume(
+        audio.backgroundMusicVolume,
+      ),
+      soundEffectsEnabled:
+        typeof audio.soundEffectsEnabled === "boolean"
+          ? audio.soundEffectsEnabled
+          : defaultAppSettings.audio.soundEffectsEnabled,
+      soundEffectsVolume: clampSoundEffectsVolume(audio.soundEffectsVolume),
+    },
     guides: {
       showFirstEntryGuides:
         typeof guides.showFirstEntryGuides === "boolean"
@@ -216,6 +259,58 @@ export function setFirstEntryGuidesEnabled(
     guides: {
       ...settings.guides,
       showFirstEntryGuides: enabled,
+    },
+  };
+}
+
+export function setBackgroundMusicEnabled(
+  settings: AppSettings,
+  enabled: boolean,
+): AppSettings {
+  return {
+    ...settings,
+    audio: {
+      ...settings.audio,
+      backgroundMusicEnabled: enabled,
+    },
+  };
+}
+
+export function setBackgroundMusicVolume(
+  settings: AppSettings,
+  volume: number,
+): AppSettings {
+  return {
+    ...settings,
+    audio: {
+      ...settings.audio,
+      backgroundMusicVolume: clampBackgroundMusicVolume(volume),
+    },
+  };
+}
+
+export function setSoundEffectsEnabled(
+  settings: AppSettings,
+  enabled: boolean,
+): AppSettings {
+  return {
+    ...settings,
+    audio: {
+      ...settings.audio,
+      soundEffectsEnabled: enabled,
+    },
+  };
+}
+
+export function setSoundEffectsVolume(
+  settings: AppSettings,
+  volume: number,
+): AppSettings {
+  return {
+    ...settings,
+    audio: {
+      ...settings.audio,
+      soundEffectsVolume: clampSoundEffectsVolume(volume),
     },
   };
 }

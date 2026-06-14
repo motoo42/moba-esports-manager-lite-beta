@@ -6,7 +6,9 @@ import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useAsianGamesDecision } from "./hooks/useAsianGamesDecision";
 import { useAiNewsPipeline } from "./hooks/useAiNewsPipeline";
 import { useAutoSaveController } from "./hooks/useAutoSaveController";
+import { useBackgroundMusic } from "./hooks/useBackgroundMusic";
 import { useCareerProgressController } from "./hooks/useCareerProgressController";
+import { useInteractionSoundEffects } from "./hooks/useInteractionSoundEffects";
 import { useRouteSynchronization } from "./hooks/useRouteSynchronization";
 import { AsianGamesDecisionModal } from "./modals/AsianGamesDecisionModal";
 import { SmallScreenGuard } from "./SmallScreenGuard";
@@ -66,6 +68,14 @@ export function AppContent() {
     appSettings,
     career,
     dispatch,
+  });
+  useBackgroundMusic({
+    enabled: appSettings.audio.backgroundMusicEnabled,
+    volume: appSettings.audio.backgroundMusicVolume,
+  });
+  useInteractionSoundEffects({
+    enabled: appSettings.audio.soundEffectsEnabled,
+    volume: appSettings.audio.soundEffectsVolume,
   });
 
   return (

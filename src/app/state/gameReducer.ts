@@ -38,6 +38,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "start-next-season":
       return handleOffseasonAction(state, action);
     case "set-first-entry-guides-enabled":
+    case "set-background-music-enabled":
+    case "set-background-music-volume":
+    case "set-sound-effects-enabled":
+    case "set-sound-effects-volume":
     case "set-ai-news-enabled":
     case "set-message-news-frequency":
     case "mark-career-guide-seen":

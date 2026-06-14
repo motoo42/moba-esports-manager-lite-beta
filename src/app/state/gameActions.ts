@@ -46,6 +46,10 @@ export type GameAction =
   | { type: "confirm-free-agent-signing"; offerId: string }
   | { type: "cancel-free-agent-signing"; offerId: string }
   | { type: "start-next-season" }
+  | { type: "set-background-music-enabled"; enabled: boolean }
+  | { type: "set-background-music-volume"; volume: number }
+  | { type: "set-sound-effects-enabled"; enabled: boolean }
+  | { type: "set-sound-effects-volume"; volume: number }
   | { type: "set-first-entry-guides-enabled"; enabled: boolean }
   | { type: "set-ai-news-enabled"; enabled: boolean }
   | { type: "set-message-news-frequency"; frequency: MessageNewsFrequency }

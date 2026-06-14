@@ -5,20 +5,11 @@ import {
   appSettingDefinitions,
   loadDeveloperModeFlag,
   saveDeveloperModeFlag,
-  type AppSettingDefinition,
   type MessageNewsFrequency,
 } from "../domain/settings/appSettings";
 import { GameGuideModal } from "../features/game-guide";
 import { Button } from "../shared/ui/Button";
 import { Card } from "../shared/ui/Card";
-
-function getScopeLabel(scope: AppSettingDefinition["scope"]) {
-  return scope === "global" ? "전역 설정" : "커리어별 설정";
-}
-
-function getStatusLabel(status: AppSettingDefinition["status"]) {
-  return status === "active" ? "적용 중" : "후속 예정";
-}
 
 const messageNewsFrequencyOptions: Array<{
   description: string;
@@ -47,9 +38,11 @@ const messageNewsFrequencyOptions: Array<{
   },
 ];
 
+const maxBackgroundMusicVolume = 0.4;
+const backgroundMusicVolumeStep = maxBackgroundMusicVolume / 100;
+
 export function SettingsPage() {
   const appSettings = useGameSelector((state) => state.appSettings);
-  const career = useGameSelector((state) => state.career);
   const dispatch = useGameDispatch();
   const [isGameGuideOpen, setIsGameGuideOpen] = useState(false);
   const [isDeveloperModeEnabled, setIsDeveloperModeEnabled] = useState(
@@ -67,10 +60,12 @@ export function SettingsPage() {
     )
       ? appSettings.messageNews.frequency
       : "normal";
-  const selectedMessageNewsFrequencyDescription =
-    visibleMessageNewsFrequencyOptions.find(
-      (option) => option.id === selectedMessageNewsFrequency,
-    )?.description;
+  const backgroundMusicVolumePercent = Math.round(
+    (appSettings.audio.backgroundMusicVolume / maxBackgroundMusicVolume) * 100,
+  );
+  const soundEffectsVolumePercent = Math.round(
+    appSettings.audio.soundEffectsVolume * 100,
+  );
 
   useEffect(() => {
     if (!isDeveloperModeEnabled && appSettings.messageNews.frequency === "debug") {
@@ -89,27 +84,22 @@ export function SettingsPage() {
 
   return (
     <section className="stack settings-page">
+      <div className="settings-page-header">
+        <div>
+          <p className="eyebrow">Settings</p>
+          <h1>설정</h1>
+        </div>
+        <span className="settings-status-chip">Beta</span>
+      </div>
+
       <Card>
         <div className="settings-overview-grid">
-          <div className="settings-hero">
-            <div>
-              <p className="eyebrow">Settings</p>
-              <h1>설정</h1>
-              <p>
-                베타 기간에는 바로 동작하는 핵심 옵션부터 전역 설정과 커리어별
-                설정을 분리해 정리합니다.
-              </p>
-            </div>
-            <span className="settings-status-chip">Beta</span>
-          </div>
-
-          <div className="settings-section settings-guide-panel">
+          <div className="settings-section">
             <div className="settings-section-header">
               <div>
                 <span>Guide</span>
                 <strong>가이드 안내</strong>
               </div>
-              <span className="settings-option-badge">전역 / 즉시 적용</span>
             </div>
             <label className="settings-toggle-row">
               <input
@@ -123,27 +113,96 @@ export function SettingsPage() {
               />
               <span>
                 <strong>최초 진입 가이드 자동 표시</strong>
-                <small>
-                  새 커리어나 아직 보지 않은 주요 화면에서 짧은 가이드를
-                  자동으로 엽니다.
-                </small>
               </span>
             </label>
-            <p className="settings-save-note">
-              표시 여부는 전역 설정으로, 읽음 상태는 현재 커리어 저장 데이터로
-              관리합니다.
-            </p>
             <div className="settings-guide-actions">
               <Button variant="ghost" onClick={() => setIsGameGuideOpen(true)}>
                 게임 기초 가이드 보기
               </Button>
             </div>
-            {career && (
-              <p className="settings-save-note">
-                {career.userTeam.name} 커리어에는 가이드 읽음 상태와 플레이 흐름
-                관련 값이 저장됩니다.
-              </p>
-            )}
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <div>
+                <span>Audio</span>
+                <strong>오디오</strong>
+              </div>
+            </div>
+            <label className="settings-toggle-row">
+              <input
+                checked={appSettings.audio.backgroundMusicEnabled}
+                onChange={(event) =>
+                  dispatch(
+                    gameActions.setBackgroundMusicEnabled(event.target.checked),
+                  )
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>Synapse 배경음 재생</strong>
+              </span>
+            </label>
+            <div className="settings-field-row">
+              <label htmlFor="background-music-volume">
+                <strong>배경음 볼륨</strong>
+              </label>
+              <div className="settings-range-control">
+                <input
+                  id="background-music-volume"
+                  max={maxBackgroundMusicVolume}
+                  min="0"
+                  onChange={(event) =>
+                    dispatch(
+                      gameActions.setBackgroundMusicVolume(
+                        Number(event.target.value),
+                      ),
+                    )
+                  }
+                  step={backgroundMusicVolumeStep}
+                  type="range"
+                  value={appSettings.audio.backgroundMusicVolume}
+                />
+                <span>{backgroundMusicVolumePercent}%</span>
+              </div>
+            </div>
+            <label className="settings-toggle-row">
+              <input
+                checked={appSettings.audio.soundEffectsEnabled}
+                onChange={(event) =>
+                  dispatch(
+                    gameActions.setSoundEffectsEnabled(event.target.checked),
+                  )
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>효과음 재생</strong>
+              </span>
+            </label>
+            <div className="settings-field-row">
+              <label htmlFor="sound-effects-volume">
+                <strong>효과음 볼륨</strong>
+              </label>
+              <div className="settings-range-control">
+                <input
+                  id="sound-effects-volume"
+                  max="1"
+                  min="0"
+                  onChange={(event) =>
+                    dispatch(
+                      gameActions.setSoundEffectsVolume(
+                        Number(event.target.value),
+                      ),
+                    )
+                  }
+                  step="0.01"
+                  type="range"
+                  value={appSettings.audio.soundEffectsVolume}
+                />
+                <span>{soundEffectsVolumePercent}%</span>
+              </div>
+            </div>
           </div>
 
           <div className="settings-section">
@@ -152,7 +211,6 @@ export function SettingsPage() {
                 <span>Message / AI</span>
                 <strong>메시지 / AI</strong>
               </div>
-              <span className="settings-option-badge">전역 / 다음 턴</span>
             </div>
             <label className="settings-toggle-row">
               <input
@@ -164,18 +222,11 @@ export function SettingsPage() {
               />
               <span>
                 <strong>AI 뉴스 생성</strong>
-                <small>
-                  켜져 있으면 뉴스 후보를 서버 Gemini 파이프라인으로 보강합니다.
-                  실패해도 기존 템플릿 뉴스가 유지됩니다.
-                </small>
               </span>
             </label>
             <div className="settings-field-row">
               <label htmlFor="message-news-frequency">
                 <strong>메시지/뉴스 빈도</strong>
-                <small>
-                  메시지함과 뉴스 후보 생성 빈도를 플레이 템포에 맞춰 조절합니다.
-                </small>
               </label>
               <select
                 id="message-news-frequency"
@@ -195,29 +246,20 @@ export function SettingsPage() {
                 ))}
               </select>
             </div>
-            <p className="settings-save-note">
-              {selectedMessageNewsFrequencyDescription}
-            </p>
           </div>
 
-          <div className="settings-section settings-advanced-panel">
-            <div className="settings-section-header">
-              <div>
-                <span>Advanced</span>
-                <strong>고급 설정</strong>
+          {isDeveloperModeEnabled && (
+            <div className="settings-section settings-advanced-panel">
+              <div className="settings-section-header">
+                <div>
+                  <span>Advanced</span>
+                  <strong>고급 설정</strong>
+                </div>
               </div>
-              <span className="settings-option-badge">
-                {isDeveloperModeEnabled ? "개발자 모드" : "일반 모드"}
-              </span>
-            </div>
-            {isDeveloperModeEnabled ? (
               <>
                 <div className="settings-field-row">
                   <label htmlFor="developer-message-news-frequency">
                     <strong>개발자 뉴스 빈도</strong>
-                    <small>
-                      디버그 빈도는 테스트용으로 뉴스 생성 조건을 크게 완화합니다.
-                    </small>
                   </label>
                   <select
                     id="developer-message-news-frequency"
@@ -241,13 +283,8 @@ export function SettingsPage() {
                   개발자 모드 끄기
                 </Button>
               </>
-            ) : (
-              <p className="settings-save-note">
-                일반 플레이에서는 내부 테스트 옵션을 숨겨 설정 화면을 간결하게
-                유지합니다.
-              </p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -258,7 +295,6 @@ export function SettingsPage() {
               <span>Roadmap</span>
               <strong>후속 예정 설정</strong>
             </div>
-            <span className="settings-option-badge">압축 목록</span>
           </div>
           <div className="settings-planned-list">
             {plannedSettings.map((option) => (
@@ -266,10 +302,6 @@ export function SettingsPage() {
                 <div>
                   <strong>{option.title}</strong>
                   <p>{option.description}</p>
-                </div>
-                <div className="settings-planned-meta">
-                  <span>{getStatusLabel(option.status)}</span>
-                  <span>{getScopeLabel(option.scope)}</span>
                 </div>
               </article>
             ))}

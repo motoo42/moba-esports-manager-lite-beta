@@ -82,6 +82,18 @@ export const gameActions = {
   startNextSeason(): GameAction {
     return { type: "start-next-season" };
   },
+  setBackgroundMusicEnabled(enabled: boolean): GameAction {
+    return { type: "set-background-music-enabled", enabled };
+  },
+  setBackgroundMusicVolume(volume: number): GameAction {
+    return { type: "set-background-music-volume", volume };
+  },
+  setSoundEffectsEnabled(enabled: boolean): GameAction {
+    return { type: "set-sound-effects-enabled", enabled };
+  },
+  setSoundEffectsVolume(volume: number): GameAction {
+    return { type: "set-sound-effects-volume", volume };
+  },
   setFirstEntryGuidesEnabled(enabled: boolean): GameAction {
     return { type: "set-first-entry-guides-enabled", enabled };
   },

@@ -54,7 +54,7 @@ export const gameGuideSlides: GameGuideSlide[] = [
   {
     id: "competition-calendar",
     eyebrow: "Season",
-    title: "대회 현황과 캘린더로 시즌 흐름을 봅니다",
+    title: "대회와 일정을 확인합니다",
     body: "대회 현황은 순위와 토너먼트 흐름을, 시즌 캘린더는 앞으로의 경기 일정을 보여줍니다.",
     points: [
       "현재 대회 탭에서 순위표, 일정, 토너먼트를 확인합니다.",
@@ -65,7 +65,7 @@ export const gameGuideSlides: GameGuideSlide[] = [
   {
     id: "offseason-teams",
     eyebrow: "Market",
-    title: "스토브리그와 구단 정보는 장기 운영의 중심입니다",
+    title: "스토브리그로 전력을 바꿉니다",
     body: "스토브리그에서는 계약과 FA 영입으로 선수단을 재정비하고, LCK 구단 정보에서는 다른 팀의 전력과 로스터를 확인합니다.",
     points: [
       "스토브리그에서는 먼저 1군 5인 구성을 안정화합니다.",
@@ -76,7 +76,7 @@ export const gameGuideSlides: GameGuideSlide[] = [
   {
     id: "save-settings",
     eyebrow: "System",
-    title: "저장, 결산, 설정으로 커리어를 관리합니다",
+    title: "저장과 설정을 관리합니다",
     body: "시즌 결산은 지나온 성과를 정리하고, 설정은 가이드 표시 같은 플레이 환경을 조정합니다. 저장 메뉴는 긴 커리어를 이어가기 위한 안전장치입니다.",
     points: [
       "데이터 저장에서 커리어를 저장하거나 불러옵니다.",
