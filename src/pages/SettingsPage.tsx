@@ -6,6 +6,7 @@ import {
   loadDeveloperModeFlag,
   saveDeveloperModeFlag,
   type MessageNewsFrequency,
+  type ThemeMode,
 } from "../domain/settings/appSettings";
 import { GameGuideModal } from "../features/game-guide";
 import { Button } from "../shared/ui/Button";
@@ -38,6 +39,14 @@ const messageNewsFrequencyOptions: Array<{
   },
 ];
 
+const themeModeOptions: Array<{
+  id: ThemeMode;
+  label: string;
+}> = [
+  { id: "dark", label: "다크" },
+  { id: "light", label: "화이트" },
+];
+
 const maxBackgroundMusicVolume = 0.4;
 const backgroundMusicVolumeStep = maxBackgroundMusicVolume / 100;
 
@@ -66,6 +75,7 @@ export function SettingsPage() {
   const soundEffectsVolumePercent = Math.round(
     appSettings.audio.soundEffectsVolume * 100,
   );
+  const selectedThemeMode = appSettings.theme?.mode ?? "dark";
 
   useEffect(() => {
     if (!isDeveloperModeEnabled && appSettings.messageNews.frequency === "debug") {
@@ -94,6 +104,31 @@ export function SettingsPage() {
 
       <Card>
         <div className="settings-overview-grid">
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <div>
+                <span>Theme</span>
+                <strong>화면 테마</strong>
+              </div>
+            </div>
+            <div className="settings-segmented-control" role="group" aria-label="화면 테마">
+              {themeModeOptions.map((option) => (
+                <button
+                  className={
+                    selectedThemeMode === option.id
+                      ? "settings-segmented-button settings-segmented-button-active"
+                      : "settings-segmented-button"
+                  }
+                  key={option.id}
+                  onClick={() => dispatch(gameActions.setThemeMode(option.id))}
+                  type="button"
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="settings-section">
             <div className="settings-section-header">
               <div>

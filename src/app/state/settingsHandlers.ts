@@ -8,6 +8,7 @@ import {
   setMessageNewsFrequency,
   setSoundEffectsEnabled,
   setSoundEffectsVolume,
+  setThemeMode,
 } from "../../domain/settings/appSettings";
 import type { GameAction } from "./gameActions";
 import type { GameState } from "./gameState";
@@ -17,6 +18,7 @@ type SettingsAction = Extract<
   {
     type:
       | "set-ai-news-enabled"
+      | "set-theme-mode"
       | "set-background-music-enabled"
       | "set-background-music-volume"
       | "set-sound-effects-enabled"
@@ -36,6 +38,17 @@ export function handleSettingsAction(
       state.appSettings,
       action.enabled,
     );
+
+    saveAppSettings(appSettings);
+
+    return {
+      ...state,
+      appSettings,
+    };
+  }
+
+  if (action.type === "set-theme-mode") {
+    const appSettings = setThemeMode(state.appSettings, action.mode);
 
     saveAppSettings(appSettings);
 

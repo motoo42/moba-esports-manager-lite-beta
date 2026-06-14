@@ -16,7 +16,10 @@ import type {
   StrategyId,
   TrainingIntensity,
 } from "../../types/game";
-import type { MessageNewsFrequency } from "../../domain/settings/appSettings";
+import type {
+  MessageNewsFrequency,
+  ThemeMode,
+} from "../../domain/settings/appSettings";
 import type { AppRoute } from "../routes";
 
 export type GameAction =
@@ -46,6 +49,7 @@ export type GameAction =
   | { type: "confirm-free-agent-signing"; offerId: string }
   | { type: "cancel-free-agent-signing"; offerId: string }
   | { type: "start-next-season" }
+  | { type: "set-theme-mode"; mode: ThemeMode }
   | { type: "set-background-music-enabled"; enabled: boolean }
   | { type: "set-background-music-volume"; volume: number }
   | { type: "set-sound-effects-enabled"; enabled: boolean }

@@ -10,6 +10,7 @@ import { useBackgroundMusic } from "./hooks/useBackgroundMusic";
 import { useCareerProgressController } from "./hooks/useCareerProgressController";
 import { useInteractionSoundEffects } from "./hooks/useInteractionSoundEffects";
 import { useRouteSynchronization } from "./hooks/useRouteSynchronization";
+import { useThemeMode } from "./hooks/useThemeMode";
 import { AsianGamesDecisionModal } from "./modals/AsianGamesDecisionModal";
 import { SmallScreenGuard } from "./SmallScreenGuard";
 
@@ -68,6 +69,9 @@ export function AppContent() {
     appSettings,
     career,
     dispatch,
+  });
+  useThemeMode({
+    mode: appSettings.theme?.mode ?? "dark",
   });
   useBackgroundMusic({
     enabled: appSettings.audio.backgroundMusicEnabled,

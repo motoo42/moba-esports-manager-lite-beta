@@ -1,5 +1,8 @@
 export type AppSettings = {
   schemaVersion: 1;
+  theme: {
+    mode: ThemeMode;
+  };
   audio: {
     backgroundMusicEnabled: boolean;
     backgroundMusicVolume: number;
@@ -14,6 +17,8 @@ export type AppSettings = {
     frequency: MessageNewsFrequency;
   };
 };
+
+export type ThemeMode = "dark" | "light";
 
 export type MessageNewsFrequency = "low" | "normal" | "high" | "debug";
 
@@ -35,6 +40,9 @@ const developerModeStorageKey = "moba-esports-manager-lite:developer-mode";
 
 export const defaultAppSettings: AppSettings = {
   schemaVersion: 1,
+  theme: {
+    mode: "dark",
+  },
   audio: {
     backgroundMusicEnabled: true,
     backgroundMusicVolume: 0.14,
@@ -176,9 +184,14 @@ export function saveDeveloperModeFlag(enabled: boolean): void {
 
 export function normalizeAppSettings(value: unknown): AppSettings {
   const source = isRecord(value) ? value : {};
+  const theme = isRecord(source.theme) ? source.theme : {};
   const audio = isRecord(source.audio) ? source.audio : {};
   const guides = isRecord(source.guides) ? source.guides : {};
   const messageNews = isRecord(source.messageNews) ? source.messageNews : {};
+  const themeMode =
+    theme.mode === "dark" || theme.mode === "light"
+      ? theme.mode
+      : defaultAppSettings.theme.mode;
   const frequency =
     messageNews.frequency === "low" ||
     messageNews.frequency === "normal" ||
@@ -189,6 +202,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
 
   return {
     schemaVersion: 1,
+    theme: {
+      mode: themeMode,
+    },
     audio: {
       backgroundMusicEnabled:
         typeof audio.backgroundMusicEnabled === "boolean"
@@ -248,6 +264,19 @@ export function saveAppSettings(settings: AppSettings): void {
     appSettingsStorageKey,
     JSON.stringify(normalizeAppSettings(settings)),
   );
+}
+
+export function setThemeMode(
+  settings: AppSettings,
+  mode: ThemeMode,
+): AppSettings {
+  return {
+    ...settings,
+    theme: {
+      ...(settings.theme ?? defaultAppSettings.theme),
+      mode,
+    },
+  };
 }
 
 export function setFirstEntryGuidesEnabled(

@@ -5,7 +5,10 @@ import type {
 } from "../../domain/game-progress/progressCareer";
 import type { OffseasonContractOfferInput } from "../../domain/season";
 import type { ScrimRequestInput } from "../../domain/scrim";
-import type { MessageNewsFrequency } from "../../domain/settings/appSettings";
+import type {
+  MessageNewsFrequency,
+  ThemeMode,
+} from "../../domain/settings/appSettings";
 import type {
   AsianGamesPlayMode,
   CareerSave,
@@ -81,6 +84,9 @@ export const gameActions = {
   },
   startNextSeason(): GameAction {
     return { type: "start-next-season" };
+  },
+  setThemeMode(mode: ThemeMode): GameAction {
+    return { type: "set-theme-mode", mode };
   },
   setBackgroundMusicEnabled(enabled: boolean): GameAction {
     return { type: "set-background-music-enabled", enabled };
