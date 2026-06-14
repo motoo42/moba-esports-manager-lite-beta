@@ -20,11 +20,12 @@ import {
   getRecordByScheduleId,
   isLckRounds35Competition,
 } from "./competitionDashboardShared";
+import { CompetitionBracket, type CompetitionBracketColumn } from "./competitionBracket";
 import {
-  LckPlayoffMatchCard,
   createSlotFromMatchSide,
   createWinnerSlot,
   getPlayoffMatch,
+  toCompetitionBracketMatch,
   type LckPlayoffMatch,
   type LckPlayoffSlot,
 } from "./lckDashboardShared";
@@ -554,11 +555,42 @@ export function LckRounds34PostseasonPathView({
       ? "실제 경기 진행 중 · 전 경기 BO5 Fearless"
       : "현 순위 기준 예상 슬롯";
   const frameClassName = hasPostseasonSchedule
-    ? "lck-playoff-frame lck-postseason-frame"
-    : "lck-playoff-frame lck-postseason-projection-frame";
+    ? "lck-postseason-frame"
+    : "lck-postseason-projection-frame";
   const boardClassName = hasPostseasonSchedule
-    ? "lck-postseason-board"
-    : "lck-postseason-projection-board";
+    ? "lck-postseason-flow-board"
+    : "lck-postseason-projection-flow-board";
+  const flowHints: Record<string, string> = hasPostseasonSchedule
+    ? {
+        finals: "패자조 결승 승자가 최종 결승에서 승자조 결승 승자와 만납니다.",
+        "lower-round-1": "승자는 패자조 준결승으로, 패자는 탈락합니다.",
+        "lower-round-2": "승자는 패자조 결승으로, 패자는 최종 4위가 됩니다.",
+        "playoffs-round-1": "승자는 플레이오프 2라운드로, 패자는 패자조로 내려갑니다.",
+        "playoffs-round-2": "승자는 승자조 결승으로, 패자는 패자조 1라운드로 내려갑니다.",
+        "playoffs-round-3": "승자는 최종 결승으로, 패자는 패자조 결승으로 내려갑니다.",
+        "season-play-in": "두 팀이 플레이오프에 합류하고, 나머지는 탈락합니다.",
+        "worlds-path": "최종 1~3위는 Worlds 기본 후보, 4위는 MSI 보너스 조건을 따릅니다.",
+      }
+    : {
+        "playoffs-round-1": "Legend 3~4위는 플레이오프 1라운드로 직행합니다.",
+        "playoffs-round-2": "Legend 1~2위는 플레이오프 2라운드로 직행합니다.",
+        "season-locked": "Rise 4~5위는 후속 포스트시즌에서 제외됩니다.",
+        "season-play-in": "Legend 5위와 Rise 1~3위가 플레이오프 남은 두 자리를 놓고 경쟁합니다.",
+      };
+  const bracketColumns: CompetitionBracketColumn[] = pathGroups.map((round) => ({
+    align:
+      round.id === "worlds-path" || round.matches.length === 1 ? "center" : "spread",
+    id: round.id,
+    matches: round.matches.map((match) =>
+      toCompetitionBracketMatch({
+        flowHint: flowHints[round.id],
+        isCurrent: match.stageName === currentPostseasonStageName,
+        match,
+        meta: hasPostseasonSchedule ? "BO5" : "예상",
+      }),
+    ),
+    title: round.title,
+  }));
 
   return (
     <section className="competition-panel lck-rounds-main-panel">
@@ -569,34 +601,13 @@ export function LckRounds34PostseasonPathView({
         </div>
         <span className="panel-note">{bracketStatus}</span>
       </div>
-      <div className={frameClassName}>
-        <div className={boardClassName}>
-          {pathGroups.map((round) => (
-            <section
-              className={`lck-playoff-round lck-postseason-round lck-postseason-slot-${round.id} ${
-                round.matches.some(
-                  (match) => match.stageName === currentPostseasonStageName,
-                )
-                  ? "lck-playoff-round-current"
-                  : ""
-              }`}
-              key={round.id}
-            >
-              <h3>{round.title}</h3>
-              <div className="lck-playoff-match-stack">
-                {round.matches.map((match) => (
-                  <LckPlayoffMatchCard
-                    isCurrent={match.stageName === currentPostseasonStageName}
-                    key={match.id}
-                    match={match}
-                    userTeamId={userTeamId}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </div>
+      <CompetitionBracket
+        boardClassName={boardClassName}
+        className={frameClassName}
+        columns={bracketColumns}
+        minWidth={hasPostseasonSchedule ? "1140px" : "760px"}
+        userTeamId={userTeamId}
+      />
     </section>
   );
 }

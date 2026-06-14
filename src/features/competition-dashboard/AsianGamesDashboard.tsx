@@ -20,32 +20,18 @@ import {
   getScoreLabel,
   getSelectionStarsFromForm,
 } from "./competitionDashboardShared";
+import {
+  CompetitionBracket,
+  type CompetitionBracketColumn,
+  type CompetitionBracketMatch,
+  type CompetitionBracketSlot,
+} from "./competitionBracket";
 
 type AsianGamesDashboardTab = "overview" | "schedule" | "bracket";
 function isAsianGamesDashboardTab(
   value: CompetitionSubPage | null | undefined,
 ): value is AsianGamesDashboardTab {
   return value === "overview" || value === "schedule" || value === "bracket";
-}
-
-function getAsianGamesTeamClass({
-  record,
-  teamId,
-}: {
-  record: MatchRecord | undefined;
-  teamId: string;
-}) {
-  const classes = ["asian-games-team-slot"];
-
-  if (teamId === asianGamesKoreaTeamId) {
-    classes.push("asian-games-team-korea");
-  }
-
-  if (record?.winnerTeamId === teamId) {
-    classes.push("asian-games-team-winner");
-  }
-
-  return classes.join(" ");
 }
 
 function getAsianGamesRosterRoleLabel(role: string) {
@@ -271,50 +257,86 @@ function AsianGamesScheduleView({
   );
 }
 
-function AsianGamesBracketMatchCard({
+function createAsianGamesBracketSlot({
+  label,
+  match,
+  record,
+  side,
+}: {
+  label: string;
+  match: MatchSchedule | undefined;
+  record: MatchRecord | undefined;
+  side: "blue" | "red";
+}): CompetitionBracketSlot {
+  if (!match) {
+    return {
+      detail: "진출팀 대기",
+      isPlaceholder: true,
+      label,
+      teamName: label,
+    };
+  }
+
+  const teamId = side === "blue" ? match.blueTeamId : match.redTeamId;
+  const teamName = side === "blue" ? match.blueTeamName : match.redTeamName;
+
+  return {
+    detail: record ? getScoreLabel(record) : `${getDateLabel(match.scheduledDate)} · ${getFormatLabel(match)}`,
+    isWinner: record?.winnerTeamId === teamId,
+    label,
+    teamId,
+    teamName,
+  };
+}
+
+function createAsianGamesBracketMatch({
+  currentStageName,
+  flowHint,
   match,
   placeholder,
   record,
+  title,
 }: {
-  match?: MatchSchedule;
+  currentStageName: string;
+  flowHint: string;
+  match: MatchSchedule | undefined;
   placeholder: string;
-  record?: MatchRecord;
-}) {
-  if (!match) {
-    return (
-      <article className="asian-games-bracket-match asian-games-bracket-placeholder">
-        <strong>{placeholder}</strong>
-        <span>진출팀 대기</span>
-      </article>
-    );
-  }
-
-  return (
-    <article
-      className={`asian-games-bracket-match ${
-        match.blueTeamId === asianGamesKoreaTeamId ||
-        match.redTeamId === asianGamesKoreaTeamId
-          ? "asian-games-bracket-korea"
-          : ""
-      }`}
-    >
-      <header>
-        <strong>{getAsianGamesStageLabel(match.stageName)}</strong>
-        <span>
-          {getDateLabel(match.scheduledDate)} · {getFormatLabel(match)}
-        </span>
-      </header>
-      <div className="asian-games-bracket-slots">
-        <span className={getAsianGamesTeamClass({ teamId: match.blueTeamId, record })}>
-          {match.blueTeamName}
-        </span>
-        <span className={getAsianGamesTeamClass({ teamId: match.redTeamId, record })}>
-          {match.redTeamName}
-        </span>
-      </div>
-      <small>{getScoreLabel(record)}</small>
-    </article>
-  );
+  record: MatchRecord | undefined;
+  title: string;
+}): CompetitionBracketMatch {
+  return {
+    flowHint,
+    id: match?.id ?? placeholder,
+    isCurrent: match?.stageName === currentStageName && match.status === "scheduled",
+    meta: match ? getFormatLabel(match) : "대기",
+    slots: match
+      ? [
+          createAsianGamesBracketSlot({
+            label: "블루",
+            match,
+            record,
+            side: "blue",
+          }),
+          createAsianGamesBracketSlot({
+            label: "레드",
+            match,
+            record,
+            side: "red",
+          }),
+        ]
+      : [
+          {
+            detail: "진출팀 대기",
+            isPlaceholder: true,
+            label: "대진",
+            teamName: placeholder,
+          },
+        ],
+    subtitle: match
+      ? `${getDateLabel(match.scheduledDate)} · ${getScoreLabel(record)}`
+      : placeholder,
+    title,
+  };
 }
 
 function AsianGamesBracketView({
@@ -326,56 +348,6 @@ function AsianGamesBracketView({
 }) {
   const recordsByScheduleId = getRecordByScheduleId(records);
   const scheduleById = new Map(competition.schedule.map((match) => [match.id, match]));
-  const bracketSlots = [
-    {
-      id: "qf-a",
-      className: "asian-games-slot-qf-a asian-games-bracket-node-source",
-      matchId: asianGamesMatchIds.quarterfinalA,
-      placeholder: "대한민국 vs 마카오",
-    },
-    {
-      id: "qf-b",
-      className: "asian-games-slot-qf-b asian-games-bracket-node-source",
-      matchId: asianGamesMatchIds.quarterfinalB,
-      placeholder: "일본 vs 홍콩",
-    },
-    {
-      id: "qf-c",
-      className: "asian-games-slot-qf-c asian-games-bracket-node-source",
-      matchId: asianGamesMatchIds.quarterfinalC,
-      placeholder: "중국 vs 인도",
-    },
-    {
-      id: "qf-d",
-      className: "asian-games-slot-qf-d asian-games-bracket-node-source",
-      matchId: asianGamesMatchIds.quarterfinalD,
-      placeholder: "대만 vs 베트남",
-    },
-    {
-      id: "sf-a",
-      className: "asian-games-slot-sf-a asian-games-bracket-node-merge",
-      matchId: asianGamesMatchIds.semifinalA,
-      placeholder: "8강 A/B 승자",
-    },
-    {
-      id: "sf-b",
-      className: "asian-games-slot-sf-b asian-games-bracket-node-merge",
-      matchId: asianGamesMatchIds.semifinalB,
-      placeholder: "8강 C/D 승자",
-    },
-    {
-      id: "final",
-      className: "asian-games-slot-final asian-games-bracket-node-merge",
-      matchId: asianGamesMatchIds.final,
-      placeholder: "4강 승자 결승",
-    },
-    {
-      id: "bronze",
-      className: "asian-games-slot-bronze asian-games-bracket-node-merge",
-      matchId: asianGamesMatchIds.bronzeMedal,
-      placeholder: "4강 패자 동메달전",
-    },
-  ];
   const medals = competition.completed
     ? {
         gold: competition.qualifiedTeamNames[0] ?? "미정",
@@ -383,6 +355,125 @@ function AsianGamesBracketView({
         bronze: competition.qualifiedTeamNames[2] ?? "미정",
       }
     : null;
+  const bracketColumns: CompetitionBracketColumn[] = [
+    {
+      align: "spread",
+      id: "quarterfinals",
+      matches: [
+        {
+          matchId: asianGamesMatchIds.quarterfinalA,
+          placeholder: "대한민국 vs 마카오",
+          title: "8강 A",
+        },
+        {
+          matchId: asianGamesMatchIds.quarterfinalB,
+          placeholder: "일본 vs 홍콩",
+          title: "8강 B",
+        },
+        {
+          matchId: asianGamesMatchIds.quarterfinalC,
+          placeholder: "중국 vs 인도",
+          title: "8강 C",
+        },
+        {
+          matchId: asianGamesMatchIds.quarterfinalD,
+          placeholder: "대만 vs 베트남",
+          title: "8강 D",
+        },
+      ].map((item) => {
+        const match = scheduleById.get(item.matchId);
+
+        return createAsianGamesBracketMatch({
+          currentStageName: competition.currentStageName,
+          flowHint: "승자는 4강으로 진출합니다.",
+          match,
+          placeholder: item.placeholder,
+          record: recordsByScheduleId.get(item.matchId),
+          title: item.title,
+        });
+      }),
+      title: "8강",
+    },
+    {
+      align: "spread",
+      id: "semifinals",
+      matches: [
+        {
+          matchId: asianGamesMatchIds.semifinalA,
+          placeholder: "8강 A/B 승자",
+          title: "4강 A",
+        },
+        {
+          matchId: asianGamesMatchIds.semifinalB,
+          placeholder: "8강 C/D 승자",
+          title: "4강 B",
+        },
+      ].map((item) => {
+        const match = scheduleById.get(item.matchId);
+
+        return createAsianGamesBracketMatch({
+          currentStageName: competition.currentStageName,
+          flowHint: "승자는 결승, 패자는 동메달전으로 이동합니다.",
+          match,
+          placeholder: item.placeholder,
+          record: recordsByScheduleId.get(item.matchId),
+          title: item.title,
+        });
+      }),
+      title: "4강",
+    },
+    {
+      align: "center",
+      id: "medal-matches",
+      matches: [
+        {
+          matchId: asianGamesMatchIds.final,
+          placeholder: "4강 승자 결승",
+          title: "결승",
+        },
+        {
+          matchId: asianGamesMatchIds.bronzeMedal,
+          placeholder: "4강 패자 동메달전",
+          title: "동메달전",
+        },
+      ].map((item) => {
+        const match = scheduleById.get(item.matchId);
+
+        return createAsianGamesBracketMatch({
+          currentStageName: competition.currentStageName,
+          flowHint: "결과는 메달 보드에 반영됩니다.",
+          match,
+          placeholder: item.placeholder,
+          record: recordsByScheduleId.get(item.matchId),
+          title: item.title,
+        });
+      }),
+      title: "결승 / 동메달전",
+    },
+  ];
+  const resultCards = [
+    {
+      id: "gold",
+      label: "금메달",
+      title: "금메달",
+      tone: "gold" as const,
+      value: medals?.gold ?? "미정",
+    },
+    {
+      id: "silver",
+      label: "은메달",
+      title: "은메달",
+      tone: "silver" as const,
+      value: medals?.silver ?? "미정",
+    },
+    {
+      id: "bronze",
+      label: "동메달",
+      title: "동메달",
+      tone: "bronze" as const,
+      value: medals?.bronze ?? "미정",
+    },
+  ];
 
   return (
     <section className="competition-panel asian-games-bracket-panel">
@@ -393,49 +484,14 @@ function AsianGamesBracketView({
         </div>
         <span className="panel-note">8강 · 4강 · 동메달전 · 결승</span>
       </div>
-      <div className="asian-games-bracket-frame">
-        <div className="asian-games-bracket-board">
-          <h3 className="asian-games-bracket-heading asian-games-heading-qf">8강</h3>
-          <h3 className="asian-games-bracket-heading asian-games-heading-sf">4강</h3>
-          <h3 className="asian-games-bracket-heading asian-games-heading-medal">
-            결승 / 동메달전
-          </h3>
-          <h3 className="asian-games-bracket-heading asian-games-heading-result">
-            메달
-          </h3>
-          {bracketSlots.map((slot) => (
-            <div
-              className={`asian-games-bracket-node ${slot.className} ${
-                scheduleById.get(slot.matchId)?.stageName ===
-                competition.currentStageName
-                  ? "asian-games-bracket-node-current"
-                  : ""
-              }`}
-              key={slot.id}
-            >
-              <AsianGamesBracketMatchCard
-                match={scheduleById.get(slot.matchId)}
-                placeholder={slot.placeholder}
-                record={recordsByScheduleId.get(slot.matchId)}
-              />
-            </div>
-          ))}
-          <section className="asian-games-medal-board">
-            <div className="asian-games-medal-card asian-games-medal-gold">
-              <span>금메달</span>
-              <strong>{medals?.gold ?? "미정"}</strong>
-            </div>
-            <div className="asian-games-medal-card asian-games-medal-silver">
-              <span>은메달</span>
-              <strong>{medals?.silver ?? "미정"}</strong>
-            </div>
-            <div className="asian-games-medal-card asian-games-medal-bronze">
-              <span>동메달</span>
-              <strong>{medals?.bronze ?? "미정"}</strong>
-            </div>
-          </section>
-        </div>
-      </div>
+      <CompetitionBracket
+        boardClassName="asian-games-flow-board"
+        columns={bracketColumns}
+        minWidth="780px"
+        resultCards={resultCards}
+        resultTitle="메달"
+        userTeamId={asianGamesKoreaTeamId}
+      />
     </section>
   );
 }

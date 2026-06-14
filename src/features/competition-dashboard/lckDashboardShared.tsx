@@ -1,4 +1,8 @@
 import type { CompetitionState, MatchRecord, MatchSchedule } from "../../types/game";
+import type {
+  CompetitionBracketMatch,
+  CompetitionBracketSlot,
+} from "./competitionBracket";
 import { getDateLabel, getFormatLabel } from "./competitionDashboardShared";
 
 export type LckPlayoffSlot = {
@@ -74,59 +78,37 @@ export function createSlotFromMatchSide({
   };
 }
 
-export function LckPlayoffTeamSlot({
-  slot,
-  userTeamId,
-}: {
-  slot: LckPlayoffSlot;
-  userTeamId: string | undefined;
-}) {
-  const classes = [
-    "lck-playoff-team",
-    slot.isPlaceholder ? "lck-playoff-team-placeholder" : "",
-    slot.teamId === userTeamId ? "lck-playoff-team-user" : "",
-    slot.isWinner ? "lck-playoff-team-winner" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <div className={classes}>
-      <span>{slot.label}</span>
-      <strong>{slot.teamName}</strong>
-      <small>{slot.detail}</small>
-    </div>
-  );
+export function toCompetitionBracketSlot(
+  slot: LckPlayoffSlot,
+): CompetitionBracketSlot {
+  return {
+    detail: slot.detail,
+    isPlaceholder: slot.isPlaceholder,
+    isWinner: slot.isWinner,
+    label: slot.label,
+    teamId: slot.teamId,
+    teamName: slot.teamName,
+  };
 }
 
-export function LckPlayoffMatchCard({
+export function toCompetitionBracketMatch({
+  flowHint,
   isCurrent,
   match,
-  userTeamId,
+  meta = "BO5",
 }: {
+  flowHint?: string;
   isCurrent: boolean;
   match: LckPlayoffMatch;
-  userTeamId: string | undefined;
-}) {
-  return (
-    <article
-      className={`lck-playoff-match ${
-        isCurrent ? "lck-playoff-match-current" : ""
-      }`}
-    >
-      <header>
-        <strong>{match.title}</strong>
-        <span>{isCurrent ? `현재 라운드 · ${match.subtitle}` : match.subtitle}</span>
-      </header>
-      <div className="lck-playoff-match-slots">
-        {match.slots.map((slot) => (
-          <LckPlayoffTeamSlot
-            key={`${match.id}-${slot.label}`}
-            slot={slot}
-            userTeamId={userTeamId}
-          />
-        ))}
-      </div>
-    </article>
-  );
+  meta?: string;
+}): CompetitionBracketMatch {
+  return {
+    flowHint,
+    id: match.id,
+    isCurrent,
+    meta,
+    slots: match.slots.map(toCompetitionBracketSlot),
+    subtitle: match.subtitle,
+    title: match.title,
+  };
 }

@@ -24,6 +24,12 @@ import {
   getUserTeamId,
   groupMatchesByDate,
 } from "./competitionDashboardShared";
+import {
+  CompetitionBracket,
+  type CompetitionBracketColumn,
+  type CompetitionBracketMatch,
+  type CompetitionBracketSlot,
+} from "./competitionBracket";
 
 type MsiDashboardTab = "overview" | "schedule" | "bracket";
 function isMsiDashboardTab(
@@ -536,27 +542,24 @@ function getMsiBracketMatch(competition: CompetitionState, matchId: string) {
   return competition.schedule.find((match) => match.id === matchId);
 }
 
-function MsiBracketTeam({
+function createMsiBracketSlot({
   label,
   match,
   record,
   side,
-  userTeamId,
 }: {
   label: string;
   match: MatchSchedule | undefined;
   record: MatchRecord | undefined;
   side: "blue" | "red";
-  userTeamId: string | undefined;
-}) {
+}): CompetitionBracketSlot {
   if (!match) {
-    return (
-      <div className="msi-bracket-team msi-bracket-team-placeholder">
-        <span>{label}</span>
-        <strong>대기 중</strong>
-        <small>이전 경기 결과 대기</small>
-      </div>
-    );
+    return {
+      detail: "이전 경기 결과 대기",
+      isPlaceholder: true,
+      label,
+      teamName: "대기 중",
+    };
   }
 
   const teamId = side === "blue" ? match.blueTeamId : match.redTeamId;
@@ -571,147 +574,67 @@ function MsiBracketTeam({
       ? record.score.redWins
       : record.score.blueWins
     : undefined;
-  const classes = [
-    "msi-bracket-team",
-    teamId === userTeamId ? "msi-bracket-team-user" : "",
-    record?.winnerTeamId === teamId ? "msi-bracket-team-winner" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const isWinner = record?.winnerTeamId === teamId;
 
-  return (
-    <div className={classes}>
-      <span>{label}</span>
-      <strong>{teamName}</strong>
-      <small>
-        {record
-          ? `${teamScore}-${opponentScore}${record.winnerTeamId === teamId ? " 승" : ""}`
-          : `${getMsiLeagueForTeam(teamId)} · ${getFormatLabel(match)}`}
-      </small>
-    </div>
-  );
+  return {
+    detail: record
+      ? `${teamScore}-${opponentScore}${isWinner ? " 승리" : " 패배"}`
+      : `${getMsiLeagueForTeam(teamId)} · ${getFormatLabel(match)}`,
+    isWinner,
+    label,
+    teamId,
+    teamName,
+  };
 }
 
-function MsiBracketMatchCard({
+function createMsiBracketMatch({
   competition,
+  flowHint,
   matchId,
   placeholderLabels,
   recordsByScheduleId,
   title,
-  userTeamId,
 }: {
   competition: CompetitionState;
+  flowHint: string;
   matchId: string;
   placeholderLabels: [string, string];
   recordsByScheduleId: Map<string, MatchRecord>;
   title: string;
-  userTeamId: string | undefined;
-}) {
+}): CompetitionBracketMatch {
   const match = getMsiBracketMatch(competition, matchId);
   const record = match ? recordsByScheduleId.get(match.id) : undefined;
   const expectedFormatLabel = getMsiExpectedFormatLabel(matchId);
   const isCurrent = match ? isMsiStageCurrent(match.stageName, competition) : false;
-  const isBo5 = match?.format === "bo5" || msiBo5MatchIds.has(matchId);
 
-  return (
-    <article
-      className={`msi-bracket-match ${isCurrent ? "msi-bracket-match-current" : ""}`}
-    >
-      <header>
-        <strong>{title}</strong>
-        <span className={isBo5 ? "msi-format-badge msi-format-badge-feature" : "msi-format-badge"}>
-          {expectedFormatLabel}
-        </span>
-      </header>
-      <MsiBracketTeam
-        label={placeholderLabels[0]}
-        match={match}
-        record={record}
-        side="blue"
-        userTeamId={userTeamId}
-      />
-      <MsiBracketTeam
-        label={placeholderLabels[1]}
-        match={match}
-        record={record}
-        side="red"
-        userTeamId={userTeamId}
-      />
-      <small className="msi-bracket-match-status">
-        {getMsiMatchStatusLabel(match, record, expectedFormatLabel)}
-      </small>
-    </article>
-  );
-}
-
-function MsiBracketRoundView({
-  competition,
-  recordsByScheduleId,
-  round,
-  userTeamId,
-}: {
-  competition: CompetitionState;
-  recordsByScheduleId: Map<string, MatchRecord>;
-  round: MsiBracketRound;
-  userTeamId: string | undefined;
-}) {
-  const isCurrent = isMsiStageCurrent(round.stageName, competition);
-
-  return (
-    <section
-      className={`msi-bracket-round ${isCurrent ? "msi-bracket-round-current" : ""}`}
-    >
-      <h3>{round.title}</h3>
-      <div className="msi-bracket-match-stack">
-        {round.matchIds.map((matchId, index) => (
-          <MsiBracketMatchCard
-            competition={competition}
-            key={matchId}
-            matchId={matchId}
-            placeholderLabels={round.placeholders[index] ?? ["대기 중", "대기 중"]}
-            recordsByScheduleId={recordsByScheduleId}
-            title={`${round.title} ${round.matchIds.length > 1 ? index + 1 : ""}`.trim()}
-            userTeamId={userTeamId}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function MsiBracketSection({
-  className,
-  competition,
-  recordsByScheduleId,
-  rounds,
-  title,
-  userTeamId,
-}: {
-  className: string;
-  competition: CompetitionState;
-  recordsByScheduleId: Map<string, MatchRecord>;
-  rounds: MsiBracketRound[];
-  title: string;
-  userTeamId: string | undefined;
-}) {
-  return (
-    <article className={`msi-bracket-section ${className}`}>
-      <header>
-        <strong>{title}</strong>
-      </header>
-      <div className="msi-bracket-round-grid">
-        {rounds.map((round) => (
-          <MsiBracketRoundView
-            competition={competition}
-            key={round.id}
-            recordsByScheduleId={recordsByScheduleId}
-            round={round}
-            userTeamId={userTeamId}
-          />
-        ))}
-      </div>
-    </article>
-  );
+  return {
+    flowHint,
+    id: matchId,
+    isCurrent,
+    meta: expectedFormatLabel,
+    slots: [
+      createMsiBracketSlot({
+        label: placeholderLabels[0],
+        match,
+        record,
+        side: "blue",
+      }),
+      createMsiBracketSlot({
+        label: placeholderLabels[1],
+        match,
+        record,
+        side: "red",
+      }),
+    ],
+    subtitle: match
+      ? `${getMsiStageLabel(match.stageName)} · ${getMsiMatchStatusLabel(
+          match,
+          record,
+          expectedFormatLabel,
+        )}`
+      : `${expectedFormatLabel} · 대기`,
+    title,
+  };
 }
 
 function MsiBracketView({
@@ -726,6 +649,51 @@ function MsiBracketView({
   const recordsByScheduleId = getRecordByScheduleId(records);
   const championName = competition.winnerTeamName ?? "우승팀 미정";
   const runnerUpName = competition.qualifiedTeamNames[1] ?? "준우승팀 미정";
+  const flowHints: Record<string, string> = {
+    "grand-finals": "최종 결승 승자가 MSI 우승팀으로 기록됩니다.",
+    "lower-final": "승자는 최종 결승으로, 패자는 MSI 3위권으로 정리됩니다.",
+    "lower-round-1": "승자는 패자조 2라운드로, 패자는 탈락합니다.",
+    "lower-round-2": "승자는 패자조 3라운드로, 패자는 탈락합니다.",
+    "lower-round-3": "승자는 패자조 결승으로, 패자는 탈락합니다.",
+    "play-in-final": "승자는 토너먼트 본선 마지막 시드로 합류합니다.",
+    "play-in-semifinals": "승자는 플레이-인 결승으로 진출합니다.",
+    "upper-final": "승자는 최종 결승으로, 패자는 패자조 결승으로 내려갑니다.",
+    "upper-round-1": "승자는 승자조 2라운드로, 패자는 패자조 1라운드로 내려갑니다.",
+    "upper-round-2": "승자는 승자조 결승으로, 패자는 패자조 2라운드로 내려갑니다.",
+  };
+  const bracketRounds = [
+    ...msiPlayInRounds,
+    ...msiUpperRounds,
+    ...msiLowerRounds,
+    msiGrandFinalRound,
+  ];
+  const bracketColumns: CompetitionBracketColumn[] = bracketRounds.map((round) => ({
+    align: round.matchIds.length === 1 ? "center" : "spread",
+    id: round.id,
+    matches: round.matchIds.map((matchId, index) =>
+      createMsiBracketMatch({
+        competition,
+        flowHint: flowHints[round.id],
+        matchId,
+        placeholderLabels: round.placeholders[index] ?? ["대기 중", "대기 중"],
+        recordsByScheduleId,
+        title: `${round.title} ${round.matchIds.length > 1 ? index + 1 : ""}`.trim(),
+      }),
+    ),
+    title: round.title,
+  }));
+  const resultCards = [
+    {
+      detail: competition.completed
+        ? `준우승: ${runnerUpName}`
+        : "최종 결승 결과 대기",
+      id: "msi-champion",
+      label: competition.completed ? "우승팀" : "대기 중",
+      title: "우승",
+      tone: "gold" as const,
+      value: championName,
+    },
+  ];
 
   return (
     <section className="competition-panel msi-main-panel">
@@ -736,51 +704,20 @@ function MsiBracketView({
         </div>
         <span className="panel-note">플레이-인 승자가 승자조/패자조 토너먼트에 합류합니다</span>
       </div>
-      <div className="msi-bracket-frame">
-        <div className="msi-bracket-board">
-          <MsiBracketSection
-            className="msi-bracket-section-play-in"
-            competition={competition}
-            recordsByScheduleId={recordsByScheduleId}
-            rounds={msiPlayInRounds}
-            title="플레이-인"
-            userTeamId={userTeamId}
-          />
-          <MsiBracketSection
-            className="msi-bracket-section-upper"
-            competition={competition}
-            recordsByScheduleId={recordsByScheduleId}
-            rounds={msiUpperRounds}
-            title="승자조"
-            userTeamId={userTeamId}
-          />
-          <MsiBracketSection
-            className="msi-bracket-section-lower"
-            competition={competition}
-            recordsByScheduleId={recordsByScheduleId}
-            rounds={msiLowerRounds}
-            title="패자조"
-            userTeamId={userTeamId}
-          />
-          <MsiBracketSection
-            className="msi-bracket-section-final"
-            competition={competition}
-            recordsByScheduleId={recordsByScheduleId}
-            rounds={[msiGrandFinalRound]}
-            title="결승"
-            userTeamId={userTeamId}
-          />
-          <article className="msi-champion-card">
-            <span>{competition.completed ? "우승팀" : "대기 중"}</span>
-            <strong>{championName}</strong>
-            <small>
-              {competition.completed
-                ? `준우승: ${runnerUpName}`
-                : "최종 결승 결과 대기"}
-            </small>
-          </article>
-        </div>
+      <div className="competition-bracket-flow-legend">
+        <span>플레이-인</span>
+        <span>승자조</span>
+        <span>패자조</span>
+        <span>결승</span>
       </div>
+      <CompetitionBracket
+        boardClassName="msi-flow-board"
+        columns={bracketColumns}
+        minWidth="1420px"
+        resultCards={resultCards}
+        resultTitle="우승"
+        userTeamId={userTeamId}
+      />
     </section>
   );
 }

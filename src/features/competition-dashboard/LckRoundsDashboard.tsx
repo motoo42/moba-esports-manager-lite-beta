@@ -36,12 +36,13 @@ import {
   isLckRounds35Competition,
   isLateLckRoundsCompetition,
 } from "./competitionDashboardShared";
+import { CompetitionBracket, type CompetitionBracketColumn } from "./competitionBracket";
 import { LckRounds34PostseasonPathView } from "./LckRoundsPostseasonPath";
 import {
-  LckPlayoffMatchCard,
   createSlotFromMatchSide,
   createWinnerSlot,
   getPlayoffMatch,
+  toCompetitionBracketMatch,
   type LckPlayoffMatch,
   type LckPlayoffSlot,
 } from "./lckDashboardShared";
@@ -792,6 +793,35 @@ function LckRoundsTournamentView({
         )
       ? "포스트시즌 진행 중 · 승자가 다음 라운드로 진출"
       : "정규시즌 진행 중 · 슬롯은 최종 순위 기준으로 확정";
+  const flowHints: Record<string, string> = {
+    final: "승자는 LCK Rounds 1-2 우승팀으로 기록됩니다.",
+    "round-1": "승자는 준결승에서 1·2번 시드와 만납니다.",
+    semifinals: "승자는 결승으로 진출합니다.",
+  };
+  const bracketColumns: CompetitionBracketColumn[] = playoffRounds.map((round) => ({
+    align: round.matches.length === 1 ? "center" : "spread",
+    id: round.id,
+    matches: round.matches.map((match) =>
+      toCompetitionBracketMatch({
+        flowHint: flowHints[round.id],
+        isCurrent: match.stageName === currentPlayoffStageName,
+        match,
+      }),
+    ),
+    title: round.title,
+  }));
+  const resultCards = [
+    {
+      detail: finalists[1]
+        ? `준우승: ${finalists[1].teamName}`
+        : "결승 결과가 확정되면 우승팀과 준우승팀이 표시됩니다.",
+      id: "lck-rounds-12-champion",
+      label: "우승팀",
+      title: "우승",
+      tone: "gold" as const,
+      value: competition.winnerTeamName ?? "우승팀 미정",
+    },
+  ];
 
   return (
     <section className="competition-panel lck-rounds-main-panel">
@@ -802,46 +832,14 @@ function LckRoundsTournamentView({
         </div>
         <span className="panel-note">{bracketStatus}</span>
       </div>
-      <div className="lck-playoff-frame">
-        <div className="lck-playoff-bracket">
-          {playoffRounds.map((round) => (
-            <section
-              className={`lck-playoff-round ${
-                round.matches.some(
-                  (match) => match.stageName === currentPlayoffStageName,
-                )
-                  ? "lck-playoff-round-current"
-                  : ""
-              }`}
-              key={round.id}
-            >
-              <h3>{round.title}</h3>
-              <div className="lck-playoff-match-stack">
-                {round.matches.map((match) => (
-                  <LckPlayoffMatchCard
-                    isCurrent={match.stageName === currentPlayoffStageName}
-                    key={match.id}
-                    match={match}
-                    userTeamId={userTeamId}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-          <section className="lck-playoff-round lck-playoff-champion-round">
-            <h3>우승</h3>
-            <article className="lck-playoff-champion-card">
-              <span>우승팀</span>
-              <strong>{competition.winnerTeamName ?? "우승팀 미정"}</strong>
-              <small>
-                {finalists[1]
-                  ? `준우승: ${finalists[1].teamName}`
-                  : "결승 결과가 확정되면 우승팀과 준우승팀이 표시됩니다."}
-              </small>
-            </article>
-          </section>
-        </div>
-      </div>
+      <CompetitionBracket
+        boardClassName="lck-rounds12-flow-board"
+        columns={bracketColumns}
+        minWidth="760px"
+        resultCards={resultCards}
+        resultTitle="우승"
+        userTeamId={userTeamId}
+      />
     </section>
   );
 }
