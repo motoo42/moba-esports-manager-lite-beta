@@ -60,6 +60,26 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function createScrimReportBody({
+  bullets,
+  footer,
+  title,
+}: {
+  bullets: string[];
+  footer?: string;
+  title: string;
+}) {
+  return [
+    title,
+    ...bullets.map((bullet) => `- ${bullet}`),
+    ...(footer ? [footer] : []),
+  ].join("\n");
+}
+
+function createScrimParagraph(sentences: string[]) {
+  return sentences.join(" ");
+}
+
 export function createEmptyScrimState(): ScrimState {
   return {
     requests: [],
@@ -356,7 +376,11 @@ export function requestScrim(
       category: "training",
       priority: "normal",
       title: "스크림 요청 발송",
-      body: `${opponentOption.teamName}에게 ${scheduledDateLabel} ${input.matchCount}경기 스크림을 요청했습니다. 승낙 여부는 다음날 메시지함으로 안내됩니다.`,
+      body: createScrimParagraph([
+        `${opponentOption.teamName}에게 ${scheduledDateLabel} ${input.matchCount}경기 스크림을 요청했습니다.`,
+        `현재 기준 수락 예상치는 ${opponentOption.acceptanceChance}%이며, 상대가 수락할 경우 해당 날짜 전략/훈련 탭의 스크림 메뉴에서 일정을 진행할 수 있습니다.`,
+        "승낙 여부는 다음날 메시지함으로 안내되므로, 같은 날짜의 공식 경기와 주간 계획을 함께 확인해두세요.",
+      ]),
       createdTurn: career.seasonState.currentTurn,
       source: "club",
       relatedTeamId: input.opponentTeamId,
@@ -397,14 +421,38 @@ function resolveScrimRequest(career: CareerSave, request: ScrimSchedule) {
 
 function createScrimDecisionBody(request: ScrimSchedule) {
   if (request.status === "accepted") {
-    return `${request.opponentTeamName}이 ${request.scheduledDateLabel} ${request.matchCount}경기 스크림 요청을 수락했습니다. 해당 날짜에는 전략/훈련 탭의 스크림 메뉴에서 진행할 수 있습니다.`;
+    return createScrimReportBody({
+      title: "스크림 요청 결과",
+      bullets: [
+        `${request.opponentTeamName}이 ${request.scheduledDateLabel} ${request.matchCount}경기 스크림 요청을 수락했습니다.`,
+        "해당 날짜에는 전략/훈련 탭의 스크림 메뉴에서 진행할 수 있습니다.",
+        "스크림은 공식 경기보다 부담은 작지만 선수단 피로도와 경기력에 영향을 줍니다.",
+      ],
+      footer: "권장 행동: 경기 전날에는 피로도 누적을 보고 진행 여부를 다시 판단하세요.",
+    });
   }
 
   if (request.decisionReason === "opponent-official-match") {
-    return `${request.opponentTeamName}이 ${request.scheduledDateLabel} 공식 경기 일정으로 인해 ${request.matchCount}경기 스크림 요청을 거절했습니다.`;
+    return createScrimReportBody({
+      title: "스크림 요청 결과",
+      bullets: [
+        `${request.opponentTeamName}이 ${request.scheduledDateLabel} 공식 경기 일정으로 인해 요청을 거절했습니다.`,
+        `요청 경기 수는 ${request.matchCount}경기였습니다.`,
+        "공식 경기가 있는 팀은 해당 날짜 스크림을 수락하지 않습니다.",
+      ],
+      footer: "권장 행동: 일정이 비어 있는 다른 날짜나 상대 팀을 다시 선택하세요.",
+    });
   }
 
-  return `${request.opponentTeamName}이 ${request.scheduledDateLabel} ${request.matchCount}경기 스크림 요청을 거절했습니다. 다른 날짜나 상대를 다시 확인해보세요.`;
+  return createScrimReportBody({
+    title: "스크림 요청 결과",
+    bullets: [
+      `${request.opponentTeamName}이 ${request.scheduledDateLabel} ${request.matchCount}경기 스크림 요청을 거절했습니다.`,
+      `요청 당시 수락 예상치는 ${request.acceptanceChance}%였습니다.`,
+      "전력 차이와 일정 상황에 따라 같은 상대라도 다른 날짜에는 결과가 달라질 수 있습니다.",
+    ],
+    footer: "권장 행동: 더 가까운 전력의 상대나 다른 날짜로 다시 요청해보세요.",
+  });
 }
 
 export function resolvePendingScrimRequests(career: CareerSave): CareerSave {
@@ -509,6 +557,18 @@ function getScrimFatigueDelta(matchCount: number) {
   return scrimMatchMultipliers[matchCount] ?? 2;
 }
 
+function formatScrimFormText(formDelta: number) {
+  if (formDelta > 0) {
+    return `경기력 +${formDelta}`;
+  }
+
+  if (formDelta < 0) {
+    return `경기력 ${formDelta}`;
+  }
+
+  return "경기력 변화 없음";
+}
+
 function applyScrimStatusEffects({
   career,
   fatigueDelta,
@@ -556,12 +616,7 @@ function getScrimResultSummary({
   userWins: number;
   opponentWins: number;
 }) {
-  const formText =
-    formDelta > 0
-      ? `경기력 +${formDelta}`
-      : formDelta < 0
-        ? `경기력 ${formDelta}`
-        : "경기력 변화 없음";
+  const formText = formatScrimFormText(formDelta);
 
   return `${request.opponentTeamName} 상대 ${request.matchCount}경기 결과 ${userWins}승 ${opponentWins}패. ${formText}, 피로도 +${fatigueDelta}.`;
 }
@@ -593,6 +648,7 @@ export function runTodayScrim(career: CareerSave): RunTodayScrimResult {
   const formDelta = getScrimFormDelta(userWins, opponentWins, request.matchCount);
   const fatigueDelta = getScrimFatigueDelta(request.matchCount);
   const roundedFatigueDelta = Math.round(fatigueDelta);
+  const formText = formatScrimFormText(formDelta);
   const resultSummary = getScrimResultSummary({
     fatigueDelta: roundedFatigueDelta,
     formDelta,
@@ -635,7 +691,16 @@ export function runTodayScrim(career: CareerSave): RunTodayScrimResult {
         category: "training",
         priority: "important",
         title: "스크림 결과 보고",
-        body: resultSummary,
+        body: createScrimReportBody({
+          title: "스크림 결과 리포트",
+          bullets: [
+            `${request.opponentTeamName} 상대 ${request.matchCount}경기 결과는 ${userWins}승 ${opponentWins}패입니다.`,
+            `${formText}가 선수단 상태에 반영됐습니다.`,
+            `선발 선수단 피로도는 +${roundedFatigueDelta}만큼 상승했습니다.`,
+            "스크림 승률이 좋을수록 경기력 상승폭이 커지지만, 피로도 누적도 함께 관리해야 합니다.",
+          ],
+          footer: "권장 행동: 다음 공식 경기 전 선발 컨디션과 피로도를 확인하세요.",
+        }),
         createdTurn: career.seasonState.currentTurn,
         source: "club",
         relatedTeamId: request.opponentTeamId,

@@ -3,7 +3,13 @@ export type AppSettings = {
   guides: {
     showFirstEntryGuides: boolean;
   };
+  messageNews: {
+    aiNewsEnabled: boolean;
+    frequency: MessageNewsFrequency;
+  };
 };
+
+export type MessageNewsFrequency = "low" | "normal" | "high" | "debug";
 
 export type AppSettingScope = "global" | "career";
 
@@ -24,6 +30,10 @@ export const defaultAppSettings: AppSettings = {
   schemaVersion: 1,
   guides: {
     showFirstEntryGuides: true,
+  },
+  messageNews: {
+    aiNewsEnabled: true,
+    frequency: "normal",
   },
 };
 
@@ -70,8 +80,8 @@ export const appSettingDefinitions: AppSettingDefinition[] = [
     description:
       "메시지함과 뉴스 생성 빈도를 커리어별 진행 템포에 맞춰 조정합니다.",
     scope: "career",
-    applyTiming: "다음 턴부터 적용 예정",
-    status: "planned",
+    applyTiming: "다음 턴부터 적용",
+    status: "active",
   },
   {
     id: "accessibility",
@@ -95,6 +105,14 @@ function getBrowserStorage(): Storage | null {
 export function normalizeAppSettings(value: unknown): AppSettings {
   const source = isRecord(value) ? value : {};
   const guides = isRecord(source.guides) ? source.guides : {};
+  const messageNews = isRecord(source.messageNews) ? source.messageNews : {};
+  const frequency =
+    messageNews.frequency === "low" ||
+    messageNews.frequency === "normal" ||
+    messageNews.frequency === "high" ||
+    messageNews.frequency === "debug"
+      ? messageNews.frequency
+      : defaultAppSettings.messageNews.frequency;
 
   return {
     schemaVersion: 1,
@@ -103,6 +121,13 @@ export function normalizeAppSettings(value: unknown): AppSettings {
         typeof guides.showFirstEntryGuides === "boolean"
           ? guides.showFirstEntryGuides
           : defaultAppSettings.guides.showFirstEntryGuides,
+    },
+    messageNews: {
+      aiNewsEnabled:
+        typeof messageNews.aiNewsEnabled === "boolean"
+          ? messageNews.aiNewsEnabled
+          : defaultAppSettings.messageNews.aiNewsEnabled,
+      frequency,
     },
   };
 }
@@ -145,6 +170,32 @@ export function setFirstEntryGuidesEnabled(
     guides: {
       ...settings.guides,
       showFirstEntryGuides: enabled,
+    },
+  };
+}
+
+export function setAiNewsEnabled(
+  settings: AppSettings,
+  enabled: boolean,
+): AppSettings {
+  return {
+    ...settings,
+    messageNews: {
+      ...settings.messageNews,
+      aiNewsEnabled: enabled,
+    },
+  };
+}
+
+export function setMessageNewsFrequency(
+  settings: AppSettings,
+  frequency: MessageNewsFrequency,
+): AppSettings {
+  return {
+    ...settings,
+    messageNews: {
+      ...settings.messageNews,
+      frequency,
     },
   };
 }

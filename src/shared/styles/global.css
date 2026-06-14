@@ -937,6 +937,18 @@ select {
   opacity: 0.62;
 }
 
+.shell-progress-notice {
+  margin: 0 18px 12px;
+  border: 1px solid rgba(251, 191, 36, 0.38);
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.45;
+  padding: 0.8rem 1rem;
+}
+
 .save-manager {
   display: grid;
   gap: 8px;
@@ -8042,6 +8054,56 @@ h1 {
   white-space: nowrap;
 }
 
+.inbox-detail-chips {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.inbox-read-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 950;
+  line-height: 1;
+  padding: 0.35rem 0.58rem;
+  white-space: nowrap;
+}
+
+.inbox-read-chip::before {
+  border-radius: 999px;
+  content: "";
+  flex: 0 0 auto;
+  height: 0.42rem;
+  width: 0.42rem;
+}
+
+.inbox-read-chip-read {
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.inbox-read-chip-read::before {
+  background: #94a3b8;
+}
+
+.inbox-read-chip-unread {
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  background: rgba(14, 165, 233, 0.15);
+  color: #bae6fd;
+}
+
+.inbox-read-chip-unread::before {
+  background: #38bdf8;
+  box-shadow: 0 0 0.7rem rgba(56, 189, 248, 0.7);
+}
+
 .inbox-priority-normal {
   background: #94a3b8;
   color: #0f172a;
@@ -8147,31 +8209,6 @@ h1 {
   flex-wrap: wrap;
   gap: 0.55rem;
   margin-top: 1rem;
-}
-
-.inbox-detail-meta {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 1.1rem 0 0;
-}
-
-.inbox-detail-meta div {
-  background: rgba(248, 250, 252, 0.06);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 6px;
-  padding: 0.75rem;
-}
-
-.inbox-detail-meta dt {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.inbox-detail-meta dd {
-  color: var(--text);
-  font-weight: 800;
-  margin: 0.2rem 0 0;
 }
 
 .inbox-empty,
@@ -8335,7 +8372,39 @@ button.opponent-analysis-panel:focus-visible {
   color: var(--text);
 }
 
+.settings-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.35fr);
+  gap: 0.75rem;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 0.85rem;
+}
+
+.settings-field-row label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.settings-field-row strong {
+  color: var(--text);
+}
+
+.settings-field-row select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.82);
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  padding: 0.62rem 0.75rem;
+}
+
 .settings-toggle-row small,
+.settings-field-row small,
 .settings-save-note {
   margin: 0;
   color: var(--muted);
@@ -9185,6 +9254,10 @@ button.opponent-analysis-panel:focus-visible {
   padding: 0.65rem;
 }
 
+.settings-field-row {
+  padding: 0.65rem;
+}
+
 .settings-save-note {
   line-height: 1.4;
 }
@@ -9298,6 +9371,7 @@ button.opponent-analysis-panel:focus-visible {
   .match-hub-grid,
   .match-week-layout,
   .offseason-overview-grid,
+  .settings-field-row,
   .settings-overview-grid,
   .roster-management-header,
   .lineup-board,

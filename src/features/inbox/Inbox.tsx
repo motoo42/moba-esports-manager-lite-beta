@@ -70,6 +70,10 @@ function getPriorityClass(message: CareerMessage) {
   return "inbox-priority-normal";
 }
 
+function getReadStatusClass(message: CareerMessage) {
+  return message.read ? "inbox-read-chip-read" : "inbox-read-chip-unread";
+}
+
 function getUnreadCount(messages: CareerMessage[]) {
   return messages.filter((message) => !message.read).length;
 }
@@ -86,24 +90,43 @@ function getFilterCount(messages: CareerMessage[], filter: InboxFilter) {
   return messages.filter((message) => message.category === filter).length;
 }
 
-function getMessageAction(message: CareerMessage) {
+function getMessageActions(message: CareerMessage) {
+  if (message.title === "다음 경기 일정 안내") {
+    return [
+      {
+        label: "로스터 관리로 이동",
+        route: "roster-builder" as const,
+        subPage: "main" as const,
+      },
+      {
+        label: "전략/훈련으로 이동",
+        route: "match-week" as const,
+        subPage: "report" as const,
+      },
+    ];
+  }
+
   if (message.title === "주간 선수단 리포트") {
-    return {
-      label: "주간 계획으로 이동",
-      route: "match-week" as const,
-      subPage: "plan" as const,
-    };
+    return [
+      {
+        label: "주간 계획으로 이동",
+        route: "match-week" as const,
+        subPage: "plan" as const,
+      },
+    ];
   }
 
   if (message.title === "스토브리그 주간 요약") {
-    return {
-      label: "스토브리그로 이동",
-      route: "offseason" as const,
-      subPage: "overview" as const,
-    };
+    return [
+      {
+        label: "스토브리그로 이동",
+        route: "offseason" as const,
+        subPage: "overview" as const,
+      },
+    ];
   }
 
-  return null;
+  return [];
 }
 
 function MessageBody({ body }: { body: string }) {
@@ -154,7 +177,7 @@ function MessageDetail({
     );
   }
 
-  const messageAction = getMessageAction(message);
+  const messageActions = getMessageActions(message);
 
   return (
     <section className="inbox-detail">
@@ -167,37 +190,33 @@ function MessageDetail({
           <h2>{message.title}</h2>
           <span>{message.dateLabel}</span>
         </div>
-        <span className={`inbox-priority-chip ${getPriorityClass(message)}`}>
-          {careerMessagePriorityLabels[message.priority]}
-        </span>
+        <div className="inbox-detail-chips" aria-label="메시지 상태">
+          <span className={`inbox-priority-chip ${getPriorityClass(message)}`}>
+            {careerMessagePriorityLabels[message.priority]}
+          </span>
+          <span className={`inbox-read-chip ${getReadStatusClass(message)}`}>
+            {message.read ? "읽음" : "안읽음"}
+          </span>
+        </div>
       </div>
       <MessageBody body={message.body} />
-      {messageAction && (
+      {messageActions.length > 0 && (
         <div className="inbox-detail-actions">
-          <Button
-            onClick={() =>
-              onGoTo(messageAction.route, {
-                subPage: messageAction.subPage,
-              })
-            }
-            type="button"
-          >
-            {messageAction.label}
-          </Button>
+          {messageActions.map((messageAction) => (
+            <Button
+              key={messageAction.label}
+              onClick={() =>
+                onGoTo(messageAction.route, {
+                  subPage: messageAction.subPage,
+                })
+              }
+              type="button"
+            >
+              {messageAction.label}
+            </Button>
+          ))}
         </div>
       )}
-      <dl className="inbox-detail-meta">
-        <div>
-          <dt>상태</dt>
-          <dd>{message.read ? "읽음" : "읽지 않음"}</dd>
-        </div>
-        {message.relatedCompetitionId && (
-          <div>
-            <dt>관련 대회</dt>
-            <dd>{message.relatedCompetitionId}</dd>
-          </div>
-        )}
-      </dl>
     </section>
   );
 }

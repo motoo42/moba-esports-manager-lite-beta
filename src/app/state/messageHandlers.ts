@@ -1,4 +1,5 @@
 import {
+  applyAiNewsToCareerMessage,
   markAllCareerMessagesRead,
   markCareerMessageRead,
 } from "../../domain/messages";
@@ -7,7 +8,12 @@ import type { GameState } from "./gameState";
 
 type MessageAction = Extract<
   GameAction,
-  { type: "mark-message-read" | "mark-all-messages-read" }
+  {
+    type:
+      | "apply-ai-news-message"
+      | "mark-message-read"
+      | "mark-all-messages-read";
+  }
 >;
 
 export function handleMessageAction(
@@ -22,6 +28,17 @@ export function handleMessageAction(
     return {
       ...state,
       career: markAllCareerMessagesRead(state.career),
+    };
+  }
+
+  if (action.type === "apply-ai-news-message") {
+    return {
+      ...state,
+      career: applyAiNewsToCareerMessage({
+        career: state.career,
+        messageId: action.messageId,
+        ...action.news,
+      }),
     };
   }
 

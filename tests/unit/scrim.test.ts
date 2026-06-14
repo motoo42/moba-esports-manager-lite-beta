@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createInitialGameState, gameReducer } from "../../src/app/state";
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
 import {
   getScrimDateOptions,
@@ -51,6 +52,32 @@ function moveCareerDate(career: CareerSave, dateKey: string): CareerSave {
   };
 }
 
+function createAcceptedScrimDayCareer() {
+  const career = createCompetitionCareer();
+  const input = getFirstRequestableInput(career);
+  const requested = requestScrim(career, input);
+  const pending = requested.seasonState.scrim?.requests[0] as ScrimSchedule;
+  const accepted: ScrimSchedule = {
+    ...pending,
+    status: "accepted",
+    resolvedDateKey: requested.seasonState.currentDateKey,
+    resolvedDateLabel: requested.seasonState.currentDateLabel,
+  };
+
+  return moveCareerDate(
+    {
+      ...requested,
+      seasonState: {
+        ...requested.seasonState,
+        scrim: {
+          requests: [accepted],
+        },
+      },
+    },
+    input.scheduledDateKey,
+  );
+}
+
 describe("scrim system", () => {
   it("exposes requestable dates while disabling same-day requests", () => {
     const career = createCompetitionCareer();
@@ -74,6 +101,10 @@ describe("scrim system", () => {
       scheduledDateKey: input.scheduledDateKey,
       matchCount: 3,
     });
+    expect(
+      requested.messages?.find((message) => message.title === "스크림 요청 발송")
+        ?.body,
+    ).not.toContain("\n");
 
     const nextDay = addDaysToDateKey(career.seasonState.currentDateKey, 1);
     const resolved = resolvePendingScrimRequests(
@@ -87,28 +118,7 @@ describe("scrim system", () => {
   });
 
   it("runs an accepted scrim without changing official records", () => {
-    const career = createCompetitionCareer();
-    const input = getFirstRequestableInput(career);
-    const requested = requestScrim(career, input);
-    const pending = requested.seasonState.scrim?.requests[0] as ScrimSchedule;
-    const accepted: ScrimSchedule = {
-      ...pending,
-      status: "accepted",
-      resolvedDateKey: requested.seasonState.currentDateKey,
-      resolvedDateLabel: requested.seasonState.currentDateLabel,
-    };
-    const scrimDayCareer = moveCareerDate(
-      {
-        ...requested,
-        seasonState: {
-          ...requested.seasonState,
-          scrim: {
-            requests: [accepted],
-          },
-        },
-      },
-      input.scheduledDateKey,
-    );
+    const scrimDayCareer = createAcceptedScrimDayCareer();
     const starterId = Object.values(scrimDayCareer.userTeam.roster).find(Boolean);
     const previousStarter = scrimDayCareer.lckPlayers.find(
       (player) => player.id === starterId,
@@ -126,5 +136,22 @@ describe("scrim system", () => {
     expect(result.career.userTeam.wins).toBe(scrimDayCareer.userTeam.wins);
     expect(result.career.userTeam.losses).toBe(scrimDayCareer.userTeam.losses);
     expect(nextStarter?.status.fatigue).not.toBe(previousStarter?.status.fatigue);
+  });
+
+  it("blocks next-day progress while an accepted scrim is still unplayed today", () => {
+    const scrimDayCareer = createAcceptedScrimDayCareer();
+    const state = {
+      ...createInitialGameState(),
+      career: scrimDayCareer,
+      route: "match-week" as const,
+    };
+    const nextState = gameReducer(state, { type: "progress-season" });
+
+    expect(nextState.career?.seasonState.currentDateKey).toBe(
+      scrimDayCareer.seasonState.currentDateKey,
+    );
+    expect(nextState.career?.seasonState.scrim?.requests[0].status).toBe(
+      "accepted",
+    );
   });
 });

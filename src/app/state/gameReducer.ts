@@ -38,10 +38,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "start-next-season":
       return handleOffseasonAction(state, action);
     case "set-first-entry-guides-enabled":
+    case "set-ai-news-enabled":
+    case "set-message-news-frequency":
     case "mark-career-guide-seen":
       return handleSettingsAction(state, action);
     case "mark-message-read":
     case "mark-all-messages-read":
+    case "apply-ai-news-message":
       return handleMessageAction(state, action);
     case "set-asian-games-play-mode":
     case "request-scrim":

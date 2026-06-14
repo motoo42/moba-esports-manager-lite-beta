@@ -4,6 +4,7 @@ import { AppRouteRenderer } from "./AppRouteRenderer";
 import { useGameDispatch, useGameSelector } from "./GameProvider";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useAsianGamesDecision } from "./hooks/useAsianGamesDecision";
+import { useAiNewsPipeline } from "./hooks/useAiNewsPipeline";
 import { useAutoSaveController } from "./hooks/useAutoSaveController";
 import { useCareerProgressController } from "./hooks/useCareerProgressController";
 import { useRouteSynchronization } from "./hooks/useRouteSynchronization";
@@ -13,12 +14,13 @@ import { SmallScreenGuard } from "./SmallScreenGuard";
 export function AppContent() {
   const location = useLocation();
   const career = useGameSelector((state) => state.career);
+  const appSettings = useGameSelector((state) => state.appSettings);
   const route = useGameSelector((state) => state.route);
   const selectedCompetitionId = useGameSelector(
     (state) => state.selectedCompetitionId,
   );
   const dispatch = useGameDispatch();
-  const { handleProgress, isProgressing, progressOverlay } =
+  const { handleProgress, isProgressing, progressNotice, progressOverlay } =
     useCareerProgressController({
       career,
       dispatch,
@@ -60,6 +62,11 @@ export function AppContent() {
     disabled: isProgressing || Boolean(asianGamesDecisionState),
     isProgressing,
   });
+  useAiNewsPipeline({
+    appSettings,
+    career,
+    dispatch,
+  });
 
   return (
     <>
@@ -67,6 +74,7 @@ export function AppContent() {
         career={career}
         isProgressBlocked={Boolean(asianGamesDecisionState)}
         isProgressing={isProgressing}
+        progressNotice={progressNotice}
         progressOverlay={progressOverlay}
         route={renderedRoute}
         selectedCompetitionId={renderedCompetitionId}

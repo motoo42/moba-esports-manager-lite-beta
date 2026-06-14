@@ -5,6 +5,7 @@ import type {
 } from "../../domain/game-progress/progressCareer";
 import type { OffseasonContractOfferInput } from "../../domain/season";
 import type { ScrimRequestInput } from "../../domain/scrim";
+import type { MessageNewsFrequency } from "../../domain/settings/appSettings";
 import type {
   AsianGamesPlayMode,
   CareerSave,
@@ -84,6 +85,12 @@ export const gameActions = {
   setFirstEntryGuidesEnabled(enabled: boolean): GameAction {
     return { type: "set-first-entry-guides-enabled", enabled };
   },
+  setAiNewsEnabled(enabled: boolean): GameAction {
+    return { type: "set-ai-news-enabled", enabled };
+  },
+  setMessageNewsFrequency(frequency: MessageNewsFrequency): GameAction {
+    return { type: "set-message-news-frequency", frequency };
+  },
   markCareerGuideSeen(guideId: CareerGuideId): GameAction {
     return { type: "mark-career-guide-seen", guideId };
   },
@@ -92,6 +99,17 @@ export const gameActions = {
   },
   markAllMessagesRead(): GameAction {
     return { type: "mark-all-messages-read" };
+  },
+  applyAiNewsMessage({
+    body,
+    messageId,
+    title,
+  }: {
+    body: string;
+    messageId: string;
+    title: string;
+  }): GameAction {
+    return { type: "apply-ai-news-message", messageId, news: { body, title } };
   },
   setStrategy(strategy: StrategyId): GameAction {
     return { type: "set-strategy", strategy };

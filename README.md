@@ -180,4 +180,5 @@ main
 - `docs/beta-test-guide.md`
 - `docs/architecture.md`
 - `docs/season-calendar.md`
+- `docs/design-guidelines.md`
 - `docs/ui-design-decisions.md`

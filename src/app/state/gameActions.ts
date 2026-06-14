@@ -10,11 +10,13 @@ import type {
   CareerSave,
   CareerGuideId,
   CompetitionId,
+  CareerMessage,
   Player,
   Role,
   StrategyId,
   TrainingIntensity,
 } from "../../types/game";
+import type { MessageNewsFrequency } from "../../domain/settings/appSettings";
 import type { AppRoute } from "../routes";
 
 export type GameAction =
@@ -45,9 +47,16 @@ export type GameAction =
   | { type: "cancel-free-agent-signing"; offerId: string }
   | { type: "start-next-season" }
   | { type: "set-first-entry-guides-enabled"; enabled: boolean }
+  | { type: "set-ai-news-enabled"; enabled: boolean }
+  | { type: "set-message-news-frequency"; frequency: MessageNewsFrequency }
   | { type: "mark-career-guide-seen"; guideId: CareerGuideId }
   | { type: "mark-message-read"; messageId: string }
   | { type: "mark-all-messages-read" }
+  | {
+      type: "apply-ai-news-message";
+      messageId: string;
+      news: Pick<CareerMessage, "body" | "title">;
+    }
   | { type: "set-strategy"; strategy: StrategyId }
   | { type: "set-training-intensity"; trainingIntensity: TrainingIntensity }
   | { type: "request-scrim"; request: ScrimRequestInput }

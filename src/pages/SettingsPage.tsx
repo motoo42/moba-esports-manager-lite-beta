@@ -4,6 +4,7 @@ import { gameActions } from "../app/state";
 import {
   appSettingDefinitions,
   type AppSettingDefinition,
+  type MessageNewsFrequency,
 } from "../domain/settings/appSettings";
 import { GameGuideModal } from "../features/game-guide";
 import { Button } from "../shared/ui/Button";
@@ -16,6 +17,33 @@ function getScopeLabel(scope: AppSettingDefinition["scope"]) {
 function getStatusLabel(status: AppSettingDefinition["status"]) {
   return status === "active" ? "적용 중" : "후속 예정";
 }
+
+const messageNewsFrequencyOptions: Array<{
+  description: string;
+  id: MessageNewsFrequency;
+  label: string;
+}> = [
+  {
+    id: "low",
+    label: "낮음",
+    description: "큰 업셋이나 강한 이슈만 뉴스 후보로 만듭니다.",
+  },
+  {
+    id: "normal",
+    label: "기본",
+    description: "실제 플레이 기준의 절제된 메시지 빈도입니다.",
+  },
+  {
+    id: "high",
+    label: "높음",
+    description: "일반 승패 리뷰도 더 자주 확인합니다.",
+  },
+  {
+    id: "debug",
+    label: "디버그",
+    description: "테스트를 위해 유저 경기 후 뉴스 후보를 최대한 생성합니다.",
+  },
+];
 
 export function SettingsPage() {
   const appSettings = useGameSelector((state) => state.appSettings);
@@ -83,6 +111,64 @@ export function SettingsPage() {
                 관련 값이 저장됩니다.
               </p>
             )}
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <div>
+                <span>Developer</span>
+                <strong>개발자/실험 옵션</strong>
+              </div>
+              <span className="settings-option-badge">전역 / 다음 턴</span>
+            </div>
+            <label className="settings-toggle-row">
+              <input
+                checked={appSettings.messageNews.aiNewsEnabled}
+                onChange={(event) =>
+                  dispatch(gameActions.setAiNewsEnabled(event.target.checked))
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>AI 뉴스 생성</strong>
+                <small>
+                  켜져 있으면 뉴스 후보를 서버 Gemini 파이프라인으로 보강합니다.
+                  실패해도 기존 템플릿 뉴스가 유지됩니다.
+                </small>
+              </span>
+            </label>
+            <div className="settings-field-row">
+              <label htmlFor="message-news-frequency">
+                <strong>메시지/뉴스 빈도</strong>
+                <small>
+                  디버그 모드는 테스트 편의를 위해 뉴스 생성 조건을 완화합니다.
+                </small>
+              </label>
+              <select
+                id="message-news-frequency"
+                onChange={(event) =>
+                  dispatch(
+                    gameActions.setMessageNewsFrequency(
+                      event.target.value as MessageNewsFrequency,
+                    ),
+                  )
+                }
+                value={appSettings.messageNews.frequency}
+              >
+                {messageNewsFrequencyOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="settings-save-note">
+              {
+                messageNewsFrequencyOptions.find(
+                  (option) => option.id === appSettings.messageNews.frequency,
+                )?.description
+              }
+            </p>
           </div>
         </div>
       </Card>

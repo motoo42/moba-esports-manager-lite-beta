@@ -136,6 +136,20 @@ function getNotableMovesForWeek({
     .slice(0, 4);
 }
 
+function createWeeklySummaryBody(week: number, moves: NotableOffseasonMove[]) {
+  const marketTone =
+    moves.length >= 3
+      ? "시장 상위권 선수들의 이동이 이어지며 다음 주 협상 경쟁도 더 치열해질 수 있습니다."
+      : "큰 폭의 연쇄 이동은 아니지만, 주요 선수의 행선지가 정해지며 시장 구도가 조금씩 정리되고 있습니다.";
+
+  return [
+    `${week}주차 스토브리그 주요 이동`,
+    ...moves.map((move) => `- ${move.label}`),
+    `시장 흐름: ${marketTone}`,
+    "권장 행동: 같은 포지션의 FA 후보와 우리 팀 예산 상황을 다시 비교하세요.",
+  ].join("\n");
+}
+
 export function createOffseasonWeeklySummaryMessages({
   nextCareer,
   previousCareer,
@@ -167,9 +181,7 @@ export function createOffseasonWeeklySummaryMessages({
       category: "transfer",
       priority: "normal",
       title: "스토브리그 주간 요약",
-      body: `${previousWeek}주차 주요 스토브리그 움직임입니다. ${notableMoves
-        .map((move) => move.label)
-        .join(", ")}.`,
+      body: createWeeklySummaryBody(previousWeek, notableMoves),
       createdTurn: nextCareer.seasonState.currentTurn,
       source: "offseason",
     },

@@ -4,6 +4,7 @@ import {
 } from "../../domain/game-progress/progressCareer";
 import { setAsianGamesPlayMode } from "../../domain/season";
 import {
+  getTodayAcceptedScrim,
   requestScrim,
   resolvePendingScrimRequests,
   runTodayScrim,
@@ -27,6 +28,10 @@ type SeasonProgressAction = Extract<
 
 function progressCareerAndResolveScrims(state: GameState) {
   if (!state.career) {
+    return state;
+  }
+
+  if (getTodayAcceptedScrim(state.career)) {
     return state;
   }
 

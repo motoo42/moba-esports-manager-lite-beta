@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   appendCareerMessages,
   appendOffseasonLogMessages,
+  createAiNewsFactsForMessage,
   createSquadReportMessages,
   createProgressMessages,
   maxCareerMessages,
@@ -9,7 +10,8 @@ import {
 import { createInitialCareer } from "../../src/domain/career/createInitialCareer";
 import { normalizeCareerSave } from "../../src/domain/career/normalizeCareerSave";
 import { completeStoveLeague } from "../../src/domain/season";
-import type { CareerSave, MatchSchedule } from "../../src/types/game";
+import { defaultAppSettings } from "../../src/domain/settings/appSettings";
+import type { CareerSave, MatchRecord, MatchResult, MatchSchedule } from "../../src/types/game";
 
 function createCompetitionCareer() {
   const preseasonCareer = createInitialCareer("T1");
@@ -325,6 +327,103 @@ describe("career messages", () => {
     expect(scheduleMessage?.title).toBe("다음 경기 일정 안내");
     expect(scheduleMessage?.title.length).toBeLessThanOrEqual(14);
     expect(scheduleMessage?.body).toContain(match.stageName);
+  });
+
+  it("creates debug-frequency media news candidates for ordinary user matches", () => {
+    const previousCareer = createCompetitionCareer();
+    const match = findUserMatch(previousCareer);
+    const userTeamId =
+      match.blueTeamName === previousCareer.userTeam.name
+        ? match.blueTeamId
+        : match.redTeamId;
+    const record: MatchRecord = {
+      id: "debug-user-record",
+      competitionId: match.competitionId,
+      createdAtTurn: previousCareer.seasonState.currentTurn + 1,
+      draft: undefined,
+      log: [],
+      scheduleId: match.id,
+      score: {
+        blueWins: 2,
+        redWins: 1,
+      },
+      stageName: match.stageName,
+      userResult: "win",
+      week: match.week,
+      winnerSide: match.blueTeamId === userTeamId ? "blue" : "red",
+      winnerTeamId: userTeamId,
+      winnerTeamName: previousCareer.userTeam.name,
+      winProbability: 0.5,
+    };
+    const lastMatch: MatchResult = {
+      draftPower: 0,
+      log: [],
+      opponentPower: 0,
+      teamPower: 0,
+      winner: "user",
+      winProbability: 0.5,
+    };
+    const nextCareer = {
+      ...previousCareer,
+      seasonState: {
+        ...previousCareer.seasonState,
+        currentTurn: previousCareer.seasonState.currentTurn + 1,
+        lastMatchRecordIds: [record.id],
+        matchRecords: [...previousCareer.seasonState.matchRecords, record],
+      },
+    };
+    const normalMessages = createProgressMessages({
+      lastMatch,
+      nextCareer,
+      previousCareer,
+    });
+    const debugMessages = createProgressMessages({
+      appSettings: {
+        ...defaultAppSettings,
+        messageNews: {
+          aiNewsEnabled: true,
+          frequency: "debug",
+        },
+      },
+      lastMatch,
+      nextCareer,
+      previousCareer,
+    });
+    const matchMessage = debugMessages.find(
+      (message) => message.title === "경기 결과 도착",
+    );
+    const careerWithDebugMessage = appendCareerMessages(nextCareer, debugMessages);
+    const newsMessage = careerWithDebugMessage.messages?.find(
+      (message) => message.id === `template-news-${record.id}`,
+    );
+
+    expect(normalMessages.some((message) => message.category === "news")).toBe(
+      false,
+    );
+    expect(newsMessage).toEqual(
+      expect.objectContaining({
+        category: "news",
+        source: "media",
+        title: "미디어 리뷰",
+      }),
+    );
+    expect(matchMessage?.body).not.toContain("\n");
+    expect(matchMessage?.body).not.toContain("경기 결과 리포트");
+    expect(newsMessage?.body).not.toContain("\n");
+    expect(newsMessage?.body).not.toContain("미디어 리뷰\n");
+    expect(
+      newsMessage &&
+        createAiNewsFactsForMessage({
+          career: careerWithDebugMessage,
+          message: newsMessage,
+        }),
+    ).toEqual(
+      expect.objectContaining({
+        eventType: "match_review",
+        result: "win",
+        team: previousCareer.userTeam.name,
+      }),
+    );
   });
 
   it("dedupes messages and keeps only the latest 120 entries", () => {

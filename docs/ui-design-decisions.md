@@ -1,5 +1,7 @@
 # UI 설계 결정사항
 
+이 문서는 지금까지의 UI 결정 기록이다. 새 UI 작업에서 지켜야 할 규약은 [design-guidelines.md](./design-guidelines.md)를 먼저 확인한다.
+
 ## 1. 기본 방향
 
 - Football Manager식 메인 허브 구조

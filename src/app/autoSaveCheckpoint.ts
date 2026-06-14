@@ -124,7 +124,7 @@ export function getCareerAutoSaveCheckpoint(career: CareerSave) {
   const messagesFingerprint = (career.messages ?? [])
     .map(
       (message) =>
-        `${message.id}:${message.read ? "read" : "unread"}:${message.priority}`,
+        `${message.id}:${message.read ? "read" : "unread"}:${message.priority}:${message.title}:${message.body.slice(0, 160)}`,
     )
     .join("|");
 

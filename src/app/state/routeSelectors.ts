@@ -49,7 +49,12 @@ export function commitProgressResult(
   const career = state.career
     ? appendOffseasonLogMessages(
         state.career,
-        appendProgressMessages(state.career, result.career, result.lastMatch),
+        appendProgressMessages(
+          state.career,
+          result.career,
+          result.lastMatch,
+          state.appSettings,
+        ),
       )
     : result.career;
 

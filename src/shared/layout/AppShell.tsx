@@ -26,6 +26,7 @@ type AppShellProps = PropsWithChildren<{
   career: CareerSave | null;
   isProgressBlocked?: boolean;
   isProgressing?: boolean;
+  progressNotice?: string | null;
   progressOverlay?: ProgressOverlayState | null;
   route: AppRoute;
   selectedCompetitionId?: CompetitionId | null;
@@ -329,6 +330,7 @@ export function AppShell({
   trainingSubPage = null,
   isProgressBlocked = false,
   isProgressing = false,
+  progressNotice = null,
   progressOverlay,
   route,
   selectedCompetitionId = null,
@@ -561,6 +563,11 @@ export function AppShell({
             {isProgressing ? "진행중" : progressActionLabel}
           </button>
         </header>
+        {progressNotice && (
+          <div className="shell-progress-notice" role="alert">
+            {progressNotice}
+          </div>
+        )}
         <main className="app-main" ref={mainRef}>
           {children}
         </main>

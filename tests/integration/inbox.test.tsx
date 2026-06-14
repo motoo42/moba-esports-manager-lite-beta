@@ -163,6 +163,7 @@ describe("Inbox", () => {
       read: false,
       createdTurn: 42,
       source: "club",
+      relatedCompetitionId: "lck-cup",
     };
 
     render(
@@ -183,8 +184,19 @@ describe("Inbox", () => {
       "inbox-priority-chip",
       "inbox-priority-important",
     );
+    const readChip = document.querySelector(".inbox-read-chip");
+
+    expect(readChip).not.toBeNull();
+    expect(readChip as HTMLElement).toHaveClass(
+      "inbox-read-chip",
+      "inbox-read-chip-unread",
+    );
+    expect(readChip).toHaveTextContent("안읽음");
     expect(screen.queryByText("생성 턴")).not.toBeInTheDocument();
     expect(screen.queryByText("42")).not.toBeInTheDocument();
+    expect(screen.queryByText("상태")).not.toBeInTheDocument();
+    expect(screen.queryByText("관련 대회")).not.toBeInTheDocument();
+    expect(screen.queryByText("lck-cup")).not.toBeInTheDocument();
   });
 
   it("shows important-priority offseason transfer messages in the important tab", () => {
@@ -273,5 +285,39 @@ describe("Inbox", () => {
     fireEvent.click(screen.getByText("스토브리그 주간 요약"));
     fireEvent.click(screen.getByRole("button", { name: "스토브리그로 이동" }));
     expect(onGoTo).toHaveBeenCalledWith("offseason", { subPage: "overview" });
+  });
+
+  it("shows roster and strategy shortcuts for next match schedule messages", () => {
+    const career = createInitialCareer("T1");
+    const onGoTo = vi.fn();
+    const scheduleMessage: CareerMessage = {
+      id: "next-schedule-message",
+      dateKey: "2026-01-14",
+      dateLabel: "2026년 1월 14일",
+      category: "schedule",
+      priority: "important",
+      title: "다음 경기 일정 안내",
+      body: "오늘 경기 준비 알림\n- Gen.G 상대 경기가 오늘 예정되어 있습니다.\n권장 행동: 로스터 관리와 전략/훈련 탭을 확인하세요.",
+      read: false,
+      createdTurn: 5,
+      source: "competition",
+    };
+
+    render(
+      <Inbox
+        career={{ ...career, messages: [scheduleMessage] }}
+        onMarkAllRead={vi.fn()}
+        onMarkRead={vi.fn()}
+        onGoTo={onGoTo}
+        onSubPageChange={vi.fn()}
+        subPage="schedule"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "로스터 관리로 이동" }));
+    expect(onGoTo).toHaveBeenCalledWith("roster-builder", { subPage: "main" });
+
+    fireEvent.click(screen.getByRole("button", { name: "전략/훈련으로 이동" }));
+    expect(onGoTo).toHaveBeenCalledWith("match-week", { subPage: "report" });
   });
 });

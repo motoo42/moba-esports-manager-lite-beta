@@ -4,6 +4,7 @@ import path from "node:path";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 import { defaultCorsOrigins } from "./config.js";
 import { careerSavesRoutes } from "./routes/careerSavesRoutes.js";
+import { aiNewsRoutes } from "./routes/aiNewsRoutes.js";
 import { healthRoutes } from "./routes/healthRoutes.js";
 
 type CreateAppOptions = {
@@ -29,6 +30,7 @@ export function createApp({
 
   app.use("/api", healthRoutes);
   app.use("/api", careerSavesRoutes);
+  app.use("/api", aiNewsRoutes);
 
   if (serveClient) {
     app.use(express.static(resolvedClientDistPath));

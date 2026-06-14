@@ -13,6 +13,7 @@ import type {
   OffseasonLogEntry,
 } from "../../types/game";
 import type { CareerProgressResult } from "../game-progress/progressCareer";
+import type { AppSettings } from "../settings/appSettings";
 import type { MessageDraft } from "./messageDraft";
 import { createTemplateNewsMessages } from "./newsTemplates";
 import { createOffseasonWeeklySummaryMessages } from "./offseasonSummaries";
@@ -121,6 +122,31 @@ export function markAllCareerMessagesRead(career: CareerSave): CareerSave {
   };
 }
 
+export function applyAiNewsToCareerMessage({
+  body,
+  career,
+  messageId,
+  title,
+}: {
+  body: string;
+  career: CareerSave;
+  messageId: string;
+  title: string;
+}): CareerSave {
+  return {
+    ...career,
+    messages: (career.messages ?? []).map((message) =>
+      message.id === messageId && message.category === "news"
+        ? {
+            ...message,
+            body,
+            title,
+          }
+        : message,
+    ),
+  };
+}
+
 export function isImportantCareerMessage(message: CareerMessage) {
   return message.category === "important" || message.priority !== "normal";
 }
@@ -163,6 +189,54 @@ function getMatchScore(record: MatchRecord) {
   return `${record.score.blueWins}-${record.score.redWins}`;
 }
 
+function createReportBody({
+  bullets,
+  footer,
+  title,
+}: {
+  bullets: string[];
+  footer?: string;
+  title: string;
+}) {
+  return [
+    title,
+    ...bullets.map((bullet) => `- ${bullet}`),
+    ...(footer ? [footer] : []),
+  ].join("\n");
+}
+
+function createParagraphBody(sentences: string[]) {
+  return sentences.join(" ");
+}
+
+function getOffseasonLogAdvice(log: OffseasonLogEntry) {
+  if (log.type === "system") {
+    return "다음 단계로 넘어가기 전에 선수단 등록 조건과 예산 여유를 함께 확인하세요.";
+  }
+
+  if (log.type === "rejection") {
+    return "거절 사유를 확인한 뒤 연봉, 역할 약속, 대체 후보를 다시 비교하는 것이 좋습니다.";
+  }
+
+  if (log.type === "blocked") {
+    return "진행이 막힌 항목이 있다면 해결 조건을 먼저 정리해야 다음 일정을 안정적으로 넘길 수 있습니다.";
+  }
+
+  if (log.type === "renewal") {
+    return "재계약 결과는 다음 시즌 로스터 안정성과 예산 운용에 바로 영향을 줍니다.";
+  }
+
+  if (log.type === "release") {
+    return "방출된 선수의 포지션 공백과 2군 자동 보충 여부를 함께 확인하세요.";
+  }
+
+  if (log.type === "signing") {
+    return "영입이 확정된 선수는 배치 역할과 기존 선수단 구성을 함께 점검해야 합니다.";
+  }
+
+  return "스토브리그 로그를 기준으로 다음 협상 우선순위를 다시 정리하세요.";
+}
+
 function createMatchResultMessages({
   nextCareer,
   previousCareer,
@@ -183,19 +257,22 @@ function createMatchResultMessages({
 
   return latestUserRecords.map((record) => {
     const isWin = record.userResult === "win";
+    const score = getMatchScore(record);
     return {
       dateKey: nextCareer.seasonState.currentDateKey,
       dateLabel: nextCareer.seasonState.currentDateLabel,
       category: "match",
       priority: isWin ? "normal" : "important",
       title: "경기 결과 도착",
-      body: `${record.stageName} 경기가 ${getMatchScore(
-        record,
-      )} 스코어로 종료됐습니다. 승리 팀은 ${record.winnerTeamName}입니다. ${
+      body: createParagraphBody([
+        `${record.stageName} 경기가 ${score} 스코어로 종료됐고, 승리 팀은 ${record.winnerTeamName}입니다.`,
         isWin
-          ? "선수단 분위기를 이어갈 수 있는 결과입니다."
-          : "다음 경기 전 전략과 선수 상태를 다시 확인하는 것이 좋습니다."
-      }`,
+          ? "선수단 분위기와 최근 경기력을 이어갈 수 있는 결과라 다음 경기 전에는 과한 변화보다 현재 강점을 유지하는 쪽이 좋아 보입니다."
+          : "다음 경기 전에는 밴픽 방향, 선수 컨디션, 피로도 누적을 함께 확인해야 하는 결과입니다.",
+        isWin
+          ? "전략/훈련 탭에서 다음 상대 리포트를 확인하고, 현재 흐름을 해치지 않는 선에서 주간 계획을 조정하세요."
+          : "전략/훈련 탭의 상대 리포트와 주간 계획을 먼저 점검한 뒤 선발 유지 여부를 판단하세요.",
+      ]),
       createdTurn: nextCareer.seasonState.currentTurn,
       source: "competition",
       relatedCompetitionId: record.competitionId,
@@ -219,16 +296,25 @@ function createScheduleMessages({
   const drafts: MessageDraft[] = [];
 
   if (previewUserMatch && !previousPreviewIds.has(previewUserMatch.id)) {
+    const opponentName = getOpponentName(previewUserMatch, userTeamId);
+    const format = previewUserMatch.format.toUpperCase();
+
     drafts.push({
       dateKey: nextCareer.seasonState.currentDateKey,
       dateLabel: nextCareer.seasonState.currentDateLabel,
       category: "schedule",
       priority: "important",
       title: "다음 경기 일정 안내",
-      body: `${getOpponentName(
-        previewUserMatch,
-        userTeamId,
-      )} 상대 ${previewUserMatch.stageName} ${previewUserMatch.format.toUpperCase()} 경기가 오늘 예정되어 있습니다. 상단 진행 버튼이 플레이 흐름으로 전환됩니다.`,
+      body: createReportBody({
+        title: "오늘 경기 준비 알림",
+        bullets: [
+          `${opponentName} 상대 ${previewUserMatch.stageName} ${format} 경기가 오늘 예정되어 있습니다.`,
+          "상단 진행 버튼은 경기 프리뷰와 플레이 흐름으로 전환됩니다.",
+          "경기 전에는 선발 5인의 컨디션, 피로도, 최근 폼을 먼저 확인하세요.",
+          "상대 리포트에서 강점과 약점을 확인하면 전략 선택을 더 명확하게 할 수 있습니다.",
+        ],
+        footer: "권장 행동: 로스터 관리와 전략/훈련 탭을 확인한 뒤 경기를 진행하세요.",
+      }),
       createdTurn: nextCareer.seasonState.currentTurn,
       source: "competition",
       relatedCompetitionId: previewUserMatch.competitionId,
@@ -249,18 +335,25 @@ function createScheduleMessages({
   );
 
   if (nextMatch && previousNextMatch?.id !== nextMatch.id) {
+    const opponentName = getOpponentName(nextMatch, userTeamId);
+    const scheduleLabel = nextMatch.scheduledDate ?? `${nextMatch.week}주차`;
+    const format = nextMatch.format.toUpperCase();
+
     drafts.push({
       dateKey: nextCareer.seasonState.currentDateKey,
       dateLabel: nextCareer.seasonState.currentDateLabel,
       category: "schedule",
       priority: "normal",
       title: "다음 경기 일정 안내",
-      body: `${getOpponentName(
-        nextMatch,
-        userTeamId,
-      )} 상대 ${nextMatch.stageName} ${nextMatch.format.toUpperCase()} 경기가 ${
-        nextMatch.scheduledDate ?? `${nextMatch.week}주차`
-      }에 예정되어 있습니다.`,
+      body: createReportBody({
+        title: "다음 경기 일정 브리핑",
+        bullets: [
+          `${opponentName} 상대 ${nextMatch.stageName} ${format} 경기가 ${scheduleLabel}에 예정되어 있습니다.`,
+          "아직 경기일까지 시간이 남아 있으므로 주간 계획과 스크림 일정을 함께 조정할 수 있습니다.",
+          "상대 전력에 따라 선발 고정, 후보 테스트, 휴식 운영 중 어느 쪽이 필요한지 미리 판단하세요.",
+        ],
+        footer: "권장 행동: 시즌 캘린더에서 남은 일정을 보고 훈련 강도를 무리 없이 배치하세요.",
+      }),
       createdTurn: nextCareer.seasonState.currentTurn,
       source: "competition",
       relatedCompetitionId: nextMatch.competitionId,
@@ -273,10 +366,12 @@ function createScheduleMessages({
 }
 
 export function createProgressMessages({
+  appSettings,
   lastMatch,
   nextCareer,
   previousCareer,
 }: {
+  appSettings?: AppSettings;
   lastMatch: CareerProgressResult["lastMatch"];
   nextCareer: CareerSave;
   previousCareer: CareerSave;
@@ -296,6 +391,7 @@ export function createProgressMessages({
   });
   const newsMessages = createTemplateNewsMessages({
     lastMatch,
+    messageNewsFrequency: appSettings?.messageNews.frequency,
     nextCareer,
     previousCareer,
   });
@@ -312,10 +408,12 @@ export function appendProgressMessages(
   previousCareer: CareerSave,
   nextCareer: CareerSave,
   lastMatch: CareerProgressResult["lastMatch"],
+  appSettings?: AppSettings,
 ) {
   return appendCareerMessages(
     nextCareer,
     createProgressMessages({
+      appSettings,
       lastMatch,
       nextCareer,
       previousCareer,
@@ -342,7 +440,18 @@ function createTransferMessageFromLog({
     category: log.type === "system" ? "important" : "transfer",
     priority: isImportantOffseasonNews ? "important" : "normal",
     title: log.type === "system" ? "스토브리그 안내" : "FA 협상 결과",
-    body: `${log.week}주차 ${log.day}일 기록입니다. ${log.message}`,
+    body: createReportBody({
+      title: log.type === "system" ? "스토브리그 진행 안내" : "협상 결과 요약",
+      bullets: [
+        `${log.week}주차 ${log.day}일 기록입니다.`,
+        log.message,
+        getOffseasonLogAdvice(log),
+      ],
+      footer:
+        log.type === "system"
+          ? "권장 행동: 스토브리그 화면에서 남은 처리 항목을 확인하세요."
+          : "권장 행동: 다음 제안 전에 예산, 역할 약속, 같은 포지션 후보를 함께 비교하세요.",
+    }),
     createdTurn: career.seasonState.currentTurn,
     source: "offseason",
   };
@@ -408,8 +517,24 @@ export function createInitialCareerMessages(career: CareerSave): CareerSave {
         ? "LCK Cup 개막 준비 완료"
         : "프리시즌 스토브리그 시작",
       body: isCompetitionStart
-        ? "2026 실제 LCK 로스터를 기준으로 커리어를 시작했습니다. LCK Cup부터 바로 시즌을 진행할 수 있습니다."
-        : "1주차에는 기존 선수단의 재계약 또는 방출을 결정합니다. 2주차부터 FA 시장이 열립니다.",
+        ? createReportBody({
+            title: "시즌 시작 안내",
+            bullets: [
+              "2026 실제 LCK 로스터를 기준으로 커리어를 시작했습니다.",
+              "LCK Cup부터 바로 시즌을 진행할 수 있습니다.",
+              "첫 경기 전에는 선발 5인 상태와 전략/훈련 탭의 상대 리포트를 함께 확인하세요.",
+            ],
+            footer: "권장 행동: 홈 화면에서 오늘 일정과 메시지함을 먼저 확인하세요.",
+          })
+        : createReportBody({
+            title: "스토브리그 시작 안내",
+            bullets: [
+              "1주차에는 기존 선수단의 재계약 또는 방출을 결정합니다.",
+              "2주차부터 FA 시장이 열리며, 주요 선수 영입 경쟁이 본격적으로 시작됩니다.",
+              "1군 선발 5인 구성이 최우선이고, 2군은 필요한 경우에만 직접 보강해도 됩니다.",
+            ],
+            footer: "권장 행동: 재계약 대상과 예산 여유를 먼저 확인한 뒤 FA 계획을 세우세요.",
+          }),
       createdTurn: career.seasonState.currentTurn,
       source: "system",
     },

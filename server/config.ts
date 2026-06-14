@@ -69,3 +69,27 @@ export function shouldServeClient() {
 export function getClientDistPath() {
   return getEnvValue("CLIENT_DIST_DIR") ?? "dist";
 }
+
+export function getAiNewsProvider() {
+  return getEnvValue("AI_NEWS_PROVIDER") ?? "none";
+}
+
+export function isAiNewsEnabled() {
+  return getEnvValue("AI_NEWS_ENABLED") === "true";
+}
+
+export function getAiNewsModel() {
+  return getEnvValue("AI_NEWS_MODEL") ?? "gemini-3.5-flash";
+}
+
+export function getGeminiApiKey() {
+  return getEnvValue("GEMINI_API_KEY");
+}
+
+export function isAiNewsTestEndpointEnabled() {
+  if (!isProduction()) {
+    return true;
+  }
+
+  return getEnvValue("AI_NEWS_TEST_ENDPOINT_ENABLED") === "true";
+}

@@ -4,7 +4,9 @@ import {
   loadAppSettings,
   normalizeAppSettings,
   saveAppSettings,
+  setAiNewsEnabled,
   setFirstEntryGuidesEnabled,
+  setMessageNewsFrequency,
 } from "../../src/domain/settings/appSettings";
 
 describe("app settings", () => {
@@ -21,11 +23,19 @@ describe("app settings", () => {
           showFirstEntryGuides: false,
           ignored: true,
         },
+        messageNews: {
+          aiNewsEnabled: false,
+          frequency: "debug",
+        },
       }),
     ).toEqual({
       schemaVersion: 1,
       guides: {
         showFirstEntryGuides: false,
+      },
+      messageNews: {
+        aiNewsEnabled: false,
+        frequency: "debug",
       },
     });
   });
@@ -36,5 +46,19 @@ describe("app settings", () => {
     saveAppSettings(disabled);
 
     expect(loadAppSettings().guides.showFirstEntryGuides).toBe(false);
+  });
+
+  it("persists message and AI news experiment settings", () => {
+    const settings = setMessageNewsFrequency(
+      setAiNewsEnabled(defaultAppSettings, false),
+      "debug",
+    );
+
+    saveAppSettings(settings);
+
+    expect(loadAppSettings().messageNews).toEqual({
+      aiNewsEnabled: false,
+      frequency: "debug",
+    });
   });
 });
