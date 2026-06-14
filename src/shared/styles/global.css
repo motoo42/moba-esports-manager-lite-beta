@@ -8968,6 +8968,15 @@ button.opponent-analysis-panel:focus-visible {
   margin-bottom: 4px;
 }
 
+.inbox-hero h1,
+.roster-management-header h1,
+.match-week-page > header h1,
+.lck-team-info-page > header h1,
+.save-manager-page > header h1,
+.settings-page-header h1 {
+  font-size: clamp(1.65rem, 2.35vw, 2.15rem);
+}
+
 .match-hub-grid {
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
@@ -10615,6 +10624,30 @@ button.opponent-analysis-panel:focus-visible {
   border-color: var(--color-border-subtle);
   background: var(--color-control-bg);
   color: var(--text);
+}
+
+:root[data-theme="light"] .contract-offer-grid select,
+:root[data-theme="light"] .contract-offer-grid input {
+  border-color: var(--color-border-subtle);
+  background: var(--color-input-bg);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .offseason-validation-box {
+  border-color: rgb(239 68 68 / 34%);
+  background: rgb(254 226 226 / 82%);
+  color: #7f1d1d;
+}
+
+:root[data-theme="light"] .offseason-validation-box span,
+:root[data-theme="light"] .offseason-validation-box li {
+  color: #7f1d1d;
+}
+
+:root[data-theme="light"] .shell-progress-notice {
+  border-color: rgb(245 158 11 / 34%);
+  background: rgb(254 243 199 / 86%);
+  color: #78350f;
 }
 
 :root[data-theme="light"] .modal-close-button,

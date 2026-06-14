@@ -175,7 +175,7 @@ export function SettingsPage() {
                 type="checkbox"
               />
               <span>
-                <strong>Synapse 배경음 재생</strong>
+                <strong>배경음 재생</strong>
               </span>
             </label>
             <div className="settings-field-row">
