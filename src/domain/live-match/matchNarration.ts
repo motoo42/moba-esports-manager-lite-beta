@@ -67,7 +67,7 @@ function narrateKill(
 
   return {
     badgeLabel: event.importance === "critical" ? "중대" : undefined,
-    body: `${killer} → ${victim} 처치 (어시 ${kill.assistRoles.length})`,
+    body: `${killer} → ${victim} 처치`,
     title: event.importance === "critical" ? "결정적 한타" : "교전",
     tone,
   };

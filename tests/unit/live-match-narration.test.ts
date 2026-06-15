@@ -83,7 +83,9 @@ describe("match commentary narration", () => {
     );
 
     expect(result.title).toBe("결정적 한타");
-    expect(result.body).toContain("어시 2");
+    expect(result.body).toContain("Faker");
+    expect(result.body).toContain("Kiin");
+    expect(result.body).not.toContain("어시");
     expect(result.badgeLabel).toBe("중대");
   });
 

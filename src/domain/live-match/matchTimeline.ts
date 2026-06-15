@@ -330,8 +330,16 @@ export function generateMatchTimeline(
   }
 
   // 6. Mid/late skirmishes and teamfights. Even trades produce neutral-colored
-  //    kills for both sides; one-sided fights lean toward the winner.
-  const skirmishCount = 4 + Math.floor(random() * (durationMin / 6));
+  //    kills for both sides; one-sided fights lean toward the winner. A per-game
+  //    kill pace (randomized) scales how many fights spawn: a bloodbath produces
+  //    both more kills (>1 combined kill/min) and a denser commentary feed, while
+  //    a slow game grinds out ~0.4/min. More fights also means more big (visible)
+  //    ones, so feed density tracks the kill pace.
+  const killPace = lerp(0.55, 2, random());
+  const skirmishCount = Math.max(
+    3,
+    Math.round((3 + durationMin / 4) * killPace),
+  );
 
   for (let index = 0; index < skirmishCount; index += 1) {
     const timeSec = clamp(
