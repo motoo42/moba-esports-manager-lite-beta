@@ -22,6 +22,7 @@ function createState(career: CareerSave) {
   return {
     career,
     lastMatch: null,
+    liveMatchSeries: null,
     route: "roster-builder" as const,
     selectedCompetitionId: null,
     appSettings: defaultAppSettings,

@@ -63,6 +63,7 @@ export function commitProgressResult(
     route: getRouteForCareer(career),
     career,
     lastMatch: result.lastMatch,
+    liveMatchSeries: result.liveMatchSeries ?? null,
     selectedCompetitionId: career.seasonState.currentCompetitionId,
   };
 }
