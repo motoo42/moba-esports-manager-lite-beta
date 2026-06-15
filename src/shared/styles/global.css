@@ -11557,7 +11557,9 @@ button.opponent-analysis-panel:focus-visible {
   align-content: end;
   gap: 8px;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 .live-commentary-event {
@@ -11687,8 +11689,13 @@ button.opponent-analysis-panel:focus-visible {
   animation: live-pop 0.4s ease-out;
 }
 
+.live-series-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .live-series-result button {
-  margin-top: 4px;
   min-height: 32px;
   padding: 0 18px;
   border: 1px solid var(--live-gold);

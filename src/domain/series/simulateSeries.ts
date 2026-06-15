@@ -47,6 +47,7 @@ export function simulateSeries(input: SimulateSeriesInput): SeriesResult {
       },
       champions,
       context: {
+        banCount: 5,
         format: input.format,
         gameNumber,
         fearlessEnabled: input.fearlessEnabled,

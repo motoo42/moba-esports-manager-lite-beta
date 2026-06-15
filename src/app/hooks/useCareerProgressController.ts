@@ -92,10 +92,21 @@ export function useCareerProgressController({
 
     setProgressNotice(null);
     const progressResult = progressCareer(career);
-    pendingProgressResultRef.current = {
+    const resolvedResult = {
       ...progressResult,
       career: resolvePendingScrimRequests(progressResult.career),
     };
+
+    // A played user match routes into the live-match replay, which replaces the
+    // progress gauge — commit and navigate immediately, with no overlay. Other
+    // progress (day advance, etc.) keeps the gauge.
+    if (resolvedResult.career.seasonState.progressStatus === "match-review") {
+      dispatch(gameActions.commitProgressResult(resolvedResult));
+      navigate(getPathForRoute("live-match"));
+      return;
+    }
+
+    pendingProgressResultRef.current = resolvedResult;
     setProgressOverlay(getProgressOverlayState(career));
 
     progressTimeoutRef.current = window.setTimeout(() => {
@@ -106,14 +117,7 @@ export function useCareerProgressController({
       if (pendingResult) {
         dispatch(gameActions.commitProgressResult(pendingResult));
 
-        // "match-review" is only reached right after the user plays their own
-        // match, so route into the live-match replay; exiting it returns to the
-        // normal post-match destination (main dashboard review).
-        const playedUserMatch =
-          pendingResult.career.seasonState.progressStatus === "match-review";
-        const nextRoute = playedUserMatch
-          ? "live-match"
-          : getRouteForCareer(pendingResult.career);
+        const nextRoute = getRouteForCareer(pendingResult.career);
         const targetPath = getPathForRoute(
           nextRoute,
           nextRoute === "competition-dashboard"

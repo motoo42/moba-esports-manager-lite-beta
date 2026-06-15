@@ -131,9 +131,14 @@ export function LiveMatchPrototype({
         <div className="live-series-result live-set-break" role="status">
           <span>세트 {baseSet.gameNumber} 종료</span>
           <strong>{setWinnerName} 승</strong>
-          <button type="button" onClick={goToNextSet}>
-            다음 세트
-          </button>
+          <div className="live-series-actions">
+            <button type="button" onClick={goToNextSet}>
+              다음 세트
+            </button>
+            <button type="button" onClick={onExit}>
+              허브로
+            </button>
+          </div>
         </div>
       )}
       {seriesComplete && (
@@ -147,6 +152,11 @@ export function LiveMatchPrototype({
             {(blueSetWins >= redSetWins ? liveSet.blueTeam : liveSet.redTeam).name}{" "}
             승리
           </em>
+          <div className="live-series-actions">
+            <button type="button" onClick={onExit}>
+              허브로
+            </button>
+          </div>
         </div>
       )}
     </section>

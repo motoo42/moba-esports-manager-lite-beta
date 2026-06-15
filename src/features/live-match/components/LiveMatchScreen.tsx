@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import type {
   LiveMatchObjectiveSnapshot,
   LiveMatchSetPresentation,
@@ -18,8 +20,6 @@ type LiveMatchScreenProps = {
   playback: MatchPlayback;
   set: LiveMatchSetPresentation;
 };
-
-const FEED_VISIBLE_LIMIT = 8;
 
 const objectiveIcons: Array<{
   key: keyof LiveMatchObjectiveSnapshot;
@@ -79,7 +79,27 @@ export function LiveMatchScreen({
   playback,
   set,
 }: LiveMatchScreenProps) {
-  const visibleCommentary = commentary.slice(-FEED_VISIBLE_LIMIT);
+  const feedRef = useRef<HTMLDivElement>(null);
+  // Stick the feed to the latest message, unless the user has scrolled up to
+  // read older entries (then leave it until they return to the bottom).
+  const stickToBottomRef = useRef(true);
+
+  const handleFeedScroll = () => {
+    const element = feedRef.current;
+
+    if (element) {
+      stickToBottomRef.current =
+        element.scrollHeight - element.scrollTop - element.clientHeight < 24;
+    }
+  };
+
+  useEffect(() => {
+    const element = feedRef.current;
+
+    if (element && stickToBottomRef.current) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [commentary]);
 
   return (
     <>
@@ -123,8 +143,12 @@ export function LiveMatchScreen({
             </div>
           </div>
 
-          <div className="live-commentary-feed">
-            {visibleCommentary.map((entry) => (
+          <div
+            className="live-commentary-feed"
+            ref={feedRef}
+            onScroll={handleFeedScroll}
+          >
+            {commentary.map((entry) => (
               <article
                 className={`live-commentary-event live-tone-${entry.tone}`}
                 key={entry.id}

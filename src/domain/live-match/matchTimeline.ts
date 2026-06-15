@@ -348,17 +348,20 @@ export function generateMatchTimeline(
       durationSec - 150,
     );
     const progress = timeSec / durationSec;
-    const isEvenTrade = random() < 0.22;
+    const isEvenTrade = random() < 0.3;
 
     if (isEvenTrade) {
+      // A mutual trade: one side's kill surfaces as a neutral-toned message so
+      // the feed carries a healthy share of neutral moments; the other stays
+      // internal (it still folds into the stats / keeps kills == deaths).
       events.push({
         advantage: "neutral",
-        importance: "low",
+        importance: "medium",
         kill: createTeamfightKill(random, false, progress),
         side: winningSide,
         timeSec,
         type: "kill",
-        visible: false,
+        visible: true,
       });
       events.push({
         advantage: "neutral",
