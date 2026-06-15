@@ -20,6 +20,22 @@ export type {
   PlayerStatSnapshot,
   TeamStatSnapshot,
 } from "./matchStats";
+export { narrateEvent } from "./matchNarration";
+export type {
+  LiveCommentaryNarration,
+  LiveCommentaryTone,
+  LiveNarrationContext,
+  LiveNarrationPlayer,
+  LiveNarrationTeamContext,
+} from "./matchNarration";
+export {
+  applyStatSnapshotToTeam,
+  applyStatSnapshotToTeams,
+  formatLiveGold,
+  toLiveObjectiveSnapshot,
+} from "./liveSnapshotAdapter";
+export { createSetTimeline } from "./liveSetTimeline";
+export type { LiveMatchOutcome } from "./liveSetTimeline";
 export type {
   LiveMatchDraftPresentation,
   LiveMatchFearlessRow,
