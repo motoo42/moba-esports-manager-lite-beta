@@ -130,7 +130,7 @@ describe("match stat snapshot fold", () => {
     }
   });
 
-  it("keeps levels within 1..18 and lets the winner finish richer", () => {
+  it("keeps every player's level within 1..18", () => {
     for (const seed of ["x", "y", "z"]) {
       const timeline = generateMatchTimeline({
         seed,
@@ -146,9 +146,23 @@ describe("match stat snapshot fold", () => {
           expect(level).toBeLessThanOrEqual(18);
         }
       }
+    }
+  });
 
+  it("gives a dominant winner a clear team gold lead", () => {
+    // Passive income is identical on both sides, so a close game can leave the
+    // loser ahead on gold. This only holds once the win is dominant enough that
+    // the kill/objective advantage clearly outweighs that shared passive income.
+    for (const seed of ["x", "y", "z", "w", "v"]) {
+      const timeline = generateMatchTimeline({
+        seed,
+        winningSide: "blue",
+        dominance: 0.85,
+      });
+      const snapshot = getFinalMatchSnapshot(timeline);
       const loser = timeline.winningSide === "blue" ? "red" : "blue";
-      expect(snapshot[timeline.winningSide].gold).toBeGreaterThanOrEqual(
+
+      expect(snapshot[timeline.winningSide].gold).toBeGreaterThan(
         snapshot[loser].gold,
       );
     }
@@ -175,6 +189,12 @@ describe("match stat snapshot fold", () => {
       expect(snapshot[side].objectives.towers).toBe(countFor(side, ["tower"]));
       expect(snapshot[side].objectives.heralds).toBe(countFor(side, ["herald"]));
       expect(snapshot[side].objectives.elders).toBe(countFor(side, ["elder"]));
+      expect(snapshot[side].objectives.inhibitors).toBe(
+        countFor(side, ["inhibitor"]),
+      );
+      expect(snapshot[side].objectives.soulTaken).toBe(
+        countFor(side, ["soul"]) > 0,
+      );
     }
   });
 
