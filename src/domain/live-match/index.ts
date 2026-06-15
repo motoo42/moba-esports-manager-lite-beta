@@ -13,6 +13,13 @@ export type {
   MatchTimelineEventType,
   MatchTimelineKillInfo,
 } from "./matchTimeline";
+export { getFinalMatchSnapshot, getMatchSnapshotAt } from "./matchStats";
+export type {
+  MatchStatSnapshot,
+  ObjectiveTally,
+  PlayerStatSnapshot,
+  TeamStatSnapshot,
+} from "./matchStats";
 export type {
   LiveMatchDraftPresentation,
   LiveMatchFearlessRow,
