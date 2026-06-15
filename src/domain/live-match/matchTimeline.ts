@@ -225,6 +225,52 @@ function pickDragonRotation(random: () => number): DragonType[] {
   return rotation;
 }
 
+/**
+ * How long a champion stays dead at a given game time, in seconds. Respawn timers
+ * are short in the early game and stretch toward ~50s past the 30-minute mark, so
+ * a champion that just died cannot plausibly die (or get a kill) again until this
+ * window passes. Used by the respawn guard below to retarget impossible kills.
+ */
+export function respawnWindowSec(timeSec: number) {
+  return clamp(8 + (timeSec / 60) * 1.25, 10, 52);
+}
+
+// Pick a team-mate on `side` who is alive at `timeSec` (never died, or already
+// respawned), other than `exclude`, preferring whoever has been up the longest.
+// Deterministic — no RNG — so the same-seed guarantee holds. Returns null when
+// the whole side is genuinely down; the caller then leaves the kill untouched
+// rather than forcing it onto another still-dead champion.
+function pickLivingRole(
+  lastDeathSec: Map<string, number>,
+  side: LiveMatchSide,
+  timeSec: number,
+  exclude: Role,
+): Role | null {
+  const window = respawnWindowSec(timeSec);
+  let best: Role | null = null;
+  let bestSince = -Infinity;
+
+  for (const role of matchTimelineRoles) {
+    if (role === exclude) {
+      continue;
+    }
+
+    const diedAt = lastDeathSec.get(`${side}-${role}`);
+    const since = diedAt === undefined ? Infinity : timeSec - diedAt;
+
+    if (since < window) {
+      continue; // still dead, cannot be involved
+    }
+
+    if (since > bestSince) {
+      best = role;
+      bestSince = since;
+    }
+  }
+
+  return best;
+}
+
 export function generateMatchTimeline(
   input: GenerateMatchTimelineInput,
 ): GeneratedMatchTimeline {
@@ -470,6 +516,9 @@ export function generateMatchTimeline(
   }
 
   // 8. Closing sequence in the final 2-3 minutes — always present and visible.
+  //    Victims are left to the random teamfight roll; the respawn guard below
+  //    spreads them across distinct living champions so the closing ace never
+  //    downs the same champion twice.
   const closingFightStart =
     durationSec - clamp(Math.round(90 + random() * 60), 90, 170);
   const closingKills = 2 + Math.floor(random() * 3);
@@ -528,6 +577,69 @@ export function generateMatchTimeline(
       event.advantage = winningSide;
       kills = countKillsBySide(ordered);
     }
+  }
+
+  // Respawn guard. Walk the kills in time order and retarget any that defy
+  // respawn timers — a victim killed again before it could respawn, or a killer
+  // who is still dead. Only the role within a side moves (sides and kill counts
+  // stay fixed, so blue-kills == red-deaths holds); times and counts are intact.
+  const lastDeathSec = new Map<string, number>();
+
+  for (const event of ordered) {
+    if (event.type !== "kill" || !event.kill) {
+      continue;
+    }
+
+    const killerSide = event.side;
+    const victimSide = opposite(event.side);
+    const window = respawnWindowSec(event.timeSec);
+
+    const killerDiedAt = lastDeathSec.get(
+      `${killerSide}-${event.kill.killerRole}`,
+    );
+
+    if (killerDiedAt !== undefined && event.timeSec - killerDiedAt < window) {
+      const living = pickLivingRole(
+        lastDeathSec,
+        killerSide,
+        event.timeSec,
+        event.kill.killerRole,
+      );
+
+      if (living) {
+        event.kill.killerRole = living;
+      }
+    }
+
+    const victimDiedAt = lastDeathSec.get(
+      `${victimSide}-${event.kill.victimRole}`,
+    );
+
+    if (victimDiedAt !== undefined && event.timeSec - victimDiedAt < window) {
+      const living = pickLivingRole(
+        lastDeathSec,
+        victimSide,
+        event.timeSec,
+        event.kill.victimRole,
+      );
+
+      if (living) {
+        event.kill.victimRole = living;
+      } else if (event.visible) {
+        // The whole enemy side is still down (a fresh ace) — there is nobody left
+        // to kill. Keep the kill in the stats fold but drop it from the narrated
+        // feed, so the commentary never shows a champion dying before it could
+        // respawn. A closing kill marked critical is demoted to high first, since
+        // the true critical finale is the nexus that follows it.
+        if (event.importance === "critical") {
+          event.importance = "high";
+        }
+
+        event.visible = false;
+      }
+    }
+
+    lastDeathSec.set(`${victimSide}-${event.kill.victimRole}`, event.timeSec);
   }
 
   return {

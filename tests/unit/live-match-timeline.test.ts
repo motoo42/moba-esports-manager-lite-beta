@@ -3,6 +3,7 @@ import {
   dominanceFromWinnerWinProbability,
   generateMatchTimeline,
   matchTimelineRoles,
+  respawnWindowSec,
   type GeneratedMatchTimeline,
 } from "../../src/domain/live-match/matchTimeline";
 import type { LiveMatchSide } from "../../src/domain/live-match/types";
@@ -277,5 +278,63 @@ describe("match timeline generator", () => {
     expect(earlyKills).toBeGreaterThan(0);
     expect(lateKills).toBeGreaterThan(0);
     expect(lateAssists / lateKills).toBeGreaterThan(earlyAssists / earlyKills);
+  });
+
+  it("grows the respawn window with game time", () => {
+    // Short and capped at both ends, longer later — a champion downed at 33:00
+    // cannot die again 28s later, which is the bug this guards against.
+    expect(respawnWindowSec(60)).toBe(10);
+    expect(respawnWindowSec(33 * 60)).toBeGreaterThan(28);
+    expect(respawnWindowSec(60 * 60)).toBe(52);
+    expect(respawnWindowSec(20 * 60)).toBeGreaterThan(respawnWindowSec(5 * 60));
+  });
+
+  it("never narrates the same champion dying twice before it could respawn", () => {
+    for (let index = 0; index < 120; index += 1) {
+      for (const winningSide of ["blue", "red"] as LiveMatchSide[]) {
+        for (const dominance of [0.05, 0.4]) {
+          const timeline = generateMatchTimeline({
+            seed: `respawn-${index}`,
+            winningSide,
+            dominance,
+          });
+          // Only the surfaced (visible) kills become commentary the user reads;
+          // two of them downing the same champion within a respawn is the glitch.
+          const lastVisibleDeath = new Map<string, number>();
+
+          for (const event of timeline.events) {
+            if (event.type !== "kill" || !event.kill || !event.visible) {
+              continue;
+            }
+
+            const victimSide = event.side === "blue" ? "red" : "blue";
+            const key = `${victimSide}-${event.kill.victimRole}`;
+            const previous = lastVisibleDeath.get(key);
+
+            if (previous !== undefined) {
+              expect(event.timeSec - previous).toBeGreaterThanOrEqual(
+                respawnWindowSec(event.timeSec),
+              );
+            }
+
+            lastVisibleDeath.set(key, event.timeSec);
+          }
+        }
+      }
+    }
+  });
+
+  it("keeps a visible closing kill and the nexus even when an ace is trimmed", () => {
+    for (const seed of ["close-1", "close-2", "close-3", "close-4"]) {
+      const timeline = generateMatchTimeline({ seed, winningSide: "blue", dominance: 0.7 });
+      const last = timeline.events[timeline.events.length - 1];
+
+      expect(last.type).toBe("nexus");
+      expect(last.visible).toBe(true);
+      // The nexus stays the sole guaranteed critical finale; trimming an
+      // impossible closing kill must not strip the visible closing push.
+      expect(timeline.events.some((event) => event.type === "nexus" && event.visible)).toBe(true);
+      expect(timeline.events.some((event) => event.type === "inhibitor" && event.visible)).toBe(true);
+    }
   });
 });
