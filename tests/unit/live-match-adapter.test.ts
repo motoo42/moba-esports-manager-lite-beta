@@ -21,7 +21,7 @@ function createTeam(): LiveMatchTeamPresentation {
     id: "t1",
     kills: 0,
     name: "T1",
-    objectives: { barons: 0, dragons: 0, heralds: 0, towers: 0 },
+    objectives: { barons: 0, dragons: 0, dragonTypes: [], heralds: 0, towers: 0 },
     shortName: "T1",
     players: roles.map((role) => ({
       champion: { dataDragonId: "Aatrox", iconUrl: "icon", id: "aatrox", name: "Aatrox" },
@@ -52,6 +52,7 @@ function createTeamSnapshot(): TeamStatSnapshot {
     objectives: {
       barons: 1,
       dragons: 4,
+      dragonTypes: ["infernal", "infernal", "ocean", "infernal"],
       elders: 1,
       heralds: 2,
       inhibitors: 1,
@@ -74,6 +75,7 @@ describe("live snapshot adapter", () => {
     const tally: ObjectiveTally = {
       barons: 1,
       dragons: 4,
+      dragonTypes: ["infernal", "ocean", "mountain", "mountain"],
       elders: 1,
       heralds: 2,
       inhibitors: 1,
@@ -84,6 +86,7 @@ describe("live snapshot adapter", () => {
     expect(toLiveObjectiveSnapshot(tally)).toEqual({
       barons: 1,
       dragons: 4,
+      dragonTypes: ["infernal", "ocean", "mountain", "mountain"],
       heralds: 2,
       towers: 8,
     });
@@ -98,7 +101,13 @@ describe("live snapshot adapter", () => {
 
     expect(updated.kills).toBe(10);
     expect(updated.gold).toBe("61.7K");
-    expect(updated.objectives).toEqual({ barons: 1, dragons: 4, heralds: 2, towers: 8 });
+    expect(updated.objectives).toEqual({
+      barons: 1,
+      dragons: 4,
+      dragonTypes: ["infernal", "infernal", "ocean", "infernal"],
+      heralds: 2,
+      towers: 8,
+    });
     expect(updated.name).toBe("T1");
 
     for (const player of updated.players) {

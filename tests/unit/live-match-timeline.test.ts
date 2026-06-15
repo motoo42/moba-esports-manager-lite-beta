@@ -177,6 +177,39 @@ describe("match timeline generator", () => {
     expect(sawSoul).toBe(true);
   });
 
+  it("rotates dragon types: first three distinct, then the third repeats", () => {
+    for (const seed of ["d1", "d2", "d3", "d4", "d5", "d6"]) {
+      const timeline = generateMatchTimeline({
+        seed,
+        winningSide: "blue",
+        dominance: 0.1,
+      });
+      const dragons = timeline.events.filter(
+        (event) => event.type === "dragon" || event.type === "soul",
+      );
+      const types = dragons.map((dragon) => dragon.dragonType!);
+
+      if (types.length === 0) {
+        continue;
+      }
+
+      // The first up-to-three dragons are distinct elements.
+      expect(new Set(types.slice(0, 3)).size).toBe(Math.min(3, types.length));
+
+      // From the third onward, every dragon repeats the third element.
+      const elemental = types[2];
+      for (let index = 3; index < types.length; index += 1) {
+        expect(types[index]).toBe(elemental);
+      }
+
+      // A soul is always that repeating element.
+      const soul = dragons.find((event) => event.type === "soul");
+      if (soul) {
+        expect(soul.dragonType).toBe(elemental);
+      }
+    }
+  });
+
   it("maps the winner's win probability to a 0..1 dominance scale (upsets stay close)", () => {
     expect(dominanceFromWinnerWinProbability(0.5)).toBe(0);
     expect(dominanceFromWinnerWinProbability(1)).toBe(1);

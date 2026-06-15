@@ -198,6 +198,30 @@ describe("match stat snapshot fold", () => {
     }
   });
 
+  it("tracks each side's dragons in order with their elemental type", () => {
+    const timeline = generateMatchTimeline({
+      seed: "dragon-seq",
+      winningSide: "blue",
+      dominance: 0.1,
+    });
+    const snapshot = getFinalMatchSnapshot(timeline);
+
+    for (const side of ["blue", "red"] as LiveMatchSide[]) {
+      const expected = timeline.events
+        .filter(
+          (event) =>
+            (event.type === "dragon" || event.type === "soul") &&
+            event.side === side,
+        )
+        .map((event) => event.dragonType);
+
+      expect(snapshot[side].objectives.dragonTypes).toEqual(expected);
+      expect(snapshot[side].objectives.dragonTypes).toHaveLength(
+        snapshot[side].objectives.dragons,
+      );
+    }
+  });
+
   it("clamps requests past the final whistle to the final snapshot", () => {
     const timeline = generateMatchTimeline({
       seed: "clamp",

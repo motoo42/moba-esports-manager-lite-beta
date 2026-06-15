@@ -29,6 +29,7 @@ export function toLiveObjectiveSnapshot(
   return {
     barons: tally.barons,
     dragons: tally.dragons,
+    dragonTypes: tally.dragonTypes,
     heralds: tally.heralds,
     towers: tally.towers,
   };

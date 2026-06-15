@@ -1,6 +1,7 @@
 import type { Role } from "../../types/game";
 import {
   matchTimelineRoles,
+  type DragonType,
   type GeneratedMatchTimeline,
   type MatchTimelineEvent,
 } from "./matchTimeline";
@@ -24,6 +25,8 @@ export type PlayerStatSnapshot = {
 export type ObjectiveTally = {
   barons: number;
   dragons: number;
+  // Elemental dragons taken, in the order they were taken.
+  dragonTypes: DragonType[];
   elders: number;
   heralds: number;
   inhibitors: number;
@@ -106,6 +109,7 @@ function createObjectiveTally(): ObjectiveTally {
   return {
     barons: 0,
     dragons: 0,
+    dragonTypes: [],
     elders: 0,
     heralds: 0,
     inhibitors: 0,
@@ -173,10 +177,16 @@ function applyObjectiveEvent(
   switch (event.type) {
     case "dragon":
       objectives.dragons += 1;
+      if (event.dragonType) {
+        objectives.dragonTypes.push(event.dragonType);
+      }
       break;
     case "soul":
       objectives.dragons += 1;
       objectives.soulTaken = true;
+      if (event.dragonType) {
+        objectives.dragonTypes.push(event.dragonType);
+      }
       break;
     case "herald":
       objectives.heralds += 1;

@@ -32,6 +32,23 @@ export type MatchTimelineEventType =
   | "elder"
   | "nexus";
 
+export type DragonType =
+  | "infernal"
+  | "mountain"
+  | "ocean"
+  | "cloud"
+  | "hextech"
+  | "chemtech";
+
+export const dragonTypes: DragonType[] = [
+  "infernal",
+  "mountain",
+  "ocean",
+  "cloud",
+  "hextech",
+  "chemtech",
+];
+
 export type MatchTimelineKillInfo = {
   assistRoles: Role[];
   isLaningPhase: boolean;
@@ -42,6 +59,8 @@ export type MatchTimelineKillInfo = {
 
 export type MatchTimelineEvent = {
   advantage: LiveMatchEventAdvantage;
+  // Set on dragon/soul events: which elemental dragon it was.
+  dragonType?: DragonType;
   id: string;
   importance: LiveMatchImportance;
   // Set on baron/elder events: true when the objective was stolen. Preserved so
@@ -193,6 +212,19 @@ export function dominanceFromWinnerWinProbability(winnerWinProbability: number) 
   return clamp((winnerWinProbability - 0.5) * 2, 0, 1);
 }
 
+// Drakes 1-3 are three distinct elementals; from the 3rd onward they all repeat
+// the 3rd one, so a soul (granted on a team's 4th dragon) is always that element.
+function pickDragonRotation(random: () => number): DragonType[] {
+  const pool = [...dragonTypes];
+  const rotation: DragonType[] = [];
+
+  for (let index = 0; index < 3; index += 1) {
+    rotation.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+  }
+
+  return rotation;
+}
+
 export function generateMatchTimeline(
   input: GenerateMatchTimelineInput,
 ): GeneratedMatchTimeline {
@@ -213,6 +245,7 @@ export function generateMatchTimeline(
   //    dragons can spawn (a 3-3 split, then the 7th grants someone the soul).
   //    Only the first dragon and the soul itself surface in the commentary feed.
   const dragonCountBySide: Record<LiveMatchSide, number> = { blue: 0, red: 0 };
+  const dragonRotation = pickDragonRotation(random);
   let soulSecured = false;
   let soulTimeSec = 0;
 
@@ -229,6 +262,7 @@ export function generateMatchTimeline(
 
     events.push({
       advantage: side,
+      dragonType: dragonRotation[Math.min(index, 2)],
       importance: isSoul ? "high" : index === 0 ? "medium" : "low",
       side,
       timeSec,

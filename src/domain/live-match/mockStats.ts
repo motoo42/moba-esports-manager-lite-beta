@@ -37,12 +37,12 @@ const teamStatsBySide: Record<
   blue: {
     gold: "55.1K",
     kills: 12,
-    objectives: { dragons: 3, heralds: 1, barons: 1, towers: 8 },
+    objectives: { dragons: 3, dragonTypes: [], heralds: 1, barons: 1, towers: 8 },
   },
   red: {
     gold: "51.6K",
     kills: 10,
-    objectives: { dragons: 1, heralds: 0, barons: 0, towers: 5 },
+    objectives: { dragons: 1, dragonTypes: [], heralds: 0, barons: 0, towers: 5 },
   },
 };
 

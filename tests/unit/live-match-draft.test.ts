@@ -20,6 +20,7 @@ function createTeam(name: string): LiveMatchTeamPresentation {
     objectives: {
       barons: 0,
       dragons: 0,
+      dragonTypes: [],
       heralds: 0,
       towers: 0,
     },

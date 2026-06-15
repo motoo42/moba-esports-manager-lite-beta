@@ -4,10 +4,12 @@ export { liveMatchRoleLabels, liveMatchRoles } from "./mockDraft";
 export { getLiveMatchUserTeamId } from "./playerSelection";
 export {
   dominanceFromWinnerWinProbability,
+  dragonTypes,
   generateMatchTimeline,
   matchTimelineRoles,
 } from "./matchTimeline";
 export type {
+  DragonType,
   GeneratedMatchTimeline,
   GenerateMatchTimelineInput,
   MatchTimelineEvent,

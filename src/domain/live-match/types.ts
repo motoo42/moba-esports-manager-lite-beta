@@ -1,7 +1,7 @@
 import type { Role } from "../../types/game";
 import type { Champion } from "../champions";
 import type { MatchItem } from "../items";
-import type { GeneratedMatchTimeline } from "./matchTimeline";
+import type { DragonType, GeneratedMatchTimeline } from "./matchTimeline";
 
 export type LiveMatchSide = "blue" | "red";
 
@@ -18,6 +18,8 @@ export type LiveMatchImportance = "low" | "medium" | "high" | "critical";
 export type LiveMatchObjectiveSnapshot = {
   barons: number;
   dragons: number;
+  // Elemental dragons taken in order, for the objective bar.
+  dragonTypes: DragonType[];
   heralds: number;
   towers: number;
 };
