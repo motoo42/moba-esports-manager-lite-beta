@@ -47,49 +47,38 @@ describe("player attributes", () => {
     expect(getPlayerAttributes(player)).toEqual(getPlayerAttributes(player));
   });
 
-  it("maps existing fields straight through to their attributes", () => {
-    const player = makePlayer({
-      laning: 77,
-      teamfight: 81,
-      macro: 64,
-      championPool: 88,
-      mental: 59,
-    });
-    const attributes = getPlayerAttributes(player);
+  it("anchors skill attributes to the overall while preserving texture", () => {
+    const low = getPlayerAttributes(
+      makePlayer({ overall: 60, laning: 88, macro: 52 }),
+    );
+    const high = getPlayerAttributes(
+      makePlayer({ overall: 90, laning: 88, macro: 52 }),
+    );
 
-    expect(attributes.laning).toBe(77);
-    expect(attributes.teamfight).toBe(81);
-    expect(attributes.macro).toBe(64);
-    expect(attributes.championPool).toBe(88);
-    expect(attributes.mentalStrength).toBe(59);
+    // Same texture inputs, higher overall -> higher anchored bars (growth follows).
+    expect(high.laning).toBeGreaterThan(low.laning);
+    expect(high.macro).toBeGreaterThan(low.macro);
+    // Texture survives: the stronger raw stat still reads above the weaker one.
+    expect(high.laning).toBeGreaterThan(high.macro);
+    expect(low.laning).toBeGreaterThan(low.macro);
   });
 
-  it("returns a flat overall when every weighted core stat is equal", () => {
+  it("uses the authored overall as the position overall", () => {
+    expect(computeRoleOverall(makePlayer({ overall: 83 }))).toBe(83);
+    expect(computeRoleOverall(makePlayer({ overall: 67 }))).toBe(67);
+  });
+
+  it("reads an off-position overall below the primary role", () => {
     const player = makePlayer({
       role: "mid",
-      laning: 70,
-      teamfight: 70,
-      macro: 70,
-      championPool: 70,
-      mental: 70,
-      mindset: { consistency: 70, clutch: 70 },
+      secondaryRoles: ["bot"],
+      overall: 80,
     });
 
-    expect(computeRoleOverall(player)).toBe(70);
-  });
-
-  it("weights positions differently — jungle values macro over laning", () => {
-    const player = makePlayer({
-      laning: 40,
-      macro: 90,
-      teamfight: 60,
-      championPool: 60,
-      mental: 60,
-      mindset: { consistency: 60, clutch: 60 },
-    });
-
-    expect(computeRoleOverall(player, "jungle")).toBeGreaterThan(
-      computeRoleOverall(player, "mid"),
+    expect(computeRoleOverall(player, "mid")).toBe(80);
+    expect(computeRoleOverall(player, "bot")).toBeLessThan(80);
+    expect(computeRoleOverall(player, "support")).toBeLessThan(
+      computeRoleOverall(player, "bot"),
     );
   });
 

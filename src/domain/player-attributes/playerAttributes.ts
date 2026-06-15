@@ -2,12 +2,14 @@ import type { Player, Role } from "../../types/game";
 
 // Player detail attributes (#72). This is a presentation/derivation layer over the
 // existing Player fields — it does NOT change the data model or the match-result
-// calculation. 11 of the 16 attributes map straight onto existing fields (several
-// of which were previously hidden inside `mindset` / `adaptability`); five are
-// derived deterministically per player — `positioning`, `lateGame`, `aggression`
-// from related stats, and `ego` / `leadership` as wide-spread, skill-independent
-// traits. None of the derived five (nor the temperament group) feed the position
-// overall. `potential` stays off the panel, shown only as 잠재 next to the overall.
+// calculation. The authored `player.overall` is the single anchor: the 12 skill
+// attributes (technical + tactical + mental) are re-centered onto `overall` so the
+// breakdown and the position overall can never diverge, while each player keeps the
+// relative shape of their raw stats (texture) plus a small seeded jitter. Because
+// the bars derive from `overall`, growth that raises `overall` pulls them along.
+// The 4 temperament attributes stay independent (situational / personality): `ego`
+// and `leadership` are wide-spread and skill-independent, `lateGame` / `aggression`
+// derive from related stats. `potential` stays off the panel, shown only as 잠재.
 
 export type PlayerAttributeKey =
   | "laning"
@@ -112,29 +114,89 @@ function seededWideRating(id: string, salt: string) {
   );
 }
 
+// The 12 skill attributes that get re-anchored onto `overall` (technical +
+// tactical + mental groups). The 4 temperament attributes are handled separately.
+const skillAttributeKeys = [
+  "laning",
+  "mechanics",
+  "positioning",
+  "championPool",
+  "teamfight",
+  "macro",
+  "prediction",
+  "shotcalling",
+  "focus",
+  "mentalStrength",
+  "clutch",
+  "composure",
+] as const;
+
+type SkillAttributeKey = (typeof skillAttributeKeys)[number];
+
+// How much of a player's raw stat spread survives re-anchoring. <1 keeps the shape
+// (strengths stay strengths, weaknesses stay weaknesses) while pulling the average
+// onto `overall`. The seeded jitter then nudges each bar a little.
+const skillTextureFactor = 0.7;
+const skillJitterSpread = 2.5;
+
 export function getPlayerAttributes(
   player: Player,
 ): Record<PlayerAttributeKey, number> {
   const score = (value: number) => clamp(Math.round(value), 1, 99);
+  const overall = clamp(player.overall, 1, 99);
+
+  // Raw skill values (pre-anchor): existing fields plus a few light derivations.
+  const rawSkill: Record<SkillAttributeKey, number> = {
+    laning: player.laning,
+    mechanics: player.mechanics,
+    positioning:
+      player.teamfight * 0.55 +
+      player.mechanics * 0.25 +
+      player.mindset.consistency * 0.2,
+    championPool: player.championPool,
+    teamfight: player.teamfight,
+    macro: player.macro,
+    prediction: player.adaptability.metaAdaptability,
+    shotcalling: player.mindset.communication,
+    focus: player.mindset.consistency,
+    mentalStrength: player.mental,
+    clutch: player.mindset.clutch,
+    composure: player.mindset.tiltControl,
+  };
+
+  const skillMean =
+    skillAttributeKeys.reduce((sum, key) => sum + rawSkill[key], 0) /
+    skillAttributeKeys.length;
+
+  // Re-center each skill on `overall`, keeping its deviation from the player's own
+  // skill mean (texture), plus a small seeded jitter whose seed includes `overall`
+  // — so as the player grows the breakdown re-distributes organically rather than
+  // shifting perfectly flat.
+  const anchor = (key: SkillAttributeKey) =>
+    score(
+      overall +
+        (rawSkill[key] - skillMean) * skillTextureFactor +
+        seededVariation(
+          player.id,
+          `anchor-${key}-${Math.round(overall)}`,
+          skillJitterSpread,
+        ),
+    );
 
   return {
-    laning: score(player.laning),
-    mechanics: score(player.mechanics),
-    positioning: score(
-      player.teamfight * 0.55 +
-        player.mechanics * 0.25 +
-        player.mindset.consistency * 0.2 +
-        seededVariation(player.id, "positioning", 6),
-    ),
-    championPool: score(player.championPool),
-    teamfight: score(player.teamfight),
-    macro: score(player.macro),
-    prediction: score(player.adaptability.metaAdaptability),
-    shotcalling: score(player.mindset.communication),
-    focus: score(player.mindset.consistency),
-    mentalStrength: score(player.mental),
-    clutch: score(player.mindset.clutch),
-    composure: score(player.mindset.tiltControl),
+    laning: anchor("laning"),
+    mechanics: anchor("mechanics"),
+    positioning: anchor("positioning"),
+    championPool: anchor("championPool"),
+    teamfight: anchor("teamfight"),
+    macro: anchor("macro"),
+    prediction: anchor("prediction"),
+    shotcalling: anchor("shotcalling"),
+    focus: anchor("focus"),
+    mentalStrength: anchor("mentalStrength"),
+    clutch: anchor("clutch"),
+    composure: anchor("composure"),
+    // Temperament stays independent of `overall`.
     lateGame: score(
       player.teamfight * 0.45 +
         player.mechanics * 0.3 +
@@ -152,43 +214,28 @@ export function getPlayerAttributes(
   };
 }
 
-type OverallWeightKey = Extract<
-  PlayerAttributeKey,
-  | "laning"
-  | "teamfight"
-  | "macro"
-  | "championPool"
-  | "focus"
-  | "clutch"
-  | "mentalStrength"
->;
-
-// Position-weighted overall (#72). Each role values the core attributes
-// differently; weights sum to 1 so the result stays on the 0-100 scale. Growth /
-// temperament are intentionally excluded — current ability only. This is a pure
-// helper offered to UI and (later) the match engine; it does not feed the live
-// match-result calculation yet.
-const roleOverallWeights: Record<Role, Record<OverallWeightKey, number>> = {
-  top: { laning: 0.24, teamfight: 0.2, macro: 0.16, championPool: 0.08, focus: 0.18, clutch: 0.06, mentalStrength: 0.08 },
-  jungle: { laning: 0.1, teamfight: 0.22, macro: 0.3, championPool: 0.1, focus: 0.12, clutch: 0.08, mentalStrength: 0.08 },
-  mid: { laning: 0.24, teamfight: 0.22, macro: 0.12, championPool: 0.16, focus: 0.06, clutch: 0.12, mentalStrength: 0.08 },
-  bot: { laning: 0.2, teamfight: 0.26, macro: 0.08, championPool: 0.1, focus: 0.18, clutch: 0.1, mentalStrength: 0.08 },
-  support: { laning: 0.12, teamfight: 0.22, macro: 0.28, championPool: 0.08, focus: 0.16, clutch: 0.06, mentalStrength: 0.08 },
-};
+// The authored `overall` IS the position overall — the detailed bars are derived to
+// match it (see getPlayerAttributes), so the two never diverge and growth flows
+// straight through. A player rated in a role other than their own reads below their
+// primary number (a touch for a known secondary role, more for a foreign one).
+const secondaryRolePenalty = 4;
+const offRolePenalty = 9;
 
 export function computeRoleOverall(
   player: Player,
   role: Role = player.role,
 ): number {
-  const attributes = getPlayerAttributes(player);
-  const weights = roleOverallWeights[role];
+  const overall = clamp(Math.round(player.overall), 1, 99);
 
-  const total = (Object.keys(weights) as OverallWeightKey[]).reduce(
-    (sum, key) => sum + attributes[key] * weights[key],
-    0,
-  );
+  if (role === player.role) {
+    return overall;
+  }
 
-  return clamp(Math.round(total), 1, 99);
+  const penalty = player.secondaryRoles.includes(role)
+    ? secondaryRolePenalty
+    : offRolePenalty;
+
+  return clamp(overall - penalty, 1, 99);
 }
 
 export type PlayerAttributeTier =
