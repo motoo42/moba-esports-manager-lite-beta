@@ -137,6 +137,46 @@ describe("match timeline generator", () => {
     }
   });
 
+  it("grants the soul on a team's 4th dragon and gates elder behind it", () => {
+    let sawSoul = false;
+
+    for (let index = 0; index < 30; index += 1) {
+      const timeline = generateMatchTimeline({
+        seed: `dragon-${index}`,
+        winningSide: "blue",
+        dominance: 0.1,
+      });
+      const dragonsAndSoul = timeline.events.filter(
+        (event) => event.type === "dragon" || event.type === "soul",
+      );
+
+      // Never more than 7 dragons (3-3 plus the soul-granting 7th).
+      expect(dragonsAndSoul.length).toBeLessThanOrEqual(7);
+
+      const soul = timeline.events.find((event) => event.type === "soul");
+      const elders = timeline.events.filter((event) => event.type === "elder");
+
+      if (!soul) {
+        // No soul means no elder may spawn.
+        expect(elders).toHaveLength(0);
+        continue;
+      }
+
+      sawSoul = true;
+
+      // The soul side has exactly four dragons (three dragons + the soul).
+      const soulSideDragons = dragonsAndSoul.filter(
+        (event) => event.side === soul.side,
+      );
+      expect(soulSideDragons).toHaveLength(4);
+
+      // Elder only appears after the soul is secured.
+      expect(elders.every((event) => event.timeSec >= soul.timeSec)).toBe(true);
+    }
+
+    expect(sawSoul).toBe(true);
+  });
+
   it("maps the winner's win probability to a 0..1 dominance scale (upsets stay close)", () => {
     expect(dominanceFromWinnerWinProbability(0.5)).toBe(0);
     expect(dominanceFromWinnerWinProbability(1)).toBe(1);

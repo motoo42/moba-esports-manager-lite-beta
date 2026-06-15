@@ -209,18 +209,23 @@ export function generateMatchTimeline(
       ? winningSide
       : losingSide;
 
-  // 1. Dragons (every ~5 min). First dragon and the soul-granting dragon are
-  //    the only ones surfaced in the commentary feed.
-  const dragonCount = clamp(Math.floor((durationMin - 6) / 5) + 1, 1, 6);
+  // 1. Dragons & soul. A team earns the soul on ITS 4th dragon, so up to 7
+  //    dragons can spawn (a 3-3 split, then the 7th grants someone the soul).
+  //    Only the first dragon and the soul itself surface in the commentary feed.
+  const dragonCountBySide: Record<LiveMatchSide, number> = { blue: 0, red: 0 };
+  let soulSecured = false;
+  let soulTimeSec = 0;
 
-  for (let index = 0; index < dragonCount; index += 1) {
-    const timeSec = clamp(
-      Math.round((6 + index * 5 + (random() - 0.5) * 1.5) * 60),
-      5 * 60,
-      durationSec - 90,
-    );
+  for (let index = 0; index < 7; index += 1) {
+    const timeSec = Math.round((6 + index * 5 + (random() - 0.5) * 1.5) * 60);
+
+    if (timeSec > durationSec - 80) {
+      break;
+    }
+
     const side = winnerWeighted(0.18);
-    const isSoul = index === 3;
+    dragonCountBySide[side] += 1;
+    const isSoul = dragonCountBySide[side] === 4;
 
     events.push({
       advantage: side,
@@ -230,6 +235,12 @@ export function generateMatchTimeline(
       type: isSoul ? "soul" : "dragon",
       visible: isSoul || index === 0,
     });
+
+    if (isSoul) {
+      soulSecured = true;
+      soulTimeSec = timeSec;
+      break;
+    }
   }
 
   // 2. Rift Herald (early, usually internal-only).
@@ -274,24 +285,31 @@ export function generateMatchTimeline(
     }
   }
 
-  // 4. Elder dragon — only in longer games, occasionally stolen.
-  if (durationMin >= 35 && random() < 0.7) {
-    const side = winnerWeighted(0.2);
-    const isSteal = random() < 0.1;
+  // 4. Elder dragon — only spawns once a soul has been secured, then re-spawns on
+  //    a timer. Either side can take it, occasionally as a steal.
+  if (soulSecured) {
+    for (let index = 0; index < 3; index += 1) {
+      const timeSec = Math.round(
+        (soulTimeSec / 60 + 6 + index * 6 + random() * 1.5) * 60,
+      );
 
-    events.push({
-      advantage: side,
-      importance: "critical",
-      isSteal,
-      side,
-      timeSec: clamp(
-        Math.round((35 + random() * (durationMin - 35)) * 60),
-        35 * 60,
-        durationSec - 80,
-      ),
-      type: "elder",
-      visible: true,
-    });
+      if (timeSec > durationSec - 70) {
+        break;
+      }
+
+      const side = winnerWeighted(0.2);
+      const isSteal = random() < 0.1;
+
+      events.push({
+        advantage: side,
+        importance: "critical",
+        isSteal,
+        side,
+        timeSec,
+        type: "elder",
+        visible: true,
+      });
+    }
   }
 
   // 5. Laning-phase solo kills — rare but always surfaced as key moments.
