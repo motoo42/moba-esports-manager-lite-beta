@@ -45,13 +45,15 @@ import {
   transitionFromMsiToLckRounds35,
 } from "../season";
 import { calculateTeamPower } from "../match-simulation";
-import { simulateSeries } from "../series";
+import { simulateSeries, summarizeSeriesGames } from "../series";
 import type {
   CareerSave,
   CompetitionId,
   MatchRecord,
   MatchResult,
   MatchSchedule,
+  MatchSeriesGameSummary,
+  MatchSeriesReplay,
   SeasonState,
   Team,
 } from "../../types/game";
@@ -59,6 +61,7 @@ import type {
 export type CareerProgressResult = {
   career: CareerSave;
   lastMatch: MatchResult | null;
+  liveMatchSeries?: MatchSeriesReplay | null;
   trace?: CareerProgressTrace;
 };
 
@@ -270,7 +273,11 @@ export function createMatchRecordFromSchedule({
   career: CareerSave;
   match: MatchSchedule;
   matchIndex: number;
-}): { record: MatchRecord; lastMatchResult: MatchResult } {
+}): {
+  record: MatchRecord;
+  lastMatchResult: MatchResult;
+  seriesGames: MatchSeriesGameSummary[];
+} {
   const userTeamId = getUserTeamId(career.seasonState);
   if (!userTeamId) {
     throw new Error("User match requested without an active user team.");
@@ -319,6 +326,7 @@ export function createMatchRecordFromSchedule({
 
   return {
     lastMatchResult: lastGame.result,
+    seriesGames: summarizeSeriesGames(series, userIsBlue),
     record: {
       id: `${match.id}-record-${career.seasonState.currentTurn + 1}-${matchIndex + 1}`,
       scheduleId: match.id,
@@ -779,12 +787,21 @@ function playCurrentDate(career: CareerSave): CareerProgressResult {
         matchIndex: index,
       }),
       lastMatchResult: null,
+      seriesGames: [] as MatchSeriesGameSummary[],
     };
   });
   const records = results.map((result) => result.record);
-  const lastResult =
-    results.find((result) => result.record.userResult !== "none")?.lastMatchResult ??
-    null;
+  const userSeriesResult = results.find(
+    (result) => result.record.userResult !== "none",
+  );
+  const lastResult = userSeriesResult?.lastMatchResult ?? null;
+  const liveMatchSeries: MatchSeriesReplay | null =
+    userSeriesResult && userSeriesResult.seriesGames.length > 0
+      ? {
+          games: userSeriesResult.seriesGames,
+          recordId: userSeriesResult.record.id,
+        }
+      : null;
   const userWins = records.filter((record) => record.userResult === "win").length;
   const userLosses = records.filter((record) => record.userResult === "loss").length;
   const userResult = userWins > 0 ? "win" : userLosses > 0 ? "loss" : "none";
@@ -825,6 +842,7 @@ function playCurrentDate(career: CareerSave): CareerProgressResult {
       },
     },
     lastMatch: lastResult,
+    liveMatchSeries,
   };
 }
 

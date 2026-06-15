@@ -391,6 +391,20 @@ export type DraftPickSummary = {
   reasons: string[];
 };
 
+// Per-game summary of a played series, surfaced transiently so the live-match
+// replay can play each set with its real winner and banpick. Not persisted.
+export type MatchSeriesGameSummary = {
+  draft?: MatchDraftSummary;
+  gameNumber: number;
+  winnerSide: "blue" | "red";
+  winProbability: number;
+};
+
+export type MatchSeriesReplay = {
+  games: MatchSeriesGameSummary[];
+  recordId: string;
+};
+
 export type SeasonPhase = "stove-league" | "competition" | "offseason" | "completed";
 
 export type CompetitionStateStatus = Competition["status"];
