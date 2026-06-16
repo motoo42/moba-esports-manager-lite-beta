@@ -4,6 +4,7 @@ import {
   applyStatSnapshotToTeams,
   buildNarrationContext,
   createMockLiveMatchPresentation,
+  getFinalMatchSnapshot,
   getLiveMatchSetId,
 } from "../../domain/live-match";
 import type { CareerSave, MatchSeriesReplay } from "../../types/game";
@@ -62,14 +63,22 @@ export function LiveMatchPrototype({
     playback.play();
   }, [playback, safeIndex]);
 
+  // The set's final-frame snapshot fixes each player's end-game gold, so item slots can
+  // fill proportionally as the replay advances. Stable per set (frozen replay).
+  const finalSnapshot = useMemo(
+    () => getFinalMatchSnapshot(baseSet.timeline),
+    [baseSet],
+  );
+
   const liveTeams = useMemo(
     () =>
       applyStatSnapshotToTeams({
         blueTeam: baseSet.blueTeam,
+        finalSnapshot,
         redTeam: baseSet.redTeam,
         snapshot: playback.snapshot,
       }),
-    [baseSet, playback.snapshot],
+    [baseSet, finalSnapshot, playback.snapshot],
   );
 
   const liveSet = useMemo(

@@ -1,5 +1,4 @@
 import type { Role } from "../../types/game";
-import { getMatchItems } from "../items";
 import type {
   LiveMatchObjectiveSnapshot,
   LiveMatchPlayerStats,
@@ -46,28 +45,6 @@ const teamStatsBySide: Record<
   },
 };
 
-const itemIdsBySideAndRole: Record<
-  LiveMatchSide,
-  Record<Role, Array<string | null>>
-> = {
-  // Six real items per build: five completed items plus one pair of boots, so the
-  // five item slots and the boot slot are all filled (no empty sample slot).
-  blue: {
-    top: ["3071", "3161", "6333", "3053", "3065", "3047"],
-    jungle: ["6631", "3078", "6333", "6692", "3053", "3158"],
-    mid: ["6655", "3089", "3157", "3135", "4645", "3020"],
-    bot: ["3031", "6672", "3094", "3036", "6676", "3006"],
-    support: ["3869", "3190", "3109", "3107", "3222", "3047"],
-  },
-  red: {
-    top: ["6662", "3071", "3053", "3065", "3075", "3111"],
-    jungle: ["3068", "3075", "6665", "2502", "6664", "3158"],
-    mid: ["3003", "4645", "3089", "3157", "3135", "3020"],
-    bot: ["3031", "6676", "6673", "3036", "3094", "3006"],
-    support: ["3876", "3109", "3190", "3222", "3504", "3111"],
-  },
-};
-
 export function getMockLiveMatchPlayerBaseStats(
   side: LiveMatchSide,
   role: Role,
@@ -77,8 +54,4 @@ export function getMockLiveMatchPlayerBaseStats(
 
 export function getMockLiveMatchTeamStats(side: LiveMatchSide) {
   return teamStatsBySide[side];
-}
-
-export function getMockLiveMatchItemSlots(side: LiveMatchSide, role: Role) {
-  return getMatchItems(itemIdsBySideAndRole[side][role]);
 }

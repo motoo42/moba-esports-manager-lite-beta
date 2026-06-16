@@ -5,7 +5,6 @@ import {
   liveMatchRoles,
 } from "./mockDraft";
 import {
-  getMockLiveMatchItemSlots,
   getMockLiveMatchPlayerBaseStats,
   getMockLiveMatchTeamStats,
 } from "./mockStats";
@@ -44,7 +43,9 @@ function createMockPlayer({
     role,
     stats: {
       ...baseStats,
-      itemSlots: getMockLiveMatchItemSlots(side, role),
+      // Items start empty; the live snapshot adapter fills the slots over time from
+      // the build timeline (progress = gold(t) / final gold).
+      itemSlots: [],
     },
   };
 }

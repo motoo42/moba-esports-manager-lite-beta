@@ -1,3 +1,4 @@
+import { getLiveMatchItemSlotsAt } from "./liveItemBuilds";
 import type { MatchStatSnapshot, ObjectiveTally, TeamStatSnapshot } from "./matchStats";
 import type {
   LiveNarrationContext,
@@ -5,13 +6,15 @@ import type {
 } from "./matchNarration";
 import type {
   LiveMatchObjectiveSnapshot,
+  LiveMatchSide,
   LiveMatchTeamPresentation,
 } from "./types";
 
 // Maps the engine's numeric stat snapshot onto the existing presentation shapes.
-// Pure: identity (team/player names, champions, portraits, item slots) is carried
-// over from the base presentation; only the live numbers are overwritten. Item
-// slots stay as-is because the v1 engine does not generate items.
+// Pure: identity (team/player names, champions, portraits) is carried over from the
+// base presentation; only the live numbers are overwritten. Item slots fill over time
+// from the build timeline when a side + final snapshot are supplied (progress =
+// gold(t) / final gold); without them they are left as-is.
 
 export function formatLiveGold(gold: number): string {
   if (gold >= 1000) {
@@ -36,9 +39,15 @@ export function toLiveObjectiveSnapshot(
 }
 
 export function applyStatSnapshotToTeam({
+  finalTeam,
+  side,
   snapshot,
   team,
 }: {
+  // The team's FINAL snapshot — its players' end-game gold sets each build's 100%
+  // mark, so item slots fill proportionally over the game. Omit to leave items as-is.
+  finalTeam?: TeamStatSnapshot;
+  side?: LiveMatchSide;
   snapshot: TeamStatSnapshot;
   team: LiveMatchTeamPresentation;
 }): LiveMatchTeamPresentation {
@@ -54,6 +63,12 @@ export function applyStatSnapshotToTeam({
         return player;
       }
 
+      const finalGold = finalTeam?.players[player.role]?.gold;
+      const itemSlots =
+        side && finalGold && finalGold > 0
+          ? getLiveMatchItemSlotsAt(side, player.role, stat.gold / finalGold)
+          : player.stats.itemSlots;
+
       return {
         ...player,
         stats: {
@@ -61,6 +76,7 @@ export function applyStatSnapshotToTeam({
           assists: stat.assists,
           deaths: stat.deaths,
           gold: formatLiveGold(stat.gold),
+          itemSlots,
           kills: stat.kills,
           level: stat.level,
         },
@@ -71,16 +87,29 @@ export function applyStatSnapshotToTeam({
 
 export function applyStatSnapshotToTeams({
   blueTeam,
+  finalSnapshot,
   redTeam,
   snapshot,
 }: {
   blueTeam: LiveMatchTeamPresentation;
+  // Final-frame snapshot; enables time-based item slots (see applyStatSnapshotToTeam).
+  finalSnapshot?: MatchStatSnapshot;
   redTeam: LiveMatchTeamPresentation;
   snapshot: MatchStatSnapshot;
 }) {
   return {
-    blueTeam: applyStatSnapshotToTeam({ snapshot: snapshot.blue, team: blueTeam }),
-    redTeam: applyStatSnapshotToTeam({ snapshot: snapshot.red, team: redTeam }),
+    blueTeam: applyStatSnapshotToTeam({
+      finalTeam: finalSnapshot?.blue,
+      side: "blue",
+      snapshot: snapshot.blue,
+      team: blueTeam,
+    }),
+    redTeam: applyStatSnapshotToTeam({
+      finalTeam: finalSnapshot?.red,
+      side: "red",
+      snapshot: snapshot.red,
+      team: redTeam,
+    }),
   };
 }
 
