@@ -527,6 +527,14 @@ export function MainDashboard({
                     <span>{primaryPreviewOpponent.name} 구단 정보</span>
                   </button>
                 )}
+                {primaryPreviewMatch.scheduledDate && (
+                  <p className="match-date-chip">
+                    <span>경기일</span>
+                    <strong>
+                      {formatSeasonDateLabel(primaryPreviewMatch.scheduledDate)}
+                    </strong>
+                  </p>
+                )}
                 <p>
                   {activeCompetitionName} {primaryPreviewMatch.week}주차 경기일입니다.
                   플레이 후 오늘 {previewMatches.length}시리즈 결과 리뷰로 전환됩니다.
@@ -562,11 +570,6 @@ export function MainDashboard({
                     value={`${career.userTeam.wins}W ${career.userTeam.losses}L`}
                   />
                 </div>
-                <WeeklyPreviewList
-                  matches={previewMatches}
-                  title="오늘 일정"
-                  userTeamId={userTeamId}
-                />
               </>
             ) : primaryNextMatch ? (
               <>
