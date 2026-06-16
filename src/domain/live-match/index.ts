@@ -17,6 +17,12 @@ export type {
   MatchTimelineKillInfo,
 } from "./matchTimeline";
 export { getFinalMatchSnapshot, getMatchSnapshotAt } from "./matchStats";
+export { buildMomentumSeries } from "./buildMomentumSeries";
+export type {
+  MomentumMarker,
+  MomentumPoint,
+  MomentumSeries,
+} from "./buildMomentumSeries";
 export type {
   MatchStatSnapshot,
   ObjectiveTally,

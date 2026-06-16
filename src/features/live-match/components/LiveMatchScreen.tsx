@@ -11,6 +11,7 @@ import type { LiveCommentaryEntry } from "../liveCommentaryView";
 import type { MatchPlayback } from "../useMatchPlayback";
 import { LiveDragonIcon } from "./LiveDragonIcon";
 import { LiveMatchIcon } from "./LiveMatchIcon";
+import { LiveMomentumGraph } from "./LiveMomentumGraph";
 import { LivePlayerPortraitRail } from "./LivePlayerPortraitRail";
 import { LiveStatsBoard } from "./LiveStatsBoard";
 
@@ -205,6 +206,8 @@ export function LiveMatchScreen({
 
         <LivePlayerPortraitRail side="red" team={set.redTeam} />
       </main>
+
+      <LiveMomentumGraph gameTimeSec={playback.gameTimeSec} set={set} />
 
       <LiveStatsBoard set={set} />
     </>

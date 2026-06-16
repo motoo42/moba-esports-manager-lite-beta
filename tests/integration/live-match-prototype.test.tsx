@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveMatchPrototype } from "../../src/features/live-match/LiveMatchPrototype";
 
@@ -51,8 +51,10 @@ describe("LiveMatchPrototype", () => {
     const lateCount = container.querySelectorAll(".live-commentary-event").length;
 
     expect(lateCount).toBeGreaterThan(earlyCount);
-    // The mandatory closing nexus is reached and narrated by the end.
-    expect(screen.getByText("넥서스 파괴")).toBeInTheDocument();
+    // The mandatory closing nexus is reached and narrated by the end. Scope to the
+    // commentary feed since the momentum graph callout shows the same event name.
+    const feed = container.querySelector(".live-commentary-feed") as HTMLElement;
+    expect(within(feed).getByText("넥서스 파괴")).toBeInTheDocument();
   });
 
   it("renders a live 10-player stat board with KDA after playback", () => {
@@ -67,13 +69,14 @@ describe("LiveMatchPrototype", () => {
   });
 
   it("jumps to the result when 세트 결과 is pressed", () => {
-    renderAndStart();
+    const { container } = renderAndStart();
 
     act(() => {
       fireEvent.click(screen.getByText("세트 결과"));
     });
 
-    expect(screen.getByText("넥서스 파괴")).toBeInTheDocument();
+    const feed = container.querySelector(".live-commentary-feed") as HTMLElement;
+    expect(within(feed).getByText("넥서스 파괴")).toBeInTheDocument();
   });
 
   it("filters the feed down to swing moments under 핵심 상황", () => {
