@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { MatchAbilities } from "../../src/domain/live-match/matchAbilityBias";
 import {
   dominanceFromWinnerWinProbability,
   generateMatchTimeline,
@@ -7,6 +8,7 @@ import {
   type GeneratedMatchTimeline,
 } from "../../src/domain/live-match/matchTimeline";
 import type { LiveMatchSide } from "../../src/domain/live-match/types";
+import type { Role } from "../../src/types/game";
 
 function killEvents(timeline: GeneratedMatchTimeline) {
   return timeline.events.filter((event) => event.type === "kill");
@@ -22,6 +24,73 @@ function deathsBySide(timeline: GeneratedMatchTimeline) {
 
   return deaths;
 }
+
+function flatAbility(overall: number) {
+  return {
+    laning: overall,
+    macro: overall,
+    mechanics: overall,
+    overall,
+    teamfight: overall,
+  };
+}
+
+function buildAbilities(
+  blue: Record<Role, number>,
+  red: Record<Role, number>,
+): MatchAbilities {
+  const side = (overalls: Record<Role, number>) =>
+    Object.fromEntries(
+      matchTimelineRoles.map((role) => [role, flatAbility(overalls[role])]),
+    ) as MatchAbilities["blue"];
+
+  return { blue: side(blue), red: side(red) };
+}
+
+function emptyRoleCounts() {
+  return Object.fromEntries(
+    matchTimelineRoles.map((role) => [role, 0]),
+  ) as Record<Role, number>;
+}
+
+// Total kills landed by each role on `side`, summed across a sample of timelines.
+function killerCounts(
+  timelines: GeneratedMatchTimeline[],
+  side: LiveMatchSide,
+) {
+  const counts = emptyRoleCounts();
+
+  for (const timeline of timelines) {
+    for (const event of killEvents(timeline)) {
+      if (event.side === side && event.kill) {
+        counts[event.kill.killerRole] += 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+// Total deaths taken by each role on `victimSide`, summed across timelines.
+function victimCounts(
+  timelines: GeneratedMatchTimeline[],
+  victimSide: LiveMatchSide,
+) {
+  const scoringSide = victimSide === "blue" ? "red" : "blue";
+  const counts = emptyRoleCounts();
+
+  for (const timeline of timelines) {
+    for (const event of killEvents(timeline)) {
+      if (event.side === scoringSide && event.kill) {
+        counts[event.kill.victimRole] += 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+const ABILITY_SEEDS = Array.from({ length: 60 }, (_, index) => `ability-${index}`);
 
 describe("match timeline generator", () => {
   it("is deterministic for the same seed", () => {
@@ -46,6 +115,88 @@ describe("match timeline generator", () => {
       expect(timeline.finalKills.blue).toBe(deaths.red);
       expect(timeline.finalKills.red).toBe(deaths.blue);
     }
+  });
+
+  it("biases kill share toward stronger players, keeping side totals intact", () => {
+    const abilities = buildAbilities(
+      { top: 58, jungle: 72, mid: 92, bot: 72, support: 72 },
+      { top: 72, jungle: 72, mid: 72, bot: 72, support: 72 },
+    );
+    const timelines = ABILITY_SEEDS.map((seed) =>
+      generateMatchTimeline({
+        seed,
+        winningSide: "blue",
+        dominance: 0.4,
+        playerAbilities: abilities,
+      }),
+    );
+
+    // A 92-overall mid out-kills a 58-overall top on the same team, across the sample.
+    const blueKills = killerCounts(timelines, "blue");
+    expect(blueKills.mid).toBeGreaterThan(blueKills.top);
+
+    // The side-level invariant still holds for every game with abilities applied.
+    for (const timeline of timelines) {
+      const deaths = deathsBySide(timeline);
+      expect(timeline.finalKills.blue).toBe(deaths.red);
+      expect(timeline.finalKills.red).toBe(deaths.blue);
+    }
+  });
+
+  it("makes the weaker player on a side feed more deaths", () => {
+    const abilities = buildAbilities(
+      { top: 72, jungle: 72, mid: 72, bot: 72, support: 72 },
+      { top: 55, jungle: 72, mid: 90, bot: 72, support: 72 },
+    );
+    const timelines = ABILITY_SEEDS.map((seed) =>
+      generateMatchTimeline({
+        seed,
+        winningSide: "blue",
+        dominance: 0.4,
+        playerAbilities: abilities,
+      }),
+    );
+
+    const redDeaths = victimCounts(timelines, "red");
+    expect(redDeaths.top).toBeGreaterThan(redDeaths.mid);
+  });
+
+  it("gives the better-macro side more objective control", () => {
+    const blueStrongMacro = buildAbilities(
+      { top: 85, jungle: 92, mid: 85, bot: 85, support: 85 },
+      { top: 60, jungle: 58, mid: 60, bot: 60, support: 60 },
+    );
+    const blueWeakMacro = buildAbilities(
+      { top: 60, jungle: 58, mid: 60, bot: 60, support: 60 },
+      { top: 85, jungle: 92, mid: 85, bot: 85, support: 85 },
+    );
+
+    const winnerDragons = (abilities: MatchAbilities) => {
+      let count = 0;
+      for (const seed of ABILITY_SEEDS) {
+        const timeline = generateMatchTimeline({
+          seed,
+          winningSide: "blue",
+          dominance: 0.4,
+          playerAbilities: abilities,
+        });
+        for (const event of timeline.events) {
+          if (
+            (event.type === "dragon" || event.type === "soul") &&
+            event.side === "blue"
+          ) {
+            count += 1;
+          }
+        }
+      }
+      return count;
+    };
+
+    // Blue wins both samples; when blue also has the stronger macro it controls more
+    // of the dragons than when its macro is weak (but it always wins regardless).
+    expect(winnerDragons(blueStrongMacro)).toBeGreaterThan(
+      winnerDragons(blueWeakMacro),
+    );
   });
 
   it("lets the winning side finish ahead on kills and take the nexus last", () => {

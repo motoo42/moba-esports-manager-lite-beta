@@ -218,9 +218,12 @@ function finalizePlayer(
   accumulator: PlayerAccumulator,
   role: Role,
   timeSec: number,
+  goldRateMultiplier = 1,
 ): PlayerStatSnapshot {
   const gold = Math.round(
-    STARTING_GOLD + passiveGoldPerSecByRole[role] * timeSec + accumulator.bonusGold,
+    STARTING_GOLD +
+      passiveGoldPerSecByRole[role] * timeSec * goldRateMultiplier +
+      accumulator.bonusGold,
   );
   const level = clamp(
     Math.round(
@@ -244,13 +247,19 @@ function finalizePlayer(
 function finalizeTeam(
   team: TeamAccumulator,
   timeSec: number,
+  goldRateMultipliers?: Record<Role, number>,
 ): TeamStatSnapshot {
   const players = {} as Record<Role, PlayerStatSnapshot>;
   let kills = 0;
   let gold = 0;
 
   for (const role of matchTimelineRoles) {
-    const player = finalizePlayer(team.players[role], role, timeSec);
+    const player = finalizePlayer(
+      team.players[role],
+      role,
+      timeSec,
+      goldRateMultipliers?.[role] ?? 1,
+    );
     players[role] = player;
     kills += player.kills;
     gold += player.gold;
@@ -286,8 +295,8 @@ export function getMatchSnapshotAt(
   }
 
   return {
-    blue: finalizeTeam(teams.blue, cappedTime),
-    red: finalizeTeam(teams.red, cappedTime),
+    blue: finalizeTeam(teams.blue, cappedTime, timeline.goldRateMultipliers?.blue),
+    red: finalizeTeam(teams.red, cappedTime, timeline.goldRateMultipliers?.red),
     timeSec: cappedTime,
   };
 }

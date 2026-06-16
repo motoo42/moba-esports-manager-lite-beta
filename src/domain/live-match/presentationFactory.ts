@@ -18,6 +18,10 @@ import {
   getDraftPickChampionIds,
 } from "./draftAdapter";
 import { createDraftPickOrder } from "./draftPickOrder";
+import type {
+  MatchAbilities,
+  MatchPlayerAbility,
+} from "./matchAbilityBias";
 import {
   createSetTimeline,
   liveMatchOutcomeFromRecord,
@@ -246,6 +250,50 @@ function getAggressiveSupportSides(
   return sides;
 }
 
+function toMatchPlayerAbility(player: Player | undefined): MatchPlayerAbility {
+  return {
+    laning: player?.laning ?? 72,
+    macro: player?.macro ?? 72,
+    mechanics: player?.mechanics ?? 72,
+    overall: player?.overall ?? 72,
+    teamfight: player?.teamfight ?? 72,
+  };
+}
+
+// Per-side, per-role ability for both rosters, pulled from the same player selection
+// the screen already uses. Feeds the timeline's INTERNAL distribution only (who gets
+// the kills/gold within a team); the result is untouched.
+function buildMatchAbilities({
+  career,
+  match,
+  userTeamId,
+}: {
+  career: CareerSave | null;
+  match?: MatchSchedule;
+  userTeamId: string;
+}): MatchAbilities {
+  const abilitiesForSide = (side: LiveMatchSide) => {
+    const teamName = getTeamNameForSide(match, side);
+    const userControlled = isUserTeam({ career, match, side, userTeamId });
+    const roleAbilities = {} as Record<Role, MatchPlayerAbility>;
+
+    for (const role of liveMatchRoles) {
+      roleAbilities[role] = toMatchPlayerAbility(
+        getLiveMatchPlayerForRole({
+          career,
+          isUserTeam: userControlled,
+          role,
+          teamName,
+        }),
+      );
+    }
+
+    return roleAbilities;
+  };
+
+  return { blue: abilitiesForSide("blue"), red: abilitiesForSide("red") };
+}
+
 function buildLiveMatchSet({
   baseBlueTeam,
   baseRedTeam,
@@ -253,6 +301,7 @@ function buildLiveMatchSet({
   format,
   gameNumber,
   outcome,
+  playerAbilities,
   stageName,
   usedChampionIdsByGame,
 }: {
@@ -262,6 +311,7 @@ function buildLiveMatchSet({
   format: MatchFormat;
   gameNumber: number;
   outcome: LiveMatchOutcome;
+  playerAbilities?: MatchAbilities;
   stageName: string;
   // Picks from the PREVIOUS sets only — the current set's picks must stay out of
   // the fearless pool or the banpick is spoiled before it plays out.
@@ -301,6 +351,7 @@ function buildLiveMatchSet({
     stageName,
     timeline: createSetTimeline(outcome, {
       aggressiveSupportSides: getAggressiveSupportSides(blueTeam, redTeam),
+      playerAbilities,
     }),
     timelineEvents: mockLiveMatchTimelineEvents,
   };
@@ -327,6 +378,8 @@ export function createLiveMatchPresentationFromCareer(
     userTeamId,
   });
   const stageName = match?.stageName ?? "LCK Cup Group Battle";
+  // Same per-match abilities for every set (the rosters do not change between games).
+  const playerAbilities = buildMatchAbilities({ career, match, userTeamId });
   const buildSet = (config: {
     draftSummary?: MatchDraftSummary;
     gameNumber: number;
@@ -337,6 +390,7 @@ export function createLiveMatchPresentationFromCareer(
       baseBlueTeam,
       baseRedTeam,
       format,
+      playerAbilities,
       stageName,
       ...config,
       usedChampionIdsByGame: config.usedChampionIdsByGame ?? [],

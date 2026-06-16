@@ -1,3 +1,4 @@
+import type { MatchAbilities } from "./matchAbilityBias";
 import {
   dominanceFromWinnerWinProbability,
   generateMatchTimeline,
@@ -79,11 +80,15 @@ export function liveMatchOutcomeFromRecord(record: {
 
 export function createSetTimeline(
   outcome: LiveMatchOutcome,
-  options?: { aggressiveSupportSides?: LiveMatchSide[] },
+  options?: {
+    aggressiveSupportSides?: LiveMatchSide[];
+    playerAbilities?: MatchAbilities;
+  },
 ): GeneratedMatchTimeline {
   return generateMatchTimeline({
     aggressiveSupportSides: options?.aggressiveSupportSides,
     dominance: dominanceFromWinnerWinProbability(outcome.winnerWinProbability),
+    playerAbilities: options?.playerAbilities,
     seed: outcome.seed,
     winningSide: outcome.winningSide,
   });
