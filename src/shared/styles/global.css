@@ -6981,6 +6981,13 @@ h1 {
   min-height: 76px;
 }
 
+/* The market-summary boxes (재계약 / 방출 / FA 영입 / AI 보강) are narrow, so shrink the
+   labels and keep them on one line — otherwise "FA 영입" / "AI 보강" wrap mid-word. */
+.season-offseason-metrics .season-summary-metric span {
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
 .season-competition-results,
 .season-renewal-list,
 .season-offseason-log-list,
