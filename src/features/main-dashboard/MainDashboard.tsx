@@ -14,6 +14,7 @@ import {
   getPreviewMatches,
   getReviewRecords,
 } from "../../domain/season";
+import { formatSeasonDateLabel } from "../../domain/season/seasonScheduleDates";
 import type {
   CareerSave,
   CompetitionState,
@@ -580,6 +581,14 @@ export function MainDashboard({
                     <span>{primaryNextOpponent.name} 구단 정보</span>
                   </button>
                 )}
+                {primaryNextMatch.scheduledDate && (
+                  <p className="match-date-chip">
+                    <span>경기일</span>
+                    <strong>
+                      {formatSeasonDateLabel(primaryNextMatch.scheduledDate)}
+                    </strong>
+                  </p>
+                )}
                 <p>
                   다음 우리 팀 예정 경기는 {activeCompetitionName}{" "}
                   {primaryNextMatch.week}주차입니다. 진행하면 하루씩 날짜가 흐릅니다.
@@ -615,11 +624,6 @@ export function MainDashboard({
                     value={`${career.userTeam.wins}W ${career.userTeam.losses}L`}
                   />
                 </div>
-                <WeeklyPreviewList
-                  matches={nextScheduledMatches}
-                  title="다음 경기일 일정"
-                  userTeamId={userTeamId}
-                />
               </>
             ) : (
               <>

@@ -2174,6 +2174,29 @@ h1 {
   color: #9aa7bd;
 }
 
+/* Compact "경기일: <date>" chip on the home next-match card — label and value sit
+   together instead of being pushed to opposite ends like a data row. */
+.match-date-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: baseline;
+  gap: 5px;
+  width: fit-content;
+  margin: 0;
+  border: 1px solid #253048;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 0.85rem;
+}
+
+.match-date-chip span {
+  color: #9aa7bd;
+}
+
+.match-date-chip span::after {
+  content: ":";
+}
+
 .match-metric-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
@@ -10780,6 +10803,7 @@ button.opponent-analysis-panel:focus-visible {
 }
 
 :root[data-theme="light"] .match-data-row,
+:root[data-theme="light"] .match-date-chip,
 :root[data-theme="light"] .competition-format-list li,
 :root[data-theme="light"] .roster-contract-table-header,
 :root[data-theme="light"] .competition-table,
@@ -10866,6 +10890,7 @@ button.opponent-analysis-panel:focus-visible {
 :root[data-theme="light"] .match-row-meta,
 :root[data-theme="light"] .result-badge,
 :root[data-theme="light"] .match-data-row span,
+:root[data-theme="light"] .match-date-chip span,
 :root[data-theme="light"] .mini-panel span,
 :root[data-theme="light"] .match-metric span,
 :root[data-theme="light"] .competition-summary-card span,
