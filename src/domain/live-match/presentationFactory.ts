@@ -1,5 +1,5 @@
 import { getPreviewMatches, getReviewRecords } from "../season/progressSeason";
-import { championPool } from "../champions";
+import { championPool, isKillHungryChampion } from "../champions";
 import { runSimpleDraft, type DraftTeam } from "../draft";
 import { getLckOpponentStyle } from "../opponents/lckOpponentProfiles";
 import type {
@@ -34,6 +34,7 @@ import {
 import type {
   LiveMatchPresentation,
   LiveMatchSetPresentation,
+  LiveMatchSide,
   LiveMatchTeamPresentation,
 } from "./types";
 
@@ -223,6 +224,27 @@ function createLiveMatchDraftSummary({
   });
 }
 
+// Which sides field a kill-hungry support champion (e.g. Pyke); their support
+// keeps a normal share of kills while every other support is down-weighted.
+function getAggressiveSupportSides(
+  blueTeam: LiveMatchTeamPresentation,
+  redTeam: LiveMatchTeamPresentation,
+): LiveMatchSide[] {
+  const sides: LiveMatchSide[] = [];
+  const blueSupport = blueTeam.players.find((player) => player.role === "support");
+  const redSupport = redTeam.players.find((player) => player.role === "support");
+
+  if (blueSupport && isKillHungryChampion(blueSupport.champion.id)) {
+    sides.push("blue");
+  }
+
+  if (redSupport && isKillHungryChampion(redSupport.champion.id)) {
+    sides.push("red");
+  }
+
+  return sides;
+}
+
 function buildLiveMatchSet({
   baseBlueTeam,
   baseRedTeam,
@@ -267,7 +289,9 @@ function buildLiveMatchSet({
     gameTime: "00:00",
     redTeam,
     stageName,
-    timeline: createSetTimeline(outcome),
+    timeline: createSetTimeline(outcome, {
+      aggressiveSupportSides: getAggressiveSupportSides(blueTeam, redTeam),
+    }),
     timelineEvents: mockLiveMatchTimelineEvents,
   };
 }

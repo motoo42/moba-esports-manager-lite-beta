@@ -33,6 +33,15 @@ const counterObjectives: Array<{
   { key: "towers", type: "tower", label: "타워" },
 ];
 
+// Short one-line explainers shown on hover over each objective in the top bar.
+const objectiveDescriptions: Partial<Record<MatchTimelineEventType, string>> = {
+  dragon:
+    "드래곤: 처치할 때마다 팀 전체에 영구 원소 강화를 쌓고, 네 마리째에 강력한 영혼을 얻습니다.",
+  herald: "전령: 처치 후 소환해 타워 철거를 돕습니다.",
+  baron: "바론: 처치 시 아군과 미니언에게 이로운 버프를 제공합니다.",
+  tower: "타워: 부술수록 골드를 얻고 상대 본진으로 진격할 수 있습니다.",
+};
+
 function DragonTrack({ side, types }: { side: LiveMatchSide; types: DragonType[] }) {
   // Mirror the order on the red side so both teams' dragons read symmetrically
   // outward from the centre.
@@ -40,9 +49,9 @@ function DragonTrack({ side, types }: { side: LiveMatchSide; types: DragonType[]
 
   return (
     <span
-      className="live-objective-dragons"
+      className="live-objective-dragons live-objective-has-tip"
       aria-label={`드래곤 ${types.length}개`}
-      title="드래곤"
+      tabIndex={0}
     >
       {ordered.length === 0 ? (
         <LiveMatchIcon type="dragon" size={14} />
@@ -51,6 +60,9 @@ function DragonTrack({ side, types }: { side: LiveMatchSide; types: DragonType[]
           <LiveDragonIcon key={`${type}-${index}`} type={type} size={14} />
         ))
       )}
+      <span className="live-objective-tip" role="tooltip">
+        {objectiveDescriptions.dragon}
+      </span>
     </span>
   );
 }
@@ -60,11 +72,15 @@ function ObjectiveRow({ side, team }: { side: LiveMatchSide; team: LiveMatchTeam
   const counterCells = counters.map((objective) => (
     <span
       aria-label={`${team.name} ${objective.label} ${team.objectives[objective.key]}개`}
+      className="live-objective-has-tip"
       key={objective.key}
-      title={objective.label}
+      tabIndex={0}
     >
       <LiveMatchIcon type={objective.type} size={15} />
       {team.objectives[objective.key]}
+      <span className="live-objective-tip" role="tooltip">
+        {objectiveDescriptions[objective.type]}
+      </span>
     </span>
   ));
   const dragonCell = (

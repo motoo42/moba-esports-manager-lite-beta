@@ -130,3 +130,16 @@ export const championPool: Champion[] = championSeeds.map((seed) => ({
   ...powerProfiles[seed.profile],
   iconUrl: getChampionIconUrl(seed.dataDragonId),
 }));
+
+// A kill-hungry champion lands kills itself (dive / skirmish assassin) rather than
+// merely setting them up. Used to exempt aggressive supports like Pyke from the
+// live-match support kill down-weight.
+export function isKillHungryChampion(championId: string): boolean {
+  const champion = championPool.find((entry) => entry.id === championId);
+
+  return Boolean(
+    champion?.archetypes.some(
+      (archetype) => archetype === "dive" || archetype === "skirmish",
+    ),
+  );
+}

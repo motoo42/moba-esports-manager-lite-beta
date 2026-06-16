@@ -88,6 +88,10 @@ export type GenerateMatchTimelineInput = {
   dominance: number;
   seed: string;
   winningSide: LiveMatchSide;
+  // Sides whose support plays a kill-hungry champion (e.g. Pyke). Their support
+  // keeps a normal share of kills; every other support is down-weighted so the
+  // role mostly racks up assists instead of kills.
+  aggressiveSupportSides?: LiveMatchSide[];
 };
 
 type DraftEvent = Omit<MatchTimelineEvent, "id">;
@@ -110,6 +114,40 @@ function pickRole(random: () => number) {
   ];
 }
 
+// Relative chance of each role landing the killing blow. Support is heavily
+// down-weighted (it mostly assists); a kill-hungry support is restored to a normal
+// share. Other roles stay even — the spec only asks to curb support kills.
+const supportKillerWeight = 0.35;
+
+function killerWeightsForSide(
+  side: LiveMatchSide,
+  aggressiveSupportSides: LiveMatchSide[],
+): Record<Role, number> {
+  const support = aggressiveSupportSides.includes(side) ? 1 : supportKillerWeight;
+
+  return { top: 1, jungle: 1, mid: 1, bot: 1, support };
+}
+
+// Weighted role pick using exactly one RNG draw, so swapping it in for pickRole
+// keeps the draw count (and thus the same-seed determinism) intact.
+function pickWeightedRole(
+  random: () => number,
+  weights: Record<Role, number>,
+) {
+  const total = matchTimelineRoles.reduce((sum, role) => sum + weights[role], 0);
+  let roll = random() * total;
+
+  for (const role of matchTimelineRoles) {
+    roll -= weights[role];
+
+    if (roll < 0) {
+      return role;
+    }
+  }
+
+  return matchTimelineRoles[matchTimelineRoles.length - 1];
+}
+
 function sampleRoles(random: () => number, pool: Role[], count: number) {
   const available = [...pool];
   const picked: Role[] = [];
@@ -125,12 +163,13 @@ function sampleRoles(random: () => number, pool: Role[], count: number) {
 function createSoloKill(
   random: () => number,
   isLaningPhase: boolean,
+  killerWeights: Record<Role, number>,
 ): MatchTimelineKillInfo {
   return {
     assistRoles: [],
     isLaningPhase,
     isSolo: true,
-    killerRole: pickRole(random),
+    killerRole: pickWeightedRole(random, killerWeights),
     victimRole: pickRole(random),
   };
 }
@@ -150,8 +189,9 @@ function createTeamfightKill(
   random: () => number,
   isLaningPhase: boolean,
   progress: number,
+  killerWeights: Record<Role, number>,
 ): MatchTimelineKillInfo {
-  const killerRole = pickRole(random);
+  const killerRole = pickWeightedRole(random, killerWeights);
   const assistRoles = sampleRoles(
     random,
     matchTimelineRoles.filter((role) => role !== killerRole),
@@ -281,6 +321,11 @@ export function generateMatchTimeline(
   const durationMin = toGameDurationMinutes(random, dominance);
   const durationSec = Math.round(durationMin * 60);
   const events: DraftEvent[] = [];
+  const aggressiveSupportSides = input.aggressiveSupportSides ?? [];
+  const killerWeights: Record<LiveMatchSide, Record<Role, number>> = {
+    blue: killerWeightsForSide("blue", aggressiveSupportSides),
+    red: killerWeightsForSide("red", aggressiveSupportSides),
+  };
 
   const winnerWeighted = (lead: number) =>
     random() < clamp(0.5 + dominance * lead, 0.5, 0.85)
@@ -401,7 +446,7 @@ export function generateMatchTimeline(
     events.push({
       advantage: side,
       importance: "high",
-      kill: createSoloKill(random, true),
+      kill: createSoloKill(random, true, killerWeights[side]),
       side,
       timeSec: clamp(Math.round((3 + random() * 10) * 60), 2 * 60, 14 * 60),
       type: "kill",
@@ -431,13 +476,13 @@ export function generateMatchTimeline(
     const isEvenTrade = random() < 0.3;
 
     if (isEvenTrade) {
-      // A mutual trade: one side's kill surfaces as a neutral-toned message so
-      // the feed carries a healthy share of neutral moments; the other stays
-      // internal (it still folds into the stats / keeps kills == deaths).
+      // A mutual trade: BOTH sides' kills surface (close together) so the feed
+      // reads as an even exchange rather than a one-sided pick. They stay
+      // neutral-toned and balanced (kills == deaths is preserved).
       events.push({
         advantage: "neutral",
         importance: "medium",
-        kill: createTeamfightKill(random, false, progress),
+        kill: createTeamfightKill(random, false, progress, killerWeights[winningSide]),
         side: winningSide,
         timeSec,
         type: "kill",
@@ -445,12 +490,12 @@ export function generateMatchTimeline(
       });
       events.push({
         advantage: "neutral",
-        importance: "low",
-        kill: createTeamfightKill(random, false, progress),
+        importance: "medium",
+        kill: createTeamfightKill(random, false, progress, killerWeights[losingSide]),
         side: losingSide,
-        timeSec: timeSec + 8,
+        timeSec: timeSec + 5,
         type: "kill",
-        visible: false,
+        visible: true,
       });
       continue;
     }
@@ -461,7 +506,7 @@ export function generateMatchTimeline(
     events.push({
       advantage: side,
       importance: isBigFight ? "high" : "medium",
-      kill: createTeamfightKill(random, false, progress),
+      kill: createTeamfightKill(random, false, progress, killerWeights[side]),
       side,
       timeSec,
       type: "kill",
@@ -472,7 +517,7 @@ export function generateMatchTimeline(
       events.push({
         advantage: side,
         importance: "high",
-        kill: createTeamfightKill(random, false, progress),
+        kill: createTeamfightKill(random, false, progress, killerWeights[side]),
         side,
         timeSec: timeSec + 10,
         type: "kill",
@@ -529,7 +574,12 @@ export function generateMatchTimeline(
     events.push({
       advantage: winningSide,
       importance: index === closingKills - 1 ? "critical" : "high",
-      kill: createTeamfightKill(random, false, timeSec / durationSec),
+      kill: createTeamfightKill(
+        random,
+        false,
+        timeSec / durationSec,
+        killerWeights[winningSide],
+      ),
       side: winningSide,
       timeSec,
       type: "kill",

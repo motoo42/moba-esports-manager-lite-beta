@@ -79,8 +79,10 @@ export function liveMatchOutcomeFromRecord(record: {
 
 export function createSetTimeline(
   outcome: LiveMatchOutcome,
+  options?: { aggressiveSupportSides?: LiveMatchSide[] },
 ): GeneratedMatchTimeline {
   return generateMatchTimeline({
+    aggressiveSupportSides: options?.aggressiveSupportSides,
     dominance: dominanceFromWinnerWinProbability(outcome.winnerWinProbability),
     seed: outcome.seed,
     winningSide: outcome.winningSide,

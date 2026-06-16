@@ -11883,6 +11883,56 @@ button.opponent-analysis-panel:focus-visible {
   letter-spacing: 0.08em;
 }
 
+.live-objective-has-tip {
+  position: relative;
+  cursor: help;
+}
+
+/* Compound selector beats the broad `.live-objective-row span` pill styling. */
+.live-objective-row .live-objective-tip {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  z-index: 40;
+  display: block;
+  width: max-content;
+  min-height: 0;
+  max-width: 240px;
+  padding: 7px 10px;
+  border: 1px solid var(--live-line);
+  border-radius: 8px;
+  background: var(--live-panel-strong);
+  color: var(--live-text);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: keep-all;
+  text-align: left;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 48%);
+  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.live-objective-row .live-objective-tip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  border: 5px solid transparent;
+  border-bottom-color: var(--live-panel-strong);
+  transform: translateX(-50%);
+}
+
+.live-objective-has-tip:hover .live-objective-tip,
+.live-objective-has-tip:focus-visible .live-objective-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
 .live-match-main {
   display: grid;
   grid-template-columns: 176px minmax(0, 1fr) 176px;

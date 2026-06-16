@@ -1,4 +1,4 @@
-export { championPool } from "./championPool";
+export { championPool, isKillHungryChampion } from "./championPool";
 export {
   calculateChampionFit,
   type ChampionFit,
